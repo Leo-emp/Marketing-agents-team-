@@ -7,19 +7,7 @@
    ============================================================ */
 
 import type { SlideData } from "./types";
-
-/* ---- Brand Constants ---- */
-const BG = "#09090b";
-const BG_CARD = "#111113";
-const BORDER = "rgba(255,255,255,0.07)";
-const TEXT_PRIMARY = "#f0f0f3";
-const TEXT_SECONDARY = "#8b8b99";
-const TEXT_MUTED = "#55555f";
-const ACCENT_1 = "#6366f1";
-const ACCENT_2 = "#a855f7";
-const ACCENT_3 = "#38bdf8";
-const BRAND_NAME = "JobPilot AI";
-const BRAND_URL = "jobpilotai.co";
+import { BG, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, ACCENT_1, ACCENT_2, ACCENT_3, BRAND_NAME, BRAND_URL } from "./brand";
 
 /* ---- Shared Components ---- */
 

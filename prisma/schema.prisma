@@ -34,8 +34,10 @@ model Content {
   platformPostId String?                           // ID returned by the platform after posting
   notes          String?                           // Admin feedback or edit notes
   researchBrief  String?                           // JSON: research data used for this content
-  visualData     String?                           // JSON: structured SlideData[] for visual generation
+  visualData     String?                           // JSON: structured SlideData[] or ReelConfig for visual generation
   imageUrl       String?                           // URL/path to generated image(s)
+  videoUrl       String?                           // S3 URL of rendered video (reels)
+  videoRenderId  String?                           // Remotion Lambda render ID for progress polling
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

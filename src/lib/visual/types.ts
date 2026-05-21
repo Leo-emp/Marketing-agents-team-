@@ -69,3 +69,44 @@ export const PLATFORM_DIMENSIONS: Record<string, { width: number; height: number
 export function getDimensions(platform: string, type: string): { width: number; height: number } {
   return PLATFORM_DIMENSIONS[`${platform}:${type}`] || { width: 1080, height: 1080 };
 }
+
+/* ============================================================
+   REEL / VIDEO TYPES
+   ============================================================ */
+
+// # Animation entrance styles for video scenes
+export type SceneEntrance = "fade_in" | "slide_up" | "slide_left" | "scale_in" | "typewriter";
+export type SceneExit = "fade_out" | "slide_down" | "none";
+export type SceneType = "brand_intro" | "hook" | "tip" | "stat" | "list" | "quote" | "cta";
+
+// # Data for a single video scene
+export interface ReelSceneData {
+  sceneType: SceneType;
+  headline: string;
+  subheadline?: string;
+  body?: string;
+  stat?: { value: string; label: string };
+  bullets?: string[];
+  entrance: SceneEntrance;
+  exit: SceneExit;
+  durationInFrames: number;
+  accentColor?: string;
+}
+
+// # Full reel configuration produced by the designer agent
+export interface ReelConfig {
+  scenes: ReelSceneData[];
+  fps: number;
+  width: number;
+  height: number;
+  totalDurationInFrames: number;
+}
+
+// # Video render status from Lambda
+export interface VideoRenderStatus {
+  renderId: string;
+  status: "rendering" | "done" | "error";
+  progress: number;
+  videoUrl?: string;
+  error?: string;
+}

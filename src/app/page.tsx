@@ -29,6 +29,8 @@ interface ContentItem {
   researchBrief: string | null;
   visualData: string | null;
   imageUrl: string | null;
+  videoUrl: string | null;
+  videoRenderId: string | null;
   createdAt: string;
 }
 
@@ -165,6 +167,10 @@ export default function Dashboard() {
   /* ---- Visual generation ---- */
   const [generatingVisual, setGeneratingVisual] = useState<string | null>(null);
   const [visualPreviews, setVisualPreviews] = useState<Record<string, VisualSlide[]>>({});
+
+  /* ---- Video generation ---- */
+  const [generatingVideo, setGeneratingVideo] = useState<string | null>(null);
+  const [videoProgress, setVideoProgress] = useState<Record<string, number>>({});
 
   /* ---- KPI ---- */
   const [kpiPlatform, setKpiPlatform] = useState("all");
@@ -403,6 +409,56 @@ export default function Dashboard() {
     } catch {
       showToast("Visual generation error", "error");
     } finally { setGeneratingVisual(null); }
+  };
+
+  // # Generate video reel via Remotion Lambda — triggers render and polls for progress
+  const handleGenerateVideo = async (item: ContentItem) => {
+    setGeneratingVideo(item.id);
+    setVideoProgress(prev => ({ ...prev, [item.id]: 0 }));
+    try {
+      const res = await fetch("/api/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId: item.id, redesign: !!item.videoUrl }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        showToast(err.error || "Video render failed", "error");
+        return;
+      }
+
+      const { renderId } = await res.json();
+
+      // # Poll for render progress every 3 seconds
+      const poll = setInterval(async () => {
+        try {
+          const statusRes = await fetch(`/api/video/${renderId}`);
+          if (!statusRes.ok) return;
+          const status = await statusRes.json();
+          setVideoProgress(prev => ({ ...prev, [item.id]: status.progress || 0 }));
+
+          if (status.status === "done" || status.status === "error") {
+            clearInterval(poll);
+            setGeneratingVideo(null);
+            if (status.status === "done") {
+              showToast("Video rendered", "success");
+              fetchContent();
+            } else {
+              showToast(`Video render failed: ${status.error}`, "error");
+            }
+          }
+        } catch {
+          clearInterval(poll);
+          setGeneratingVideo(null);
+          showToast("Lost connection to render", "error");
+        }
+      }, 3000);
+    } catch {
+      showToast("Video generation error", "error");
+    } finally {
+      if (generatingVideo === item.id) setGeneratingVideo(null);
+    }
   };
 
   const downloadVisual = (dataUrl: string, filename: string) => {
@@ -760,6 +816,25 @@ export default function Dashboard() {
                           </div>
                         )}
 
+                        {/* Video preview for reels */}
+                        {item.videoUrl && (
+                          <div className="mb-3">
+                            <video
+                              src={item.videoUrl}
+                              controls
+                              className="rounded-lg border border-card-border"
+                              style={{ aspectRatio: "9/16", maxWidth: "240px", maxHeight: "320px" }}
+                            />
+                            <a
+                              href={item.videoUrl}
+                              download={`jobpilot-reel-${item.platform}.mp4`}
+                              className="inline-block mt-2 px-3 py-1 bg-space-600 text-text-secondary text-xs rounded-lg hover:text-text-primary transition-colors"
+                            >
+                              Download MP4
+                            </a>
+                          </div>
+                        )}
+
                         {/* Body */}
                         <pre className="text-text-secondary text-sm whitespace-pre-wrap font-sans leading-relaxed mb-3 max-h-48 overflow-y-auto">{item.body}</pre>
 
@@ -803,13 +878,26 @@ export default function Dashboard() {
                             </button>
                           )}
                           {/* Visual generation / rendering button */}
-                          {item.contentType !== "plain_text" && item.contentType !== "thread" && (
+                          {item.contentType !== "plain_text" && item.contentType !== "thread" && item.contentType !== "reel_script" && (
                             <button
                               onClick={() => handleGenerateVisual(item, hasVisuals)}
                               disabled={generatingVisual === item.id}
                               className="px-3 py-1.5 bg-purple-500/15 text-purple-400 text-xs font-medium rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
                             >
                               {generatingVisual === item.id ? "Creating Visual..." : hasDesignData ? "Render Visual" : hasVisuals ? "Redesign Visual" : "Generate Visual"}
+                            </button>
+                          )}
+                          {/* Video generation button for reels */}
+                          {item.contentType === "reel_script" && (
+                            <button
+                              onClick={() => handleGenerateVideo(item)}
+                              disabled={generatingVideo === item.id}
+                              className="px-3 py-1.5 bg-cyan-500/15 text-cyan-400 text-xs font-medium rounded-lg hover:bg-cyan-500/25 transition-colors disabled:opacity-50"
+                            >
+                              {generatingVideo === item.id
+                                ? `Rendering ${videoProgress[item.id] || 0}%...`
+                                : item.videoUrl ? "Re-render Video" : "Generate Video"
+                              }
                             </button>
                           )}
                           <button

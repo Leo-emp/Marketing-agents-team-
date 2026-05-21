@@ -29,6 +29,8 @@ const SCHEMA = {
     researchBrief: "TEXT",
     visualData: "TEXT",
     imageUrl: "TEXT",
+    videoUrl: "TEXT",
+    videoRenderId: "TEXT",
     createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
     updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   },
