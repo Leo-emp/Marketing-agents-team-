@@ -1,11 +1,13 @@
 /* ============================================================
    AUTH API — /api/auth
    ============================================================
-   Simple password login. Sets a session cookie on success.
+   Simple password login. Sets a signed session cookie on success.
+   DELETE: Clears the session cookie (logout).
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { buildSessionToken } from "@/lib/auth-check";
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
@@ -15,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set("marketing-session", process.env.ADMIN_PASSWORD!, {
+  cookieStore.set("marketing-session", buildSessionToken(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -23,5 +25,12 @@ export async function POST(req: NextRequest) {
     path: "/",
   });
 
+  return NextResponse.json({ success: true });
+}
+
+/* # Logout — clear session cookie */
+export async function DELETE() {
+  const cookieStore = await cookies();
+  cookieStore.delete("marketing-session");
   return NextResponse.json({ success: true });
 }

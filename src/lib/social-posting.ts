@@ -17,12 +17,11 @@ export type PostResult = {
 /* ---- LinkedIn ---- */
 /* Uses the LinkedIn Share API v2 */
 /* Requires: LINKEDIN_ACCESS_TOKEN (OAuth 2.0 token with w_member_social scope) */
-export async function postToLinkedIn(content: string): Promise<PostResult> {
+export async function postToLinkedIn(content: string, imageUrl?: string): Promise<PostResult> {
   const token = process.env.LINKEDIN_ACCESS_TOKEN;
   if (!token) return { success: false, error: "LinkedIn not configured — set LINKEDIN_ACCESS_TOKEN" };
 
   try {
-    /* First get the user's LinkedIn URN */
     const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -30,7 +29,47 @@ export async function postToLinkedIn(content: string): Promise<PostResult> {
     const me = await meRes.json();
     const authorUrn = `urn:li:person:${me.sub}`;
 
-    /* Create the share */
+    let shareMedia: any[] = [];
+    let shareMediaCategory = "NONE";
+
+    /* # Upload image if provided */
+    if (imageUrl) {
+      /* Step 1: Register upload */
+      const registerRes = await fetch("https://api.linkedin.com/v2/assets?action=registerUpload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          registerUploadRequest: {
+            recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+            owner: authorUrn,
+            serviceRelationships: [{ relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" }],
+          },
+        }),
+      });
+
+      if (registerRes.ok) {
+        const registerData = await registerRes.json();
+        const uploadUrl = registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
+        const asset = registerData.value.asset;
+
+        /* Step 2: Upload the image bytes */
+        const imgResponse = await fetch(imageUrl);
+        const imgBuffer = await imgResponse.arrayBuffer();
+
+        await fetch(uploadUrl, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+          body: imgBuffer,
+        });
+
+        shareMedia = [{ status: "READY", media: asset, description: { text: "Generated visual" } }];
+        shareMediaCategory = "IMAGE";
+      }
+    }
+
     const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
       method: "POST",
       headers: {
@@ -44,7 +83,8 @@ export async function postToLinkedIn(content: string): Promise<PostResult> {
         specificContent: {
           "com.linkedin.ugc.ShareContent": {
             shareCommentary: { text: content },
-            shareMediaCategory: "NONE",
+            shareMediaCategory,
+            ...(shareMedia.length > 0 ? { media: shareMedia } : {}),
           },
         },
         visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
@@ -64,9 +104,9 @@ export async function postToLinkedIn(content: string): Promise<PostResult> {
 }
 
 /* ---- X / Twitter ---- */
-/* Uses the X API v2 tweets endpoint */
+/* Uses the X API v2 tweets endpoint + v1.1 media upload */
 /* Requires: TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET */
-export async function postToTwitter(content: string): Promise<PostResult> {
+export async function postToTwitter(content: string, imageUrl?: string): Promise<PostResult> {
   const apiKey = process.env.TWITTER_API_KEY;
   const apiSecret = process.env.TWITTER_API_SECRET;
   const accessToken = process.env.TWITTER_ACCESS_TOKEN;
@@ -77,39 +117,72 @@ export async function postToTwitter(content: string): Promise<PostResult> {
   }
 
   try {
-    /* OAuth 1.0a signing for X API v2 */
     const { createHmac, randomBytes } = await import("crypto");
-    const url = "https://api.x.com/2/tweets";
-    const method = "POST";
-    const nonce = randomBytes(16).toString("hex");
-    const timestamp = Math.floor(Date.now() / 1000).toString();
 
-    const params: Record<string, string> = {
-      oauth_consumer_key: apiKey,
-      oauth_nonce: nonce,
-      oauth_signature_method: "HMAC-SHA1",
-      oauth_timestamp: timestamp,
-      oauth_token: accessToken,
-      oauth_version: "1.0",
+    /* # Helper: generate OAuth 1.0a header for a given URL */
+    const oauthHeader = (method: string, url: string, extraParams?: Record<string, string>) => {
+      const nonce = randomBytes(16).toString("hex");
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+
+      const oauthParams: Record<string, string> = {
+        oauth_consumer_key: apiKey!,
+        oauth_nonce: nonce,
+        oauth_signature_method: "HMAC-SHA1",
+        oauth_timestamp: timestamp,
+        oauth_token: accessToken!,
+        oauth_version: "1.0",
+        ...extraParams,
+      };
+
+      const paramString = Object.keys(oauthParams).sort()
+        .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(oauthParams[k])}`)
+        .join("&");
+
+      const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(paramString)}`;
+      const signingKey = `${encodeURIComponent(apiSecret!)}&${encodeURIComponent(accessSecret!)}`;
+      const signature = createHmac("sha1", signingKey).update(baseString).digest("base64");
+
+      return `OAuth oauth_consumer_key="${encodeURIComponent(apiKey!)}", oauth_nonce="${encodeURIComponent(nonce)}", oauth_signature="${encodeURIComponent(signature)}", oauth_signature_method="HMAC-SHA1", oauth_timestamp="${timestamp}", oauth_token="${encodeURIComponent(accessToken!)}", oauth_version="1.0"`;
     };
 
-    const paramString = Object.keys(params).sort()
-      .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
-      .join("&");
+    /* # Upload image if provided */
+    let mediaId: string | undefined;
+    if (imageUrl) {
+      const imgResponse = await fetch(imageUrl);
+      const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
+      const base64Data = imgBuffer.toString("base64");
 
-    const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(paramString)}`;
-    const signingKey = `${encodeURIComponent(apiSecret!)}&${encodeURIComponent(accessSecret!)}`;
-    const signature = createHmac("sha1", signingKey).update(baseString).digest("base64");
+      const mediaUrl = "https://upload.twitter.com/1.1/media/upload.json";
+      const formBody = `media_data=${encodeURIComponent(base64Data)}`;
 
-    const authHeader = `OAuth oauth_consumer_key="${encodeURIComponent(apiKey)}", oauth_nonce="${encodeURIComponent(nonce)}", oauth_signature="${encodeURIComponent(signature)}", oauth_signature_method="HMAC-SHA1", oauth_timestamp="${timestamp}", oauth_token="${encodeURIComponent(accessToken)}", oauth_version="1.0"`;
+      const uploadRes = await fetch(mediaUrl, {
+        method: "POST",
+        headers: {
+          Authorization: oauthHeader("POST", mediaUrl),
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formBody,
+      });
 
-    const res = await fetch(url, {
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        mediaId = uploadData.media_id_string;
+      }
+    }
+
+    const tweetUrl = "https://api.x.com/2/tweets";
+    const tweetBody: any = { text: content };
+    if (mediaId) {
+      tweetBody.media = { media_ids: [mediaId] };
+    }
+
+    const res = await fetch(tweetUrl, {
       method: "POST",
       headers: {
-        Authorization: authHeader,
+        Authorization: oauthHeader("POST", tweetUrl),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: content }),
+      body: JSON.stringify(tweetBody),
     });
 
     if (!res.ok) {
@@ -207,8 +280,8 @@ export async function postToTikTok(content: string): Promise<PostResult> {
 /* ---- Unified Poster ---- */
 export async function postToPlatform(platform: string, content: string, imageUrl?: string): Promise<PostResult> {
   switch (platform) {
-    case "linkedin": return postToLinkedIn(content);
-    case "twitter": return postToTwitter(content);
+    case "linkedin": return postToLinkedIn(content, imageUrl);
+    case "twitter": return postToTwitter(content, imageUrl);
     case "instagram": return postToInstagram(content, imageUrl);
     case "tiktok": return postToTikTok(content);
     default: return { success: false, error: `Unknown platform: ${platform}` };

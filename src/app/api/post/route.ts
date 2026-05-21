@@ -32,14 +32,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  /* Build the full post text (body + hashtags) */
-  let postText = content.body;
+  /* # Use captionText for platforms with visuals, fall back to body */
+  let postText = content.captionText || content.body;
   if (content.hashtags && content.platform !== "twitter") {
     const tags = content.hashtags.split(",").map((t) => `#${t.trim()}`).join(" ");
     postText += `\n\n${tags}`;
   }
 
-  const result = await postToPlatform(content.platform, postText);
+  const result = await postToPlatform(content.platform, postText, content.imageUrl || undefined);
 
   if (result.success) {
     await prisma.content.update({

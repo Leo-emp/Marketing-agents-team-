@@ -18,22 +18,26 @@ datasource db {
 // ---- Marketing Content Queue ----
 // Each row is one piece of content created by an AI agent
 model Content {
-  id           String    @id @default(cuid())
-  agent        String                            // Which agent persona created it
-  platform     String                            // linkedin, twitter, instagram, tiktok
-  contentType  String                            // post, thread, reel_script, carousel, story
-  title        String                            // Internal label (not published)
-  body         String                            // The actual post content
-  hashtags     String?                           // Comma-separated hashtags
-  mediaPrompt  String?                           // AI description for visual asset creation
-  hook         String?                           // First line / scroll-stopper (for preview)
-  status       String    @default("pending")     // pending, approved, scheduled, posted, rejected
-  scheduledFor DateTime?                         // When to auto-post
-  postedAt     DateTime?                         // When it was actually posted
-  platformPostId String?                         // ID returned by the platform after posting
-  notes        String?                           // Admin feedback or edit notes
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  agent          String                            // Which agent persona created it
+  platform       String                            // linkedin, twitter, instagram, tiktok
+  contentType    String                            // post, thread, reel_script, carousel, single_image, plain_text
+  title          String                            // Internal label (not published)
+  body           String                            // The actual post content
+  captionText    String?                           // Separate caption for image/carousel posts
+  hashtags       String?                           // Comma-separated hashtags
+  mediaPrompt    String?                           // AI description for visual asset creation
+  hook           String?                           // First line / scroll-stopper (for preview)
+  status         String    @default("pending")     // pending, approved, scheduled, posted, rejected
+  scheduledFor   DateTime?                         // When to auto-post
+  postedAt       DateTime?                         // When it was actually posted
+  platformPostId String?                           // ID returned by the platform after posting
+  notes          String?                           // Admin feedback or edit notes
+  researchBrief  String?                           // JSON: research data used for this content
+  visualData     String?                           // JSON: structured SlideData[] for visual generation
+  imageUrl       String?                           // URL/path to generated image(s)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([status])
   @@index([platform])
@@ -63,4 +67,54 @@ model PlatformCredential {
   metadata     String?                           // JSON blob for platform-specific data
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ---- Generated Visuals ----
+// Stores template data for rendered images (carousels, single images, storyboard frames)
+model Visual {
+  id         String   @id @default(cuid())
+  contentId  String?                             // Links to a Content item
+  type       String                              // single_image, carousel_slide, storyboard_frame
+  slideIndex Int      @default(0)                // Slide position for carousels/storyboards
+  templateId String                              // Which template layout was used
+  data       String                              // JSON: all text, colors, layout data
+  width      Int      @default(1080)
+  height     Int      @default(1080)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([contentId])
+}
+
+// ---- KPI Metrics ----
+// Tracks performance data across platforms
+model KpiMetric {
+  id         String   @id @default(cuid())
+  platform   String                              // linkedin, twitter, instagram, tiktok
+  contentId  String?                             // Links to specific content (optional)
+  metricType String                              // impressions, reach, engagement, clicks, followers, saves, shares
+  value      Float
+  date       String                              // ISO date string
+  source     String   @default("manual")         // manual, api
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([platform])
+  @@index([date])
+  @@index([contentId])
+}
+
+// ---- KPI Goals ----
+// Targets for measuring brand performance
+model KpiGoal {
+  id          String   @id @default(cuid())
+  platform    String                             // linkedin, twitter, instagram, tiktok, all
+  metricType  String                             // impressions, reach, engagement, clicks, followers
+  targetValue Float
+  period      String                             // weekly, monthly, quarterly
+  startDate   String                             // ISO date string
+  endDate     String                             // ISO date string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

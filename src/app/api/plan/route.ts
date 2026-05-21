@@ -14,23 +14,29 @@ import { isAdmin, unauthorized } from "@/lib/auth-check";
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return unauthorized();
 
-  const { weekOf, context } = await req.json();
+  try {
+    const { weekOf, context } = await req.json();
 
-  if (!weekOf) {
-    return NextResponse.json({ error: "weekOf is required (e.g. 2026-05-25)" }, { status: 400 });
+    if (!weekOf) {
+      return NextResponse.json({ error: "weekOf is required (e.g. 2026-05-25)" }, { status: 400 });
+    }
+
+    const plan = await generatePlan(weekOf, context);
+
+    const saved = await prisma.contentPlan.create({
+      data: {
+        weekOf,
+        plan: JSON.stringify(plan),
+        status: "draft",
+      },
+    });
+
+    return NextResponse.json({ id: saved.id, weekOf, plan, status: "draft" });
+  } catch (e) {
+    console.error("Plan generation failed:", e);
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: `Plan generation failed: ${message}` }, { status: 500 });
   }
-
-  const plan = await generatePlan(weekOf, context);
-
-  const saved = await prisma.contentPlan.create({
-    data: {
-      weekOf,
-      plan: JSON.stringify(plan),
-      status: "draft",
-    },
-  });
-
-  return NextResponse.json({ id: saved.id, weekOf, plan, status: "draft" });
 }
 
 /* # List all content plans */

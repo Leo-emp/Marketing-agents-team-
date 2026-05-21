@@ -1,7 +1,8 @@
 /* ============================================================
    GEMINI CLIENT - Google Gemini AI API
    ============================================================
-   Calls Gemini with model fallback and retry logic.
+   Calls Gemini with model fallback, retry logic, and
+   optional Google Search grounding for real-time research.
    Shared across all marketing agent personas.
    ============================================================ */
 
@@ -18,7 +19,11 @@ const deadModels = new Map<string, number>();
 const DEAD_TTL = 60 * 60 * 1000;
 const TIMEOUT_MS = 45_000;
 
-export async function callGemini(prompt: string): Promise<string> {
+/* # Shared fetch logic for both standard and grounded calls */
+async function callGeminiInternal(
+  prompt: string,
+  options?: { useSearch?: boolean }
+): Promise<{ text: string; sources: { title: string; uri: string }[] }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
 
@@ -36,15 +41,22 @@ export async function callGemini(prompt: string): Promise<string> {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+        const requestBody: any = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.8, maxOutputTokens: 8192 },
+        };
+
+        // # Google Search grounding — gives Gemini real-time web access
+        if (options?.useSearch) {
+          requestBody.tools = [{ google_search: {} }];
+        }
+
         const res = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.8, maxOutputTokens: 8192 },
-            }),
+            body: JSON.stringify(requestBody),
             signal: controller.signal,
           }
         );
@@ -59,7 +71,21 @@ export async function callGemini(prompt: string): Promise<string> {
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) { lastError = "Empty AI response"; continue; }
 
-        return text;
+        // # Extract grounding sources when available
+        const sources: { title: string; uri: string }[] = [];
+        const chunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        if (chunks && Array.isArray(chunks)) {
+          for (const chunk of chunks) {
+            if (chunk.web?.uri) {
+              sources.push({
+                title: chunk.web.title || "",
+                uri: chunk.web.uri,
+              });
+            }
+          }
+        }
+
+        return { text, sources };
       } catch (e: any) {
         lastError = e.message || "Network error";
         continue;
@@ -68,4 +94,18 @@ export async function callGemini(prompt: string): Promise<string> {
   }
 
   throw new Error(`AI unavailable: ${lastError}`);
+}
+
+/* # Standard Gemini call (no web search) */
+export async function callGemini(prompt: string): Promise<string> {
+  const result = await callGeminiInternal(prompt);
+  return result.text;
+}
+
+/* # Gemini call with Google Search grounding for real-time research */
+export async function callGeminiWithSearch(prompt: string): Promise<{
+  text: string;
+  sources: { title: string; uri: string }[];
+}> {
+  return callGeminiInternal(prompt, { useSearch: true });
 }

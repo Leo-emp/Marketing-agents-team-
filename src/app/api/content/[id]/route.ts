@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
 
-  const allowedFields = ["body", "title", "hashtags", "notes", "status", "scheduledFor"];
+  const allowedFields = ["body", "title", "hashtags", "notes", "status", "scheduledFor", "captionText", "visualData", "imageUrl"];
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const data: any = {};
   for (const key of allowedFields) {
