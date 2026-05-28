@@ -8,12 +8,21 @@
 
 /* # Layout options for each slide/image */
 export type SlideLayout =
-  | "hero"       // # Full-width headline with gradient accent
-  | "stat_card"  // # Large number/stat with label
-  | "tip"        // # Numbered tip with body text
-  | "quote"      // # Quote with attribution
-  | "list"       // # Title + bullet items
-  | "cta";       // # Call-to-action with brand URL
+  | "hero"           // # Full-width headline with gradient accent
+  | "stat_card"      // # Large number/stat with label
+  | "tip"            // # Numbered tip with body text
+  | "quote"          // # Quote with attribution
+  | "list"           // # Title + bullet items
+  | "cta"            // # Call-to-action with brand URL
+  | "before_after"   // # Side-by-side comparison (bad vs good)
+  | "screenshot"     // # Fake tweet/DM/notification style card
+  | "data_chart"     // # Horizontal bar chart with percentages
+  | "comparison"     // # Two-column pros/cons or vs layout
+  | "numbered_steps" // # Step-by-step with large step numbers
+  | "gradient_text"  // # Large gradient headline, minimal layout
+  | "highlight_box"  // # Key insight in a highlighted card
+  | "split_image"    // # Left accent + right text panel
+  | "progress_bar";  // # Multiple progress bars with labels
 
 /* # Data for a single slide or image */
 export interface SlideData {
@@ -27,6 +36,17 @@ export interface SlideData {
   accentColor?: string;
   slideNumber?: number;
   totalSlides?: number;
+  /* # Extended fields for new layouts */
+  beforeText?: string;
+  afterText?: string;
+  screenshotType?: "tweet" | "dm" | "notification" | "email";
+  screenshotAuthor?: string;
+  bars?: { label: string; value: number; color?: string }[];
+  steps?: { number: number; title: string; detail?: string }[];
+  leftColumn?: string[];
+  rightColumn?: string[];
+  leftLabel?: string;
+  rightLabel?: string;
 }
 
 /* # Full request to the visual generation API */
@@ -91,7 +111,14 @@ export interface ReelSceneData {
   exit: SceneExit;
   durationInFrames: number;
   accentColor?: string;
+  /* # B-roll video URL for background (from Pexels) */
+  backgroundVideoUrl?: string;
+  /* # Subtitle text to burn into this scene */
+  subtitleText?: string;
 }
+
+// # Music mood options for background audio
+export type MusicMood = "energetic" | "chill" | "corporate" | "dramatic" | "inspirational";
 
 // # Full reel configuration produced by the designer agent
 export interface ReelConfig {
@@ -100,6 +127,13 @@ export interface ReelConfig {
   width: number;
   height: number;
   totalDurationInFrames: number;
+  /* # Background music */
+  musicMood?: MusicMood;
+  musicUrl?: string;
+  /* # Voiceover audio (ElevenLabs TTS) */
+  voiceoverUrl?: string;
+  /* # B-roll clips fetched for this reel */
+  bRollClips?: { videoUrl: string; thumbnailUrl: string; duration: number }[];
 }
 
 // # Video render status from Lambda

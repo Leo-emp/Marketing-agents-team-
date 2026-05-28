@@ -1,5 +1,6 @@
-import { Series, useVideoConfig } from "remotion";
+import { Series, useVideoConfig, Audio, OffthreadVideo } from "remotion";
 import { AnimatedBackground } from "./components/AnimatedBackground";
+import { SubtitleTrack } from "./components/SubtitleTrack";
 import { BrandIntro } from "./scenes/BrandIntro";
 import { HookScene } from "./scenes/HookScene";
 import { TipScene } from "./scenes/TipScene";
@@ -25,7 +26,22 @@ function SceneRenderer({ data }: { data: ReelSceneData }) {
   }
 }
 
-export function ReelComposition({ scenes }: ReelCompositionProps) {
+/* # B-roll background component — renders video behind scene content */
+function BRollBackground({ src }: { src: string }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+      <OffthreadVideo
+        src={src}
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        muted
+      />
+      {/* # Dark overlay so text remains readable over video */}
+      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} />
+    </div>
+  );
+}
+
+export function ReelComposition({ scenes, voiceoverUrl, musicUrl }: ReelCompositionProps) {
   const { width, height } = useVideoConfig();
 
   return (
@@ -36,8 +52,23 @@ export function ReelComposition({ scenes }: ReelCompositionProps) {
       overflow: "hidden",
       fontFamily: "Geist, sans-serif",
     }}>
-      {/* # Animated gradient background behind everything */}
+      {/* # Animated gradient background behind everything (fallback when no B-roll) */}
       <AnimatedBackground />
+
+      {/* # B-roll video backgrounds per scene */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
+        <Series>
+          {scenes.map((scene, i) => (
+            <Series.Sequence key={`broll-${i}`} durationInFrames={scene.durationInFrames}>
+              {scene.backgroundVideoUrl ? (
+                <BRollBackground src={scene.backgroundVideoUrl} />
+              ) : (
+                <div />
+              )}
+            </Series.Sequence>
+          ))}
+        </Series>
+      </div>
 
       {/* # Brand header overlay */}
       <div style={{
@@ -76,6 +107,19 @@ export function ReelComposition({ scenes }: ReelCompositionProps) {
           ))}
         </Series>
       </div>
+
+      {/* # Subtitle track — burned-in word-by-word captions */}
+      <SubtitleTrack scenes={scenes} />
+
+      {/* # Voiceover audio track */}
+      {voiceoverUrl && (
+        <Audio src={voiceoverUrl} volume={0.9} />
+      )}
+
+      {/* # Background music track (lower volume to not overpower voiceover) */}
+      {musicUrl && (
+        <Audio src={musicUrl} volume={voiceoverUrl ? 0.15 : 0.4} loop />
+      )}
 
       {/* # Brand footer overlay */}
       <div style={{

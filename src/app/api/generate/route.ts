@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateContent, generateBatch, AGENTS } from "@/lib/agents";
+import { generateContent, generateVariations, generateBatch, AGENTS } from "@/lib/agents";
 import type { PlanItem } from "@/lib/agents";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
 import { designVisual } from "@/lib/visual/designer-agent";
@@ -148,8 +148,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(record);
     }
 
-    /* ---- Single mode: generate one piece of content ---- */
-    const { agentId, topic, contentType, context, tone } = body;
+    /* ---- Single mode: generate one piece of content (with optional variations) ---- */
+    const { agentId, topic, contentType, context, tone, variations } = body;
 
     if (!agentId || !topic || !contentType) {
       return NextResponse.json(
@@ -162,6 +162,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Unknown agent: ${agentId}` }, { status: 400 });
     }
 
+    /* # Generate variations if requested (2-3 alternative versions) */
+    const variationCount = typeof variations === "number" ? variations : 1;
+
+    if (variationCount > 1) {
+      const allVariants = await generateVariations(agentId, topic, contentType, variationCount, context, tone);
+
+      const saved = [];
+      for (let i = 0; i < allVariants.length; i++) {
+        const v = allVariants[i];
+        const record = await prisma.content.create({
+          data: {
+            agent: agentId,
+            platform: AGENTS[agentId].platform,
+            contentType: v.contentType || contentType,
+            title: `${v.title}${i > 0 ? ` (v${i + 1})` : ""}`,
+            body: v.content,
+            hashtags: v.hashtags,
+            mediaPrompt: v.mediaPrompt,
+            hook: v.hook,
+            status: "pending",
+            researchBrief: v.researchBrief || null,
+            notes: i > 0 ? `Variation ${i + 1} of ${allVariants.length}` : `Original (1 of ${allVariants.length} variations)`,
+          },
+        });
+        saved.push(record);
+
+        if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
+          autoGenerateVisual(record.id);
+        }
+      }
+
+      return NextResponse.json({ variations: saved.length, items: saved });
+    }
+
+    /* # Single generation (default) */
     const content = await generateContent(agentId, topic, contentType, context, tone);
 
     const record = await prisma.content.create({

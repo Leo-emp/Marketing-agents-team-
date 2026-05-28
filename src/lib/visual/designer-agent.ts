@@ -8,6 +8,7 @@
 
 import { callGemini } from "../gemini";
 import type { SlideData, SlideLayout } from "./types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /* # Parse content into visual slides + complementary caption */
 export async function designVisual(
@@ -34,6 +35,15 @@ AVAILABLE SLIDE LAYOUTS:
 - "quote": Large quotation mark, centered quote text, optional attribution. Best for: testimonials, powerful statements, insights.
 - "list": Title with arrow-pointed bullet items. Best for: lists of 3-5 items, comparisons, checklists.
 - "cta": Call-to-action card with brand logo and URL button. Best for: final slides, directing to website.
+- "before_after": Side-by-side comparison showing bad vs good. Requires "beforeText" and "afterText" fields. Best for: resume rewrites, profile improvements, before/after transformations.
+- "screenshot": Fake tweet/DM/notification card with avatar and author name. Include "screenshotType" (tweet/dm/notification/email) and "screenshotAuthor". Best for: social proof, recruiter messages, email examples.
+- "data_chart": Horizontal bar chart with percentages. Include "bars": [{"label":"label", "value":75}]. Best for: survey results, skill comparisons, market data.
+- "comparison": Two-column layout for pros/cons or versus. Include "leftColumn", "rightColumn", "leftLabel", "rightLabel". Best for: tool comparisons, approach comparisons, do vs don't.
+- "numbered_steps": Step-by-step with large step numbers. Include "steps": [{"number":1, "title":"Step title", "detail":"optional detail"}]. Best for: processes, tutorials, frameworks.
+- "gradient_text": Large gradient-colored headline, minimal design. Best for: powerful one-liners, key takeaways, mic-drop statements.
+- "highlight_box": Key insight centered in a highlighted accent card. Best for: key takeaway slides, featured quotes, important notes.
+- "split_image": Left gradient accent panel + right text content. Include "stat" for the left panel number. Best for: data-driven points, key metrics with explanation.
+- "progress_bar": Multiple progress bars with labels and percentages. Include "bars": [{"label":"label", "value":75}]. Best for: skill levels, completion rates, survey data.
 
 CONTENT TO CONVERT:
 ${content}
@@ -85,7 +95,7 @@ Return ONLY a valid JSON object.`;
 
   // # Validate and normalize slide data
   const slides: SlideData[] = (parsed.slides || []).map((slide: Record<string, unknown>, index: number) => {
-    const validLayouts: SlideLayout[] = ["hero", "stat_card", "tip", "quote", "list", "cta"];
+    const validLayouts: SlideLayout[] = ["hero", "stat_card", "tip", "quote", "list", "cta", "before_after", "screenshot", "data_chart", "comparison", "numbered_steps", "gradient_text", "highlight_box", "split_image", "progress_bar"];
     const layout = validLayouts.includes(slide.layout as SlideLayout)
       ? (slide.layout as SlideLayout)
       : "hero";
@@ -104,6 +114,21 @@ Return ONLY a valid JSON object.`;
       layout,
       slideNumber: index + 1,
       totalSlides: (parsed.slides || []).length,
+      /* # Extended fields for new layouts */
+      beforeText: slide.beforeText ? String(slide.beforeText) : undefined,
+      afterText: slide.afterText ? String(slide.afterText) : undefined,
+      screenshotType: slide.screenshotType ? String(slide.screenshotType) as SlideData["screenshotType"] : undefined,
+      screenshotAuthor: slide.screenshotAuthor ? String(slide.screenshotAuthor) : undefined,
+      bars: Array.isArray(slide.bars)
+        ? (slide.bars as { label: unknown; value: unknown; color?: unknown }[]).map((b) => ({ label: String(b.label || ""), value: Number(b.value) || 0, color: b.color ? String(b.color) : undefined }))
+        : undefined,
+      steps: Array.isArray(slide.steps)
+        ? (slide.steps as { number: unknown; title: unknown; detail?: unknown }[]).map((s) => ({ number: Number(s.number) || 0, title: String(s.title || ""), detail: s.detail ? String(s.detail) : undefined }))
+        : undefined,
+      leftColumn: Array.isArray(slide.leftColumn) ? (slide.leftColumn as unknown[]).map(String) : undefined,
+      rightColumn: Array.isArray(slide.rightColumn) ? (slide.rightColumn as unknown[]).map(String) : undefined,
+      leftLabel: slide.leftLabel ? String(slide.leftLabel) : undefined,
+      rightLabel: slide.rightLabel ? String(slide.rightLabel) : undefined,
     };
   });
 

@@ -6,7 +6,8 @@
    ============================================================ */
 
 import { callGemini } from "../gemini";
-import type { ReelSceneData, ReelConfig, SceneEntrance, SceneType } from "./types";
+import { fetchBRollForTopic } from "../pexels";
+import type { ReelSceneData, ReelConfig, SceneEntrance, SceneType, MusicMood } from "./types";
 
 // # Design a video reel from content text
 export async function designReel(
@@ -146,11 +147,43 @@ Return ONLY valid JSON.`;
 
   const totalDurationInFrames = scenes.reduce((sum, s) => sum + s.durationInFrames, 0);
 
+  /* # Auto-generate subtitle text from scene headlines */
+  for (const scene of scenes) {
+    if (!scene.subtitleText && scene.headline && scene.sceneType !== "brand_intro") {
+      scene.subtitleText = scene.headline;
+    }
+  }
+
+  /* # Fetch B-roll clips for non-brand scenes (runs in parallel with return) */
+  let bRollClips: ReelConfig["bRollClips"] = [];
+  try {
+    bRollClips = await fetchBRollForTopic(topic || content, 3);
+    /* # Assign B-roll to body scenes (skip brand_intro and cta) */
+    const bodyScenes = scenes.filter((s) => s.sceneType !== "brand_intro" && s.sceneType !== "cta");
+    for (let i = 0; i < bodyScenes.length && i < bRollClips.length; i++) {
+      bodyScenes[i].backgroundVideoUrl = bRollClips[i].videoUrl;
+    }
+  } catch (e) {
+    console.warn("[reel-designer] B-roll fetch failed, continuing without:", e);
+  }
+
+  /* # Suggest music mood based on content */
+  const moodMap: Record<string, MusicMood> = {
+    motivational: "inspirational",
+    provocative: "dramatic",
+    educational: "corporate",
+    storytelling: "chill",
+    data_driven: "corporate",
+  };
+  const detectedMood: MusicMood = moodMap[platform] || "energetic";
+
   return {
     scenes,
     fps: 30,
     width: 1080,
     height: 1920,
     totalDurationInFrames,
+    musicMood: detectedMood,
+    bRollClips,
   };
 }

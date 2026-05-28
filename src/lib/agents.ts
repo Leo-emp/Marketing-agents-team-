@@ -8,6 +8,7 @@
 
 import { callGemini } from "./gemini";
 import { conductResearch, type ResearchBrief } from "./research";
+import { getVoiceSamplesPrompt } from "./voice-samples";
 
 /* ---- Brand Context (injected into every agent prompt) ---- */
 const BRAND = `
@@ -386,6 +387,32 @@ Return ONLY a valid JSON array. No explanation, no markdown — just the array.`
   return JSON.parse(extractJSON(raw));
 }
 
+/* # Generate multiple variations of the same content — pick the best hook */
+export async function generateVariations(
+  agentId: string,
+  topic: string,
+  contentType: string,
+  count: number = 2,
+  context?: string,
+  tone?: string
+): Promise<GeneratedContent[]> {
+  const clamped = Math.min(Math.max(count, 1), 3);
+
+  /* # First variation uses research, others reuse the same research context */
+  const first = await generateContent(agentId, topic, contentType, context, tone);
+  if (clamped === 1) return [first];
+
+  /* # Generate remaining variations in parallel, skipping redundant research */
+  const varContext = `${context || ""}\nIMPORTANT: Create a DIFFERENT angle, hook, and structure than your previous attempt. Same topic, fresh take. Vary the opening line, choose a different storytelling approach, or lead with a different data point.`;
+  const remaining = await Promise.all(
+    Array.from({ length: clamped - 1 }, () =>
+      generateContent(agentId, topic, contentType, varContext, tone, { skipResearch: true })
+    )
+  );
+
+  return [first, ...remaining];
+}
+
 /* # Generate a single piece of content — research first, then create */
 export async function generateContent(
   agentId: string,
@@ -416,8 +443,12 @@ export async function generateContent(
     }
   }
 
+  /* # Inject voice samples so AI mimics real human writing patterns */
+  const voiceSamples = getVoiceSamplesPrompt(agent.platform, contentType);
+
   const prompt = `${agent.systemPrompt}
 
+${voiceSamples}
 ${toneDirective}
 ${researchContext}
 
