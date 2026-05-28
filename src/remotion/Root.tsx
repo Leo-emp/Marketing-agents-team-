@@ -1,9 +1,11 @@
 import React from "react";
 import { Composition } from "remotion";
 import { ReelComposition } from "./ReelComposition";
+import { LaunchVideoComposition } from "./launch/LaunchVideoComposition";
+import { TOTAL_FRAMES as LAUNCH_TOTAL_FRAMES } from "./launch/config";
 import type { ReelSceneData } from "../lib/visual/types";
 
-// # Default test scenes for Remotion preview
+// # Default test scenes for Remotion reel preview
 const TEST_SCENES: ReelSceneData[] = [
   { sceneType: "brand_intro", headline: "", entrance: "fade_in", exit: "fade_out", durationInFrames: 60 },
   { sceneType: "hook", headline: "I reviewed 200 resumes last month. 80% were rejected in under 6 seconds.", entrance: "slide_up", exit: "fade_out", durationInFrames: 90 },
@@ -19,6 +21,7 @@ const TOTAL_FRAMES = TEST_SCENES.reduce((sum, s) => sum + s.durationInFrames, 0)
 export function RemotionRoot() {
   return (
     <>
+      {/* # Social media reels (vertical 1080x1920) */}
       <Composition
         id="JobPilotReel"
         component={ReelComposition as unknown as React.ComponentType<Record<string, unknown>>}
@@ -31,6 +34,17 @@ export function RemotionRoot() {
           const duration = (props.scenes as ReelSceneData[]).reduce((sum, s) => sum + s.durationInFrames, 0);
           return { durationInFrames: duration };
         }}
+      />
+
+      {/* # Cinematic launch video (horizontal 1920x1080) */}
+      <Composition
+        id="JobPilotLaunchVideo"
+        component={LaunchVideoComposition as unknown as React.ComponentType<Record<string, unknown>>}
+        durationInFrames={LAUNCH_TOTAL_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
       />
     </>
   );
