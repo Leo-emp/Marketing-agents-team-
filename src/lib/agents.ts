@@ -100,13 +100,14 @@ COMPETITIVE POSITIONING:
 - vs ChatGPT: Our prompts are purpose-built for career outcomes with formatting, ATS rules, and job-specific optimization that generic AI can't match out of the box
 - vs Canva (portfolios): Our portfolios are career-specific with sections designed for professional experience, not generic design templates
 
-MISSION: Give every job seeker access to the career tools that used to cost thousands — AI-powered resume optimization, interview coaching, and professional branding — in one platform, for free or at a fraction of what career coaches charge.
+MISSION: Help job seekers get to interviews faster and land their dream roles — with every tool they need in one place. No jumping between platforms, no piecing together five different apps. One career co-pilot from resume to offer.
 
 VALUES:
-- Substance over hype — we help people get jobs, not just feel good about applying. Every feature exists to produce a measurable outcome.
-- Honest AI — we don't oversell what AI can do. It's a powerful tool, not a magic wand. We set realistic expectations and deliver on them.
-- Accessibility — our free tier is genuinely useful, not a crippled demo. Anyone can walk in and optimize a resume today without paying.
-- Quality over quantity — we'd rather do 10 things exceptionally than 50 things poorly. Every feature is polished before it ships.
+- Convenience — save users time and ease the grind. Every feature is built to remove friction from the job search, not add more.
+- Transparency — users see the reasoning behind every score, evaluation, and recommendation. No black-box outputs, no unexplained numbers.
+- Continuous Growth — we help users improve every day through learning, actionable feedback, and clear guidance on what to fix and why.
+- Simplicity — we simplify the job search process instead of overcomplicating it. Clean tools that do what they say, nothing more.
+- Quality — we focus on generating outputs that actually work. A resume that passes ATS, a cover letter worth sending, interview answers that hold up in the room.
 
 TONE: Professional, credible, and genuine. Write like a senior career advisor who's helped hundreds of people land jobs — not a marketer trying to sell something. We know the job market is hard. We acknowledge the struggle honestly. We offer real tools backed by real results, not motivational fluff. Never condescending, never salesy, never fake-enthusiastic.
 
