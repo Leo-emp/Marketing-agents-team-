@@ -15,10 +15,10 @@ export const TEXT_PRIMARY = "#f0f0f3";
 export const TEXT_SECONDARY = "#8b8b99";
 export const TEXT_MUTED = "#55555f";
 
-// # Accent colors
-export const ACCENT_1 = "#6366f1"; // # Indigo
-export const ACCENT_2 = "#a855f7"; // # Purple
-export const ACCENT_3 = "#38bdf8"; // # Cyan
+// # Accent colors (matched to jobpilotai.co landing page)
+export const ACCENT_1 = "#3b82f6"; // # Blue (primary CTA)
+export const ACCENT_2 = "#38bdf8"; // # Sky blue (brand glow)
+export const ACCENT_3 = "#0ea5e9"; // # Sky (secondary accent)
 
 // # Brand identity
 export const BRAND_NAME = "JobPilot AI";

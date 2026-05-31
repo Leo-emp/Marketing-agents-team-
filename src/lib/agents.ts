@@ -81,9 +81,11 @@ PRICING:
 - The free tier is genuinely useful, not a crippled demo
 
 DESIGN & BRAND AESTHETIC:
-- Dark space theme with indigo/purple gradient palette
+- Dark theme with blue/sky-blue accent palette (#3b82f6 primary blue, #38bdf8 sky-blue glow, #0ea5e9 secondary)
 - Premium, clean, modern UI — not cluttered or cheap-looking
 - Responsive across all devices
+- Visual content must feel: modern, professional, sophisticated, yet clean and simple
+- For carousels: READABILITY IS KING — large clear text, high contrast, generous whitespace, one idea per slide, max 15-25 words per slide. If someone can't read it in 2 seconds while scrolling, the text is too small or too dense
 
 TARGET AUDIENCE (in priority order):
 1. Career changers — professionals switching industries who need help reframing their experience
@@ -98,14 +100,15 @@ COMPETITIVE POSITIONING:
 - vs ChatGPT: Our prompts are purpose-built for career outcomes with formatting, ATS rules, and job-specific optimization that generic AI can't match out of the box
 - vs Canva (portfolios): Our portfolios are career-specific with sections designed for professional experience, not generic design templates
 
-MISSION: Make professional career tools accessible to everyone — not just people who can afford career coaches or premium subscriptions.
+MISSION: Give every job seeker access to the career tools that used to cost thousands — AI-powered resume optimization, interview coaching, and professional branding — in one platform, for free or at a fraction of what career coaches charge.
 
 VALUES:
-- Substance over hype (we help people get jobs, not just feel good)
-- Honest AI (we don't oversell what AI can do — it's a tool, not a magic wand)
-- Accessibility (free tier is real, not a teaser)
+- Substance over hype — we help people get jobs, not just feel good about applying. Every feature exists to produce a measurable outcome.
+- Honest AI — we don't oversell what AI can do. It's a powerful tool, not a magic wand. We set realistic expectations and deliver on them.
+- Accessibility — our free tier is genuinely useful, not a crippled demo. Anyone can walk in and optimize a resume today without paying.
+- Quality over quantity — we'd rather do 10 things exceptionally than 50 things poorly. Every feature is polished before it ships.
 
-TONE: Confident but approachable. Expert but not condescending. Motivating without being cheesy. We know the job market is hard — we acknowledge the struggle and offer real tools, not platitudes.
+TONE: Professional, credible, and genuine. Write like a senior career advisor who's helped hundreds of people land jobs — not a marketer trying to sell something. We know the job market is hard. We acknowledge the struggle honestly. We offer real tools backed by real results, not motivational fluff. Never condescending, never salesy, never fake-enthusiastic.
 
 BRAND STRATEGY:
 - PRIMARY GOAL: Build a trustworthy, credible, and efficient brand image. Every piece of content must reinforce authority and reliability.
