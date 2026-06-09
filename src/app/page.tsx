@@ -160,6 +160,12 @@ export default function Dashboard() {
   const [editBody, setEditBody] = useState("");
   const [editNotes, setEditNotes] = useState("");
 
+  /* ---- Schedule popover ---- */
+  // # Tracks which content item has the schedule picker open and the selected date/time
+  const [schedulingId, setSchedulingId] = useState<string | null>(null);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("09:00");
+
   /* ---- Plan item preview modal ---- */
   // # Shows production-ready post (image + caption) when clicking a plan item
   const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
@@ -520,6 +526,27 @@ export default function Dashboard() {
   const deleteContent = async (id: string) => {
     await fetch(`/api/content/${id}`, { method: "DELETE" }).catch(() => {});
     fetchContent();
+  };
+
+  // # Set a post's scheduled time and change status to "scheduled"
+  const handleSchedule = async (id: string) => {
+    if (!scheduleDate || !scheduleTime) {
+      showToast("Pick a date and time", "error");
+      return;
+    }
+    const scheduledFor = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+    try {
+      await fetch(`/api/content/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "scheduled", scheduledFor }),
+      });
+      setSchedulingId(null);
+      showToast(`Scheduled for ${scheduleDate} at ${scheduleTime}`, "success");
+      fetchContent();
+    } catch {
+      showToast("Failed to schedule", "error");
+    }
   };
 
   // # Map platform name to the agent ID that handles it
@@ -949,9 +976,43 @@ export default function Dashboard() {
                             </>
                           )}
                           {(item.status === "approved" || item.status === "scheduled") && (
-                            <button onClick={() => handlePost(item.id)} disabled={posting === item.id} className="px-3 py-1.5 bg-indigo-500/15 text-indigo-400 text-xs font-medium rounded-lg hover:bg-indigo-500/25 transition-colors disabled:opacity-50">
-                              {posting === item.id ? "Posting..." : "Post Now"}
-                            </button>
+                            <>
+                              <button onClick={() => handlePost(item.id)} disabled={posting === item.id} className="px-3 py-1.5 bg-indigo-500/15 text-indigo-400 text-xs font-medium rounded-lg hover:bg-indigo-500/25 transition-colors disabled:opacity-50">
+                                {posting === item.id ? "Posting..." : "Post Now"}
+                              </button>
+                              {item.status === "approved" && (
+                                <button
+                                  onClick={() => {
+                                    // # Default to tomorrow at 9am when opening the scheduler
+                                    const tomorrow = new Date();
+                                    tomorrow.setDate(tomorrow.getDate() + 1);
+                                    setScheduleDate(tomorrow.toISOString().split("T")[0]);
+                                    setScheduleTime("09:00");
+                                    setSchedulingId(schedulingId === item.id ? null : item.id);
+                                  }}
+                                  className="px-3 py-1.5 bg-blue-500/15 text-blue-400 text-xs font-medium rounded-lg hover:bg-blue-500/25 transition-colors"
+                                >
+                                  Schedule
+                                </button>
+                              )}
+                              {item.status === "scheduled" && item.scheduledFor && (
+                                <span className="text-xs text-blue-400/70 flex items-center gap-1">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                  {new Date(item.scheduledFor).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              )}
+                            </>
+                          )}
+                          {/* # Inline schedule picker — appears below the actions row */}
+                          {schedulingId === item.id && (
+                            <div className="w-full mt-2 flex items-center gap-2 bg-blue-500/5 border border-blue-500/15 rounded-lg px-3 py-2">
+                              <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="px-2 py-1 bg-space-700 border border-card-border rounded text-xs text-text-primary focus:outline-none focus:border-blue-500" />
+                              <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="px-2 py-1 bg-space-700 border border-card-border rounded text-xs text-text-primary focus:outline-none focus:border-blue-500" />
+                              <button onClick={() => handleSchedule(item.id)} className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded hover:bg-blue-500/30 transition-colors">
+                                Confirm
+                              </button>
+                              <button onClick={() => setSchedulingId(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">Cancel</button>
+                            </div>
                           )}
                           {/* Visual generation / rendering button */}
                           {item.contentType !== "plain_text" && item.contentType !== "thread" && item.contentType !== "reel_script" && (
