@@ -562,6 +562,35 @@ export default function Dashboard() {
     link.click();
   };
 
+  // # Download carousel slides as a PDF for LinkedIn posting
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+  const downloadPdf = async (contentId: string, platform: string) => {
+    setDownloadingPdf(contentId);
+    try {
+      const res = await fetch("/api/visual/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentId }),
+      });
+      if (!res.ok) {
+        showToast("PDF generation failed", "error");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `jobpilot-carousel-${platform}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast("PDF downloaded", "success");
+    } catch {
+      showToast("PDF download error", "error");
+    } finally {
+      setDownloadingPdf(null);
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     try {
       const res = await fetch(`/api/content/${id}`, {
@@ -1104,6 +1133,16 @@ export default function Dashboard() {
                               className="px-3 py-1.5 bg-purple-500/15 text-purple-400 text-xs font-medium rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
                             >
                               {generatingVisual === item.id ? "Creating Visual..." : hasDesignData ? "Render Visual" : hasVisuals ? "Redesign Visual" : "Generate Visual"}
+                            </button>
+                          )}
+                          {/* PDF download for LinkedIn carousels */}
+                          {item.contentType === "carousel" && item.visualData && (
+                            <button
+                              onClick={() => downloadPdf(item.id, item.platform)}
+                              disabled={downloadingPdf === item.id}
+                              className="px-3 py-1.5 bg-blue-500/15 text-blue-400 text-xs font-medium rounded-lg hover:bg-blue-500/25 transition-colors disabled:opacity-50"
+                            >
+                              {downloadingPdf === item.id ? "Creating PDF..." : "PDF Carousel"}
                             </button>
                           )}
                           {/* Video generation button for reels */}

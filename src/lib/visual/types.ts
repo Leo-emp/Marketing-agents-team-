@@ -36,6 +36,9 @@ export interface SlideData {
   accentColor?: string;
   slideNumber?: number;
   totalSlides?: number;
+  /* # Stock photo background — fetched from Pexels based on AI-chosen keywords */
+  backgroundImageUrl?: string;
+  photoKeywords?: string;
   /* # Extended fields for new layouts */
   beforeText?: string;
   afterText?: string;
@@ -69,9 +72,9 @@ export interface VisualResult {
 
 /* # Platform-specific dimensions */
 export const PLATFORM_DIMENSIONS: Record<string, { width: number; height: number }> = {
-  // # Square for IG feed, carousel, TikTok images
-  "instagram:carousel": { width: 1080, height: 1080 },
-  "instagram:single_image": { width: 1080, height: 1080 },
+  // # Portrait for IG feed — 1080x1350 gets more screen real estate than square
+  "instagram:carousel": { width: 1080, height: 1350 },
+  "instagram:single_image": { width: 1080, height: 1350 },
   "instagram:storyboard": { width: 1080, height: 1920 },
   // # LinkedIn landscape for posts, square for carousel
   "linkedin:single_image": { width: 1200, height: 627 },

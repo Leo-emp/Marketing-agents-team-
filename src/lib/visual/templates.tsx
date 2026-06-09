@@ -11,6 +11,59 @@ import { BG, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, ACCENT_1
 
 /* ---- Shared Components ---- */
 
+/* # Wrapper that renders a stock photo background with dark overlay when available */
+/* # Falls back to solid dark background when no photo is provided */
+function SlideBackground({ data, width, height, children }: { data: SlideData; width: number; height: number; children: React.ReactNode }) {
+  const hasPhoto = !!data.backgroundImageUrl;
+
+  return (
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      width: `${width}px`,
+      height: `${height}px`,
+      padding: "48px",
+      fontFamily: "Geist",
+      position: "relative",
+      overflow: "hidden",
+      background: BG,
+    }}>
+      {/* # Stock photo background layer */}
+      {hasPhoto && (
+        <img
+          src={data.backgroundImageUrl}
+          alt=""
+          width={width}
+          height={height}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: `${width}px`,
+            height: `${height}px`,
+            objectFit: "cover",
+          }}
+        />
+      )}
+      {/* # Dark overlay for text readability on photos */}
+      {hasPhoto && (
+        <div style={{
+          display: "flex",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: `${width}px`,
+          height: `${height}px`,
+          background: "linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.72) 100%)",
+        }} />
+      )}
+      {/* # Content layer (sits above the overlay) */}
+      {children}
+    </div>
+  );
+}
+
 /* # Brand header bar at the top of every slide */
 function SlideHeader({ slideNumber, totalSlides }: { slideNumber?: number; totalSlides?: number }) {
   return (
@@ -82,16 +135,7 @@ function SlideFooter() {
 /* # Hero: Full-width headline with gradient accent. First slide or single image. */
 export function HeroSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      width: `${width}px`,
-      height: `${height}px`,
-      background: BG,
-      padding: "48px",
-      fontFamily: "Geist",
-    }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{
         display: "flex",
@@ -132,23 +176,14 @@ export function HeroSlide({ data, width, height }: { data: SlideData; width: num
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # StatCard: Large stat number with gradient color and label */
 export function StatCard({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      width: `${width}px`,
-      height: `${height}px`,
-      background: BG,
-      padding: "48px",
-      fontFamily: "Geist",
-    }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{
         display: "flex",
@@ -210,23 +245,14 @@ export function StatCard({ data, width, height }: { data: SlideData; width: numb
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # TipSlide: Numbered tip with accent border, headline, and body */
 export function TipSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      width: `${width}px`,
-      height: `${height}px`,
-      background: BG,
-      padding: "48px",
-      fontFamily: "Geist",
-    }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{
         display: "flex",
@@ -284,23 +310,14 @@ export function TipSlide({ data, width, height }: { data: SlideData; width: numb
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # QuoteCard: Large quote with attribution */
 export function QuoteCard({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      width: `${width}px`,
-      height: `${height}px`,
-      background: BG,
-      padding: "48px",
-      fontFamily: "Geist",
-    }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{
         display: "flex",
@@ -347,23 +364,14 @@ export function QuoteCard({ data, width, height }: { data: SlideData; width: num
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # ListSlide: Title + bullet items with indicators */
 export function ListSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      width: `${width}px`,
-      height: `${height}px`,
-      background: BG,
-      padding: "48px",
-      fontFamily: "Geist",
-    }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{
         display: "flex",
@@ -420,23 +428,14 @@ export function ListSlide({ data, width, height }: { data: SlideData; width: num
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # CTASlide: Call-to-action with gradient background */
 export function CTASlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      width: `${width}px`,
-      height: `${height}px`,
-      background: BG,
-      padding: "48px",
-      fontFamily: "Geist",
-    }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{
         display: "flex",
@@ -508,7 +507,7 @@ export function CTASlide({ data, width, height }: { data: SlideData; width: numb
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
@@ -517,7 +516,7 @@ export function CTASlide({ data, width, height }: { data: SlideData; width: numb
 /* # BeforeAfter: Side-by-side comparison (bad vs good) */
 export function BeforeAfterSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "24px" }}>
         {data.headline && (
@@ -535,14 +534,14 @@ export function BeforeAfterSlide({ data, width, height }: { data: SlideData; wid
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # Screenshot: Fake tweet/DM/notification card */
 export function ScreenshotSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", alignItems: "center", gap: "20px" }}>
         <div style={{ display: "flex", flexDirection: "column", width: "85%", padding: "28px", borderRadius: "16px", background: BG_CARD, border: `1px solid ${BORDER}`, gap: "16px" }}>
@@ -562,7 +561,7 @@ export function ScreenshotSlide({ data, width, height }: { data: SlideData; widt
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
@@ -570,7 +569,7 @@ export function ScreenshotSlide({ data, width, height }: { data: SlideData; widt
 export function DataChartSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   const bars = data.bars || [];
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "24px" }}>
         {data.headline && (
@@ -591,14 +590,14 @@ export function DataChartSlide({ data, width, height }: { data: SlideData; width
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # Comparison: Two-column layout */
 export function ComparisonSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "24px" }}>
         {data.headline && (
@@ -626,7 +625,7 @@ export function ComparisonSlide({ data, width, height }: { data: SlideData; widt
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
@@ -634,7 +633,7 @@ export function ComparisonSlide({ data, width, height }: { data: SlideData; widt
 export function NumberedStepsSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   const steps = data.steps || [];
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "24px" }}>
         {data.headline && (
@@ -657,14 +656,14 @@ export function NumberedStepsSlide({ data, width, height }: { data: SlideData; w
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # GradientText: Large gradient headline, minimal */
 export function GradientTextSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", alignItems: "center", gap: "24px", padding: "0 24px" }}>
         <div style={{ display: "flex", fontSize: width >= 1200 ? "56px" : "48px", fontWeight: 700, background: `linear-gradient(135deg, ${ACCENT_1}, ${ACCENT_3}, ${ACCENT_2})`, backgroundClip: "text", color: "transparent", textAlign: "center", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
@@ -675,14 +674,14 @@ export function GradientTextSlide({ data, width, height }: { data: SlideData; wi
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # HighlightBox: Key insight in a highlighted card */
 export function HighlightBoxSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", alignItems: "center", gap: "20px" }}>
         {data.subheadline && (
@@ -696,14 +695,14 @@ export function HighlightBoxSlide({ data, width, height }: { data: SlideData; wi
         )}
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 
 /* # SplitImage: Left accent panel + right content */
 export function SplitImageSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   return (
-    <div style={{ display: "flex", width: `${width}px`, height: `${height}px`, background: BG, fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <div style={{ display: "flex", width: "40%", background: `linear-gradient(180deg, ${ACCENT_1}, ${ACCENT_2})`, alignItems: "center", justifyContent: "center", padding: "40px" }}>
         {data.stat ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
@@ -721,7 +720,7 @@ export function SplitImageSlide({ data, width, height }: { data: SlideData; widt
         )}
         <div style={{ display: "flex", color: TEXT_MUTED, fontSize: "14px", marginTop: "auto" }}>{BRAND_URL}</div>
       </div>
-    </div>
+    </SlideBackground>
   );
 }
 
@@ -729,7 +728,7 @@ export function SplitImageSlide({ data, width, height }: { data: SlideData; widt
 export function ProgressBarSlide({ data, width, height }: { data: SlideData; width: number; height: number }) {
   const bars = data.bars || [];
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: `${width}px`, height: `${height}px`, background: BG, padding: "48px", fontFamily: "Geist" }}>
+    <SlideBackground data={data} width={width} height={height}>
       <SlideHeader slideNumber={data.slideNumber} totalSlides={data.totalSlides} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "28px" }}>
         {data.headline && (
@@ -750,7 +749,7 @@ export function ProgressBarSlide({ data, width, height }: { data: SlideData; wid
         </div>
       </div>
       <SlideFooter />
-    </div>
+    </SlideBackground>
   );
 }
 

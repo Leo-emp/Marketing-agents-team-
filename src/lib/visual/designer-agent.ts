@@ -7,6 +7,8 @@
    ============================================================ */
 
 import { callGemini } from "../gemini";
+import { getBackgroundPhoto } from "./pexels";
+import { getDimensions } from "./types";
 import type { SlideData, SlideLayout } from "./types";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -63,6 +65,15 @@ CRITICAL RULES:
 2. Write a SEPARATE caption that COMPLEMENTS the slide text. The caption must NOT repeat what the slides say. It adds context, story, or detail.
 3. No emojis anywhere.
 4. Professional, clean language only.
+5. For EVERY slide, include "photoKeywords" — 2-4 words describing the ideal stock photo background (e.g. "modern office workspace", "laptop interview", "professional handshake", "city skyline night"). Think about photos that create atmosphere and mood. Avoid generic keywords — be specific and visual.
+
+BACKGROUND PHOTO GUIDELINES:
+- hero slides: dramatic, wide shots (cityscapes, architecture, technology)
+- stat_card slides: abstract, minimal (gradients, textures, geometric)
+- tip slides: professional workplace (desk, meeting, laptop)
+- quote slides: atmospheric, moody (skyline, window light, nature)
+- list slides: organized, structured (workspace, planning, whiteboard)
+- cta slides: aspirational, forward-looking (horizon, path, sunrise)
 
 Return a JSON object:
 {
@@ -74,7 +85,8 @@ Return a JSON object:
       "stat": { "value": "75%", "label": "description of the stat" },
       "bullets": ["item 1", "item 2", "item 3"],
       "footer": "optional small text",
-      "layout": "hero|stat_card|tip|quote|list|cta"
+      "layout": "hero|stat_card|tip|quote|list|cta",
+      "photoKeywords": "relevant stock photo search terms"
     }
   ],
   "caption": "The post caption that complements (not repeats) the visual content. 100-300 words for Instagram, 50-200 for Twitter, 100-400 for LinkedIn."
@@ -94,8 +106,9 @@ Return ONLY a valid JSON object.`;
   const parsed = JSON.parse(jsonMatch[0]);
 
   // # Validate and normalize slide data
-  const slides: SlideData[] = (parsed.slides || []).map((slide: Record<string, unknown>, index: number) => {
-    const validLayouts: SlideLayout[] = ["hero", "stat_card", "tip", "quote", "list", "cta", "before_after", "screenshot", "data_chart", "comparison", "numbered_steps", "gradient_text", "highlight_box", "split_image", "progress_bar"];
+  const validLayouts: SlideLayout[] = ["hero", "stat_card", "tip", "quote", "list", "cta", "before_after", "screenshot", "data_chart", "comparison", "numbered_steps", "gradient_text", "highlight_box", "split_image", "progress_bar"];
+
+  const rawSlides = (parsed.slides || []).map((slide: Record<string, unknown>, index: number) => {
     const layout = validLayouts.includes(slide.layout as SlideLayout)
       ? (slide.layout as SlideLayout)
       : "hero";
@@ -114,6 +127,7 @@ Return ONLY a valid JSON object.`;
       layout,
       slideNumber: index + 1,
       totalSlides: (parsed.slides || []).length,
+      photoKeywords: slide.photoKeywords ? String(slide.photoKeywords) : undefined,
       /* # Extended fields for new layouts */
       beforeText: slide.beforeText ? String(slide.beforeText) : undefined,
       afterText: slide.afterText ? String(slide.afterText) : undefined,
@@ -131,6 +145,20 @@ Return ONLY a valid JSON object.`;
       rightLabel: slide.rightLabel ? String(slide.rightLabel) : undefined,
     };
   });
+
+  // # Fetch stock photo backgrounds from Pexels for slides that have keywords
+  const { width } = getDimensions(platform, contentType);
+  const slides: SlideData[] = await Promise.all(
+    rawSlides.map(async (slide: SlideData) => {
+      if (slide.photoKeywords) {
+        const photoUrl = await getBackgroundPhoto(slide.photoKeywords, width);
+        if (photoUrl) {
+          return { ...slide, backgroundImageUrl: photoUrl };
+        }
+      }
+      return slide;
+    })
+  );
 
   return {
     slides,
