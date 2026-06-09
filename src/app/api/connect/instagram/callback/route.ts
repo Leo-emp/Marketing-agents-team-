@@ -8,12 +8,18 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const error = req.nextUrl.searchParams.get("error");
 
+  const payload = JSON.stringify({
+    type: "oauth-callback",
+    platform: "instagram",
+    code: code || null,
+    error: error || null,
+  }).replace(/</g, "\\u003c");
+
   const html = `<!DOCTYPE html><html><head><title>Connecting Instagram...</title></head><body>
+    <script id="oauth-data" type="application/json">${payload}</script>
     <script>
-      ${error
-        ? `window.opener?.postMessage({ type: "oauth-callback", platform: "instagram", error: "${error}" }, "*");`
-        : `window.opener?.postMessage({ type: "oauth-callback", platform: "instagram", code: "${code}" }, "*");`
-      }
+      var d = JSON.parse(document.getElementById('oauth-data').textContent);
+      window.opener?.postMessage(d, window.location.origin);
       window.close();
     </script>
     <p>Connecting Instagram... this window will close automatically.</p>

@@ -300,8 +300,11 @@ export default function Dashboard() {
   // # Listen for OAuth callback messages from popup windows
   useEffect(() => {
     const handleOAuthMessage = async (e: MessageEvent) => {
+      // # Reject messages from other origins and validate platform value
+      if (e.origin !== window.location.origin) return;
       if (e.data?.type !== "oauth-callback") return;
       const { platform, code, error } = e.data;
+      if (!["linkedin", "twitter", "instagram"].includes(platform)) return;
 
       if (error) {
         showToast(`${platform} connection failed: ${error}`, "error");

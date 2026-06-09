@@ -7,18 +7,22 @@
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes, createHash } from "crypto";
+import { randomBytes, createHash, createHmac } from "crypto";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
-
-// # Store PKCE verifier in-memory (per-deploy is fine since the flow is immediate)
-let pkceVerifier = "";
 
 function getRedirectUri() {
   const base = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000";
   return `${base}/api/connect/twitter/callback`;
+}
+
+// # Sign values for tamper protection
+function signValue(value: string): string {
+  const secret = process.env.ADMIN_PASSWORD || "oauth-state-secret";
+  return createHmac("sha256", secret).update(value).digest("hex");
 }
 
 export async function GET() {
@@ -29,16 +33,33 @@ export async function GET() {
     return NextResponse.json({ error: "TWITTER_CLIENT_ID not configured" }, { status: 500 });
   }
 
-  // # Generate PKCE challenge
-  pkceVerifier = randomBytes(32).toString("base64url");
+  // # Generate PKCE verifier and random state, store both in signed cookies
+  const pkceVerifier = randomBytes(32).toString("base64url");
   const challenge = createHash("sha256").update(pkceVerifier).digest("base64url");
+  const state = randomBytes(16).toString("hex");
+
+  const cookieStore = await cookies();
+  cookieStore.set("oauth-state-twitter", `${state}.${signValue(state)}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+  cookieStore.set("oauth-pkce-twitter", `${pkceVerifier}.${signValue(pkceVerifier)}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
 
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
     redirect_uri: getRedirectUri(),
     scope: "tweet.read tweet.write users.read offline.access",
-    state: "twitter-connect",
+    state,
     code_challenge: challenge,
     code_challenge_method: "S256",
   });
@@ -54,13 +75,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Authorization code required" }, { status: 400 });
   }
 
+  // # Read PKCE verifier from signed cookie
+  const cookieStore = await cookies();
+  const pkceCookie = cookieStore.get("oauth-pkce-twitter")?.value;
+  if (!pkceCookie) {
+    return NextResponse.json({ error: "PKCE session expired — try connecting again" }, { status: 400 });
+  }
+
+  const [pkceVerifier, pkceSig] = pkceCookie.split(".");
+  if (signValue(pkceVerifier) !== pkceSig) {
+    return NextResponse.json({ error: "Invalid PKCE session" }, { status: 400 });
+  }
+
   const clientId = process.env.TWITTER_CLIENT_ID;
   const clientSecret = process.env.TWITTER_CLIENT_SECRET;
   if (!clientId) {
     return NextResponse.json({ error: "Twitter OAuth not configured" }, { status: 500 });
   }
 
-  // # Exchange code for token
   const headers: Record<string, string> = { "Content-Type": "application/x-www-form-urlencoded" };
   if (clientSecret) {
     headers["Authorization"] = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
@@ -100,6 +132,10 @@ export async function POST(req: NextRequest) {
       expiresAt,
     },
   });
+
+  // # Clean up OAuth cookies
+  cookieStore.delete("oauth-state-twitter");
+  cookieStore.delete("oauth-pkce-twitter");
 
   return NextResponse.json({ success: true, expiresAt: expiresAt.toISOString() });
 }

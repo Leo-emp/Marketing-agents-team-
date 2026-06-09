@@ -8,6 +8,8 @@
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes, createHmac } from "crypto";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
 
@@ -18,7 +20,12 @@ function getRedirectUri() {
   return `${base}/api/connect/linkedin/callback`;
 }
 
-// # Step 1: Redirect user to LinkedIn's OAuth consent page
+// # Sign the state value so we can verify it wasn't tampered with
+function signState(state: string): string {
+  const secret = process.env.ADMIN_PASSWORD || "oauth-state-secret";
+  return createHmac("sha256", secret).update(state).digest("hex");
+}
+
 export async function GET() {
   if (!(await isAdmin())) return unauthorized();
 
@@ -27,18 +34,28 @@ export async function GET() {
     return NextResponse.json({ error: "LINKEDIN_CLIENT_ID not configured" }, { status: 500 });
   }
 
+  // # Generate random state and store signed version in cookie
+  const state = randomBytes(16).toString("hex");
+  const cookieStore = await cookies();
+  cookieStore.set("oauth-state-linkedin", `${state}.${signState(state)}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
     redirect_uri: getRedirectUri(),
     scope: "openid profile w_member_social",
-    state: "linkedin-connect",
+    state,
   });
 
   return NextResponse.json({ url: `https://www.linkedin.com/oauth/v2/authorization?${params}` });
 }
 
-// # Step 2: Exchange authorization code for access token
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return unauthorized();
 
@@ -53,7 +70,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "LinkedIn OAuth not configured" }, { status: 500 });
   }
 
-  // # Exchange code for token
   const tokenRes = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -74,7 +90,6 @@ export async function POST(req: NextRequest) {
   const tokenData = await tokenRes.json();
   const expiresAt = new Date(Date.now() + (tokenData.expires_in || 5184000) * 1000);
 
-  // # Store the credential (upsert so reconnecting replaces the old token)
   await prisma.platformCredential.upsert({
     where: { platform: "linkedin" },
     update: {
@@ -90,13 +105,15 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // # Clear the state cookie
+  const cookieStore = await cookies();
+  cookieStore.delete("oauth-state-linkedin");
+
   return NextResponse.json({ success: true, expiresAt: expiresAt.toISOString() });
 }
 
-// # Disconnect LinkedIn
 export async function DELETE() {
   if (!(await isAdmin())) return unauthorized();
-
   await prisma.platformCredential.deleteMany({ where: { platform: "linkedin" } });
   return NextResponse.json({ success: true });
 }
