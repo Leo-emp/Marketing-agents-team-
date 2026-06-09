@@ -2,11 +2,13 @@
    SOCIAL POSTING - Platform API Integrations
    ============================================================
    Posts content to LinkedIn, X/Twitter, Instagram, and TikTok.
-   Each platform has its own posting function. Falls back to
-   a "not configured" error if API keys aren't set.
+   Reads OAuth tokens from the PlatformCredential DB table first,
+   falls back to env vars for backwards compatibility.
    ============================================================ */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { prisma } from "@/lib/prisma";
 
 export type PostResult = {
   success: boolean;
@@ -14,12 +16,32 @@ export type PostResult = {
   error?: string;
 };
 
+// # Load token from DB, fall back to env var
+async function getToken(platform: string, envKey: string): Promise<string | null> {
+  try {
+    const cred = await prisma.platformCredential.findUnique({ where: { platform } });
+    if (cred?.accessToken) return cred.accessToken;
+  } catch { /* DB not available — fall back to env */ }
+  return process.env[envKey] || null;
+}
+
+// # Load Instagram business account ID from DB metadata or env var
+async function getInstagramAccountId(): Promise<string | null> {
+  try {
+    const cred = await prisma.platformCredential.findUnique({ where: { platform: "instagram" } });
+    if (cred?.metadata) {
+      const meta = JSON.parse(cred.metadata);
+      if (meta.businessAccountId) return meta.businessAccountId;
+    }
+  } catch { /* fall back */ }
+  return process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || null;
+}
+
 /* ---- LinkedIn ---- */
 /* Uses the LinkedIn Share API v2 */
-/* Requires: LINKEDIN_ACCESS_TOKEN (OAuth 2.0 token with w_member_social scope) */
 export async function postToLinkedIn(content: string, imageUrl?: string): Promise<PostResult> {
-  const token = process.env.LINKEDIN_ACCESS_TOKEN;
-  if (!token) return { success: false, error: "LinkedIn not configured — set LINKEDIN_ACCESS_TOKEN" };
+  const token = await getToken("linkedin", "LINKEDIN_ACCESS_TOKEN");
+  if (!token) return { success: false, error: "LinkedIn not connected — go to Settings tab to connect your account" };
 
   try {
     const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
@@ -104,16 +126,22 @@ export async function postToLinkedIn(content: string, imageUrl?: string): Promis
 }
 
 /* ---- X / Twitter ---- */
-/* Uses the X API v2 tweets endpoint + v1.1 media upload */
-/* Requires: TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET */
+/* Uses X API v2 with OAuth 2.0 bearer token (from DB) or OAuth 1.0a (from env vars) */
 export async function postToTwitter(content: string, imageUrl?: string): Promise<PostResult> {
+  // # Try OAuth 2.0 token from DB first (set via Connect flow)
+  const oauth2Token = await getToken("twitter", "");
+  if (oauth2Token) {
+    return postToTwitterOAuth2(content, oauth2Token, imageUrl);
+  }
+
+  // # Fall back to OAuth 1.0a env vars for backwards compatibility
   const apiKey = process.env.TWITTER_API_KEY;
   const apiSecret = process.env.TWITTER_API_SECRET;
   const accessToken = process.env.TWITTER_ACCESS_TOKEN;
   const accessSecret = process.env.TWITTER_ACCESS_SECRET;
 
   if (!apiKey || !accessToken) {
-    return { success: false, error: "X/Twitter not configured — set TWITTER_* env vars" };
+    return { success: false, error: "X/Twitter not connected — go to Settings tab to connect your account" };
   }
 
   try {
@@ -197,15 +225,42 @@ export async function postToTwitter(content: string, imageUrl?: string): Promise
   }
 }
 
+// # Post via OAuth 2.0 bearer token (from the Connect flow)
+async function postToTwitterOAuth2(content: string, token: string, imageUrl?: string): Promise<PostResult> {
+  try {
+    const tweetBody: any = { text: content };
+    // # OAuth 2.0 user tokens don't support v1.1 media upload — text-only for now
+    // # Image posting requires OAuth 1.0a credentials in env vars
+
+    const res = await fetch("https://api.x.com/2/tweets", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(tweetBody),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      return { success: false, error: `X post failed: ${err}` };
+    }
+
+    const data = await res.json();
+    return { success: true, platformPostId: data.data?.id };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
+}
+
 /* ---- Instagram ---- */
 /* Uses the Instagram Graph API (requires Facebook Business account) */
-/* Requires: INSTAGRAM_ACCESS_TOKEN, INSTAGRAM_BUSINESS_ACCOUNT_ID */
 export async function postToInstagram(content: string, imageUrl?: string): Promise<PostResult> {
-  const token = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const accountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
+  const token = await getToken("instagram", "INSTAGRAM_ACCESS_TOKEN");
+  const accountId = await getInstagramAccountId();
 
   if (!token || !accountId) {
-    return { success: false, error: "Instagram not configured — set INSTAGRAM_* env vars" };
+    return { success: false, error: "Instagram not connected — go to Settings tab to connect your account" };
   }
 
   try {

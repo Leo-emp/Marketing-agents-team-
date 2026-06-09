@@ -136,7 +136,7 @@ export default function Dashboard() {
   const [authError, setAuthError] = useState("");
 
   /* ---- Tabs & data ---- */
-  const [tab, setTab] = useState<"queue" | "agents" | "plans" | "kpi">("queue");
+  const [tab, setTab] = useState<"queue" | "agents" | "plans" | "kpi" | "settings">("queue");
   const [content, setContent] = useState<ContentItem[]>([]);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
   const [total, setTotal] = useState(0);
@@ -194,6 +194,10 @@ export default function Dashboard() {
   const [kpiMetricType, setKpiMetricType] = useState("impressions");
   const [kpiValue, setKpiValue] = useState("");
   const [kpiDate, setKpiDate] = useState(new Date().toISOString().split("T")[0]);
+
+  /* ---- Settings / Platform Connections ---- */
+  const [platformStatus, setPlatformStatus] = useState<Record<string, { connected: boolean; expiresAt: string | null }>>({});
+  const [connectingPlatform, setConnectingPlatform] = useState<string | null>(null);
 
   /* ---- Toast ---- */
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -282,11 +286,86 @@ export default function Dashboard() {
     }
   }, []);
 
+  const fetchPlatformStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/connect/status");
+      if (res.ok) setPlatformStatus(await res.json());
+    } catch { /* silent */ }
+  }, []);
+
   useEffect(() => {
-    if (authed) { fetchContent(); fetchPlans(); }
-  }, [authed, fetchContent, fetchPlans]);
+    if (authed) { fetchContent(); fetchPlans(); fetchPlatformStatus(); }
+  }, [authed, fetchContent, fetchPlans, fetchPlatformStatus]);
+
+  // # Listen for OAuth callback messages from popup windows
+  useEffect(() => {
+    const handleOAuthMessage = async (e: MessageEvent) => {
+      if (e.data?.type !== "oauth-callback") return;
+      const { platform, code, error } = e.data;
+
+      if (error) {
+        showToast(`${platform} connection failed: ${error}`, "error");
+        setConnectingPlatform(null);
+        return;
+      }
+
+      // # Exchange the code for a token
+      try {
+        const res = await fetch(`/api/connect/${platform}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        });
+
+        if (res.ok) {
+          showToast(`${platform} connected!`, "success");
+          fetchPlatformStatus();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.error || `${platform} connection failed`, "error");
+        }
+      } catch {
+        showToast(`Failed to connect ${platform}`, "error");
+      } finally {
+        setConnectingPlatform(null);
+      }
+    };
+
+    window.addEventListener("message", handleOAuthMessage);
+    return () => window.removeEventListener("message", handleOAuthMessage);
+  }, [fetchPlatformStatus]);
 
   const goToPage = (p: number) => { setPage(p); fetchContent(p); };
+
+  // # Open OAuth popup for a platform
+  const handleConnect = async (platform: string) => {
+    setConnectingPlatform(platform);
+    try {
+      const res = await fetch(`/api/connect/${platform}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || `Cannot connect ${platform}`, "error");
+        setConnectingPlatform(null);
+        return;
+      }
+      const { url } = await res.json();
+      // # Open the OAuth consent page in a popup
+      window.open(url, `connect-${platform}`, "width=600,height=700,popup=yes");
+    } catch {
+      showToast(`Failed to start ${platform} connection`, "error");
+      setConnectingPlatform(null);
+    }
+  };
+
+  const handleDisconnect = async (platform: string) => {
+    try {
+      await fetch(`/api/connect/${platform}`, { method: "DELETE" });
+      showToast(`${platform} disconnected`, "success");
+      fetchPlatformStatus();
+    } catch {
+      showToast(`Failed to disconnect ${platform}`, "error");
+    }
+  };
 
   /* ---- Status counts ---- */
   const pendingCount = content.filter(c => c.status === "pending").length;
@@ -757,11 +836,11 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {(["queue", "plans", "agents", "kpi"] as const).map((t) => (
+          {(["queue", "plans", "agents", "kpi", "settings"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               tab === t ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20" : "text-text-secondary hover:text-text-primary hover:bg-space-700"
             }`}>
-              {t === "queue" ? `Content${total ? ` (${total})` : ""}` : t === "plans" ? "Plans" : t === "kpi" ? "KPIs" : "Agents"}
+              {t === "queue" ? `Content${total ? ` (${total})` : ""}` : t === "plans" ? "Plans" : t === "kpi" ? "KPIs" : t === "settings" ? "Settings" : "Agents"}
             </button>
           ))}
           <div className="w-px h-6 bg-card-border mx-1" />
@@ -1365,6 +1444,118 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+          </>
+        )}
+
+        {/* ==== SETTINGS TAB ==== */}
+        {tab === "settings" && (
+          <>
+            <div className="bg-card-bg border border-card-border rounded-xl p-6 mb-6">
+              <h2 className="font-semibold mb-1 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                Connected Accounts
+              </h2>
+              <p className="text-text-muted text-sm mb-5">Connect your social media accounts to enable auto-posting. Tokens are stored securely in the database.</p>
+
+              <div className="space-y-3">
+                {[
+                  { id: "linkedin", name: "LinkedIn", color: "#0a66c2", icon: "in", envHint: "LINKEDIN_CLIENT_ID + LINKEDIN_CLIENT_SECRET" },
+                  { id: "twitter", name: "X / Twitter", color: "#1d9bf0", icon: "X", envHint: "TWITTER_CLIENT_ID (+ TWITTER_CLIENT_SECRET for confidential apps)" },
+                  { id: "instagram", name: "Instagram", color: "#e1306c", icon: "IG", envHint: "FACEBOOK_APP_ID + FACEBOOK_APP_SECRET" },
+                ].map((p) => {
+                  const status = platformStatus[p.id];
+                  const isConnected = status?.connected;
+                  const isExpired = status?.expiresAt && new Date(status.expiresAt) < new Date();
+                  const isConnecting = connectingPlatform === p.id;
+
+                  return (
+                    <div key={p.id} className="flex items-center justify-between bg-space-700/50 rounded-xl px-5 py-4 border border-card-border/50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: p.color }}>
+                          {p.icon}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{p.name}</p>
+                          {isConnected && !isExpired && (
+                            <p className="text-green-400 text-xs flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                              Connected
+                              {status?.expiresAt && (
+                                <span className="text-text-muted ml-1">
+                                  — expires {new Date(status.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          {isConnected && isExpired && (
+                            <p className="text-yellow-400 text-xs flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block" />
+                              Token expired — reconnect to continue posting
+                            </p>
+                          )}
+                          {!isConnected && (
+                            <p className="text-text-muted text-xs">Not connected — requires {p.envHint} in env vars</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isConnected && (
+                          <button
+                            onClick={() => handleDisconnect(p.id)}
+                            className="px-3 py-1.5 text-red-400 text-xs font-medium rounded-lg hover:bg-red-500/10 transition-colors"
+                          >
+                            Disconnect
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleConnect(p.id)}
+                          disabled={isConnecting}
+                          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            isConnected && !isExpired
+                              ? "bg-space-600 text-text-secondary hover:text-text-primary"
+                              : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
+                          } disabled:opacity-50`}
+                        >
+                          {isConnecting ? "Connecting..." : isConnected && !isExpired ? "Reconnect" : isExpired ? "Reconnect" : "Connect"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* # How scheduling works info */}
+            <div className="bg-card-bg border border-card-border rounded-xl p-6">
+              <h2 className="font-semibold mb-1 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                Auto-Posting Schedule
+              </h2>
+              <p className="text-text-muted text-sm mb-4">How the automated posting pipeline works:</p>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-green-500/15 text-green-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                  <div>
+                    <p className="text-text-primary font-medium">Approve content</p>
+                    <p className="text-text-muted text-xs">Review generated posts in the Content tab and approve them</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-blue-500/15 text-blue-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                  <div>
+                    <p className="text-text-primary font-medium">Schedule or post now</p>
+                    <p className="text-text-muted text-xs">Click &quot;Schedule&quot; to pick a date/time, or &quot;Post Now&quot; for immediate publishing</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-purple-500/15 text-purple-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                  <div>
+                    <p className="text-text-primary font-medium">Auto-posting runs every 5 minutes</p>
+                    <p className="text-text-muted text-xs">A cron job checks for scheduled posts whose time has arrived and publishes them automatically</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
