@@ -7,13 +7,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const error = req.nextUrl.searchParams.get("error");
+  const state = req.nextUrl.searchParams.get("state");
 
-  // # JSON-encode into a non-executable element to prevent XSS from untrusted query params
   const payload = JSON.stringify({
     type: "oauth-callback",
     platform: "linkedin",
     code: code || null,
     error: error || null,
+    state: state || null,
   }).replace(/</g, "\\u003c");
 
   const html = `<!DOCTYPE html><html><head><title>Connecting LinkedIn...</title></head><body>

@@ -7,7 +7,7 @@
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes, createHash, createHmac } from "crypto";
+import { randomBytes, createHash, createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
@@ -19,10 +19,14 @@ function getRedirectUri() {
   return `${base}/api/connect/twitter/callback`;
 }
 
-// # Sign values for tamper protection
+function getStateSecret(): string {
+  const secret = process.env.OAUTH_STATE_SECRET;
+  if (!secret) throw new Error("OAUTH_STATE_SECRET not configured");
+  return secret;
+}
+
 function signValue(value: string): string {
-  const secret = process.env.ADMIN_PASSWORD || "oauth-state-secret";
-  return createHmac("sha256", secret).update(value).digest("hex");
+  return createHmac("sha256", getStateSecret()).update(value).digest("hex");
 }
 
 export async function GET() {
@@ -70,20 +74,41 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return unauthorized();
 
-  const { code } = await req.json();
+  const { code, state: clientState } = await req.json();
   if (!code) {
     return NextResponse.json({ error: "Authorization code required" }, { status: 400 });
   }
 
-  // # Read PKCE verifier from signed cookie
   const cookieStore = await cookies();
+
+  // # Verify OAuth state to prevent CSRF
+  const stateCookie = cookieStore.get("oauth-state-twitter")?.value;
+  if (!stateCookie || !clientState) {
+    return NextResponse.json({ error: "OAuth state missing — try connecting again" }, { status: 400 });
+  }
+  const [cookieState, cookieSig] = stateCookie.split(".");
+  const expectedSig = signValue(cookieState);
+  if (
+    cookieSig.length !== expectedSig.length ||
+    !timingSafeEqual(Buffer.from(cookieSig), Buffer.from(expectedSig)) ||
+    cookieState !== clientState
+  ) {
+    return NextResponse.json({ error: "OAuth state mismatch — possible CSRF" }, { status: 400 });
+  }
+  cookieStore.delete("oauth-state-twitter");
+
+  // # Read PKCE verifier from signed cookie
   const pkceCookie = cookieStore.get("oauth-pkce-twitter")?.value;
   if (!pkceCookie) {
     return NextResponse.json({ error: "PKCE session expired — try connecting again" }, { status: 400 });
   }
 
   const [pkceVerifier, pkceSig] = pkceCookie.split(".");
-  if (signValue(pkceVerifier) !== pkceSig) {
+  const expectedPkceSig = signValue(pkceVerifier);
+  if (
+    pkceSig.length !== expectedPkceSig.length ||
+    !timingSafeEqual(Buffer.from(pkceSig), Buffer.from(expectedPkceSig))
+  ) {
     return NextResponse.json({ error: "Invalid PKCE session" }, { status: 400 });
   }
 

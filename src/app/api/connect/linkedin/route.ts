@@ -8,7 +8,7 @@
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes, createHmac } from "crypto";
+import { randomBytes, createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
@@ -20,10 +20,14 @@ function getRedirectUri() {
   return `${base}/api/connect/linkedin/callback`;
 }
 
-// # Sign the state value so we can verify it wasn't tampered with
+function getStateSecret(): string {
+  const secret = process.env.OAUTH_STATE_SECRET;
+  if (!secret) throw new Error("OAUTH_STATE_SECRET not configured");
+  return secret;
+}
+
 function signState(state: string): string {
-  const secret = process.env.ADMIN_PASSWORD || "oauth-state-secret";
-  return createHmac("sha256", secret).update(state).digest("hex");
+  return createHmac("sha256", getStateSecret()).update(state).digest("hex");
 }
 
 export async function GET() {
@@ -59,10 +63,27 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return unauthorized();
 
-  const { code } = await req.json();
+  const { code, state: clientState } = await req.json();
   if (!code) {
     return NextResponse.json({ error: "Authorization code required" }, { status: 400 });
   }
+
+  // # Verify OAuth state to prevent CSRF
+  const cookieStore = await cookies();
+  const stateCookie = cookieStore.get("oauth-state-linkedin")?.value;
+  if (!stateCookie || !clientState) {
+    return NextResponse.json({ error: "OAuth state missing — try connecting again" }, { status: 400 });
+  }
+  const [cookieState, cookieSig] = stateCookie.split(".");
+  const expectedSig = signState(cookieState);
+  if (
+    cookieSig.length !== expectedSig.length ||
+    !timingSafeEqual(Buffer.from(cookieSig), Buffer.from(expectedSig)) ||
+    cookieState !== clientState
+  ) {
+    return NextResponse.json({ error: "OAuth state mismatch — possible CSRF" }, { status: 400 });
+  }
+  cookieStore.delete("oauth-state-linkedin");
 
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
@@ -104,10 +125,6 @@ export async function POST(req: NextRequest) {
       expiresAt,
     },
   });
-
-  // # Clear the state cookie
-  const cookieStore = await cookies();
-  cookieStore.delete("oauth-state-linkedin");
 
   return NextResponse.json({ success: true, expiresAt: expiresAt.toISOString() });
 }

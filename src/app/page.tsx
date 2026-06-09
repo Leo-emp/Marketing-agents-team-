@@ -303,7 +303,7 @@ export default function Dashboard() {
       // # Reject messages from other origins and validate platform value
       if (e.origin !== window.location.origin) return;
       if (e.data?.type !== "oauth-callback") return;
-      const { platform, code, error } = e.data;
+      const { platform, code, error, state } = e.data;
       if (!["linkedin", "twitter", "instagram"].includes(platform)) return;
 
       if (error) {
@@ -312,12 +312,12 @@ export default function Dashboard() {
         return;
       }
 
-      // # Exchange the code for a token
+      // # Exchange the code for a token, forwarding state for CSRF verification
       try {
         const res = await fetch(`/api/connect/${platform}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, state }),
         });
 
         if (res.ok) {
