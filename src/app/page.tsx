@@ -160,6 +160,12 @@ export default function Dashboard() {
   const [editBody, setEditBody] = useState("");
   const [editNotes, setEditNotes] = useState("");
 
+  /* ---- Plan item preview modal ---- */
+  // # Shows production-ready post (image + caption) when clicking a plan item
+  const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
+  const [previewSlides, setPreviewSlides] = useState<VisualSlide[]>([]);
+  const [generatingPreview, setGeneratingPreview] = useState<number | null>(null);
+
   /* ---- Posting & regenerating ---- */
   const [posting, setPosting] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState<string | null>(null);
@@ -514,6 +520,76 @@ export default function Dashboard() {
   const deleteContent = async (id: string) => {
     await fetch(`/api/content/${id}`, { method: "DELETE" }).catch(() => {});
     fetchContent();
+  };
+
+  // # Map platform name to the agent ID that handles it
+  const PLATFORM_TO_AGENT: Record<string, string> = {
+    linkedin: "linkedin",
+    twitter: "twitter",
+    instagram: "instagram",
+    tiktok: "tiktok",
+  };
+
+  // # Generate a single post from a plan item, render its visuals, and open the preview modal
+  const handlePlanItemClick = async (item: PlanItem, index: number) => {
+    setGeneratingPreview(index);
+    setPreviewItem(null);
+    setPreviewSlides([]);
+
+    try {
+      // # Step 1: Generate the content using the platform-specific agent
+      const agentId = PLATFORM_TO_AGENT[item.platform] || "linkedin";
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId,
+          topic: item.topic,
+          contentType: item.contentType,
+          context: `Content pillar: ${item.pillar}. Hook angle: ${item.hook}`,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || "Failed to generate post", "error");
+        return;
+      }
+
+      const contentRecord: ContentItem = await res.json();
+      setPreviewItem(contentRecord);
+      fetchContent();
+
+      // # Step 2: Render the visual (wait for auto-design to complete, then render)
+      const visualTypes = ["post", "carousel", "single_image", "reel_script"];
+      if (visualTypes.includes(contentRecord.contentType)) {
+        const visualRes = await fetch("/api/visual", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contentId: contentRecord.id }),
+        });
+
+        if (visualRes.ok) {
+          const visualData = await visualRes.json();
+          setPreviewSlides(visualData.slides || []);
+          // # Also store in the global visual previews so the queue tab shows them
+          setVisualPreviews(prev => ({ ...prev, [contentRecord.id]: visualData.slides || [] }));
+          // # Refresh to get the updated caption
+          const refreshRes = await fetch(`/api/content?page=1`);
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json();
+            const updated = refreshData.items.find((c: ContentItem) => c.id === contentRecord.id);
+            if (updated) setPreviewItem(updated);
+          }
+        }
+      }
+
+      showToast(`${AGENT_META[agentId]?.name || agentId} generated your post`, "success");
+    } catch {
+      showToast("Network error generating post", "error");
+    } finally {
+      setGeneratingPreview(null);
+    }
   };
 
   const handlePost = async (id: string) => {
@@ -1000,7 +1076,11 @@ export default function Dashboard() {
                         </thead>
                         <tbody>
                           {plan.plan.map((item: PlanItem, i: number) => (
-                            <tr key={i} className="border-b border-card-border/50 hover:bg-space-700/50">
+                            <tr
+                              key={i}
+                              className="border-b border-card-border/50 hover:bg-indigo-500/10 cursor-pointer transition-colors group"
+                              onClick={() => handlePlanItemClick(item, i)}
+                            >
                               <td className="py-2.5 pr-4 text-text-primary whitespace-nowrap">{item.day}</td>
                               <td className="py-2.5 pr-4">
                                 <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>{item.platform}</span>
@@ -1008,7 +1088,17 @@ export default function Dashboard() {
                               <td className="py-2.5 pr-4 text-text-secondary">{item.pillar}</td>
                               <td className="py-2.5 pr-4 text-text-muted">{CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</td>
                               <td className="py-2.5 pr-4 text-text-primary max-w-xs">{item.topic}</td>
-                              <td className="py-2.5 text-text-secondary italic max-w-xs">{item.hook}</td>
+                              <td className="py-2.5 text-text-secondary italic max-w-xs">
+                                <div className="flex items-center justify-between">
+                                  <span>{item.hook}</span>
+                                  {/* # Loading spinner when this specific item is generating */}
+                                  {generatingPreview === i ? (
+                                    <div className="w-4 h-4 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin shrink-0 ml-2" />
+                                  ) : (
+                                    <span className="text-indigo-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">Preview</span>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -1217,6 +1307,133 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      {/* ==== PLAN ITEM PREVIEW MODAL ==== */}
+      {/* # Production-ready post preview with image + caption + full content */}
+      {previewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={(e) => { if (e.target === e.currentTarget) { setPreviewItem(null); setPreviewSlides([]); } }}>
+          <div className="bg-space-800 border border-card-border rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            {/* # Header with agent info and platform badge */}
+            <div className="sticky top-0 bg-space-800 border-b border-card-border px-6 py-4 flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: AGENT_META[previewItem.agent]?.color || "#666" }}>
+                  {AGENT_META[previewItem.agent]?.avatar || "?"}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{AGENT_META[previewItem.agent]?.name || previewItem.agent}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[previewItem.platform] || "#666"}22`, color: PLATFORM_COLORS[previewItem.platform] || "#999" }}>{previewItem.platform}</span>
+                    <span className="text-xs text-text-muted">{CONTENT_TYPE_LABELS[previewItem.contentType] || previewItem.contentType}</span>
+                  </div>
+                  <p className="text-text-muted text-xs">{previewItem.title}</p>
+                </div>
+              </div>
+              <button onClick={() => { setPreviewItem(null); setPreviewSlides([]); }} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-space-600 text-text-muted hover:text-text-primary transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* # Visual slides — the actual generated images */}
+              {previewSlides.length > 0 ? (
+                <div>
+                  <p className="text-text-muted text-xs mb-2 uppercase tracking-wider font-medium">Visual</p>
+                  <div className={`${previewSlides.length === 1 ? "flex justify-center" : "flex gap-3 overflow-x-auto pb-2"}`}>
+                    {previewSlides.map((slide) => (
+                      <div key={slide.index} className="shrink-0 relative group">
+                        <img
+                          src={slide.dataUrl}
+                          alt={`Slide ${slide.index + 1}`}
+                          className={`rounded-xl border border-card-border ${previewSlides.length === 1 ? "max-h-[400px] w-auto" : "h-52 w-auto"}`}
+                        />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); downloadVisual(slide.dataUrl, `jobpilot-${previewItem.platform}-slide-${slide.index + 1}.png`); }}
+                          className="absolute bottom-2 right-2 px-2.5 py-1 bg-black/70 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
+                        >
+                          Download
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : previewItem.visualData ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center gap-2 text-text-muted text-sm">
+                    <div className="w-4 h-4 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                    <span>Rendering visual...</span>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* # Caption for image/carousel posts */}
+              {previewItem.captionText && (
+                <div>
+                  <p className="text-text-muted text-xs mb-2 uppercase tracking-wider font-medium">Caption</p>
+                  <div className="bg-space-700/60 rounded-xl px-4 py-3 border border-card-border/50">
+                    <p className="text-text-primary text-sm leading-relaxed">{previewItem.captionText}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* # Hook — the scroll-stopping opener */}
+              {previewItem.hook && (
+                <div>
+                  <p className="text-text-muted text-xs mb-2 uppercase tracking-wider font-medium">Hook</p>
+                  <p className="text-indigo-400 font-medium italic text-sm">&ldquo;{previewItem.hook}&rdquo;</p>
+                </div>
+              )}
+
+              {/* # Full post body */}
+              <div>
+                <p className="text-text-muted text-xs mb-2 uppercase tracking-wider font-medium">Post Content</p>
+                <pre className="text-text-secondary text-sm whitespace-pre-wrap font-sans leading-relaxed bg-space-700/40 rounded-xl px-4 py-3 border border-card-border/50 max-h-64 overflow-y-auto">{previewItem.body}</pre>
+              </div>
+
+              {/* # Hashtags */}
+              {previewItem.hashtags && (
+                <div>
+                  <p className="text-text-muted text-xs mb-2 uppercase tracking-wider font-medium">Hashtags</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {previewItem.hashtags.split(",").map((tag, i) => (
+                      <span key={i} className="text-xs px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        {tag.trim().startsWith("#") ? tag.trim() : `#${tag.trim()}`}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* # Action buttons */}
+              <div className="flex gap-3 pt-2 border-t border-card-border">
+                <button
+                  onClick={() => { updateStatus(previewItem.id, "approved"); showToast("Approved!", "success"); setPreviewItem(null); setPreviewSlides([]); }}
+                  className="flex-1 py-2.5 bg-green-500/15 text-green-400 text-sm font-medium rounded-lg hover:bg-green-500/25 transition-colors border border-green-500/20"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => { setEditing(previewItem); setEditBody(previewItem.body); setEditNotes(previewItem.notes || ""); setPreviewItem(null); setPreviewSlides([]); }}
+                  className="flex-1 py-2.5 bg-space-600 text-text-secondary text-sm font-medium rounded-lg hover:text-text-primary hover:bg-space-500 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => { copyContent(previewItem); }}
+                  className="flex-1 py-2.5 bg-space-600 text-text-secondary text-sm font-medium rounded-lg hover:text-text-primary hover:bg-space-500 transition-colors"
+                >
+                  Copy
+                </button>
+                <button
+                  onClick={() => { handleRegenerate(previewItem); setPreviewItem(null); setPreviewSlides([]); }}
+                  className="flex-1 py-2.5 bg-purple-500/15 text-purple-400 text-sm font-medium rounded-lg hover:bg-purple-500/25 transition-colors border border-purple-500/20"
+                >
+                  Regenerate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==== EDIT MODAL ==== */}
       {editing && (
