@@ -8,15 +8,24 @@
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { postToPlatform } from "@/lib/social-posting";
 
 export async function GET(req: NextRequest) {
-  // # Verify the request is from Vercel Cron using the shared secret
-  const authHeader = req.headers.get("authorization");
+  // # Fail closed — CRON_SECRET must be configured
   const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return NextResponse.json({ error: "Server misconfigured — CRON_SECRET not set" }, { status: 500 });
+  }
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  const authHeader = req.headers.get("authorization");
+  const expected = `Bearer ${cronSecret}`;
+  if (
+    !authHeader ||
+    authHeader.length !== expected.length ||
+    !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
+  ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
