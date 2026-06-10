@@ -2,33 +2,14 @@
    VISUAL SERVE — /api/visual/[id]
    ============================================================
    GET: Re-renders a stored Visual record on demand as PNG.
-   Enables shareable and downloadable image URLs.
+   Uses @napi-rs/canvas for full pixel-level rendering.
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
-import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
-import { renderSlide } from "@/lib/visual/templates";
+import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import type { SlideData } from "@/lib/visual/types";
-
-/* # Font cache */
-let fontCache: ArrayBuffer | null = null;
-
-async function loadFont(): Promise<ArrayBuffer> {
-  if (fontCache) return fontCache;
-  try {
-    const buffer = await readFile(join(process.cwd(), "public", "fonts", "Geist-Regular.ttf"));
-    fontCache = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return fontCache;
-  } catch {
-    const buffer = await readFile(join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "Geist-Regular.ttf"));
-    fontCache = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return fontCache;
-  }
-}
 
 export async function GET(
   _req: NextRequest,
@@ -45,18 +26,11 @@ export async function GET(
     }
 
     const slideData: SlideData = JSON.parse(visual.data);
-    const fontData = await loadFont();
 
-    const element = renderSlide(slideData, visual.width, visual.height);
-    const imgResponse = new ImageResponse(element, {
-      width: visual.width,
-      height: visual.height,
-      fonts: [{ name: "Geist", data: fontData, style: "normal" as const, weight: 400 as const }],
-    });
+    // # Render via Canvas
+    const pngBuffer = await renderSlideCanvas(slideData, visual.width, visual.height);
 
-    // # Return the image with proper headers
-    const arrayBuffer = await imgResponse.arrayBuffer();
-    return new NextResponse(arrayBuffer, {
+    return new NextResponse(pngBuffer, {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=3600",

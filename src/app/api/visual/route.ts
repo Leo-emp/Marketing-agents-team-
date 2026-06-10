@@ -5,39 +5,16 @@
    Two modes:
    - Design mode: pass contentId, AI designer creates slides
    - Direct mode: pass slides[], renders them directly
-   Renders each slide via Satori (next/og ImageResponse).
+   Renders each slide via @napi-rs/canvas for full pixel control.
    Returns base64-encoded PNG data URLs and saves Visual records.
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
-import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
-import { renderSlide } from "@/lib/visual/templates";
+import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData, type VisualRequest } from "@/lib/visual/types";
 import { designVisual } from "@/lib/visual/designer-agent";
-
-/* # Cache the font in memory after first load */
-let fontCache: ArrayBuffer | null = null;
-
-async function loadFont(): Promise<ArrayBuffer> {
-  if (fontCache) return fontCache;
-
-  // # Try public/fonts first, then fall back to node_modules
-  try {
-    const fontPath = join(process.cwd(), "public", "fonts", "Geist-Regular.ttf");
-    const buffer = await readFile(fontPath);
-    fontCache = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return fontCache;
-  } catch {
-    const fontPath = join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "Geist-Regular.ttf");
-    const buffer = await readFile(fontPath);
-    fontCache = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return fontCache;
-  }
-}
 
 /* # Render slides to PNGs and save to DB */
 async function renderAndSave(
@@ -45,7 +22,6 @@ async function renderAndSave(
   platform: string,
   type: string,
   contentId: string | null,
-  fontData: ArrayBuffer
 ) {
   const { width, height } = getDimensions(platform, type);
   const results: { index: number; visualId: string; dataUrl: string; width: number; height: number }[] = [];
@@ -57,16 +33,9 @@ async function renderAndSave(
       totalSlides: slides[i].totalSlides ?? slides.length,
     };
 
-    // # Render via Satori
-    const element = renderSlide(slide, width, height);
-    const imgResponse = new ImageResponse(element, {
-      width,
-      height,
-      fonts: [{ name: "Geist", data: fontData, style: "normal" as const, weight: 400 }],
-    });
-
-    const arrayBuffer = await imgResponse.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    // # Render via Canvas
+    const pngBuffer = await renderSlideCanvas(slide, width, height);
+    const base64 = pngBuffer.toString("base64");
     const dataUrl = `data:image/png;base64,${base64}`;
 
     const visual = await prisma.visual.create({
@@ -92,7 +61,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const fontData = await loadFont();
 
     /* ---- Design mode: AI designs slides from existing content ---- */
     if (body.contentId && !body.slides) {
@@ -137,7 +105,6 @@ export async function POST(req: NextRequest) {
         content.platform,
         visualType,
         content.id,
-        fontData
       );
 
       // # Update Content record with visual data and caption
@@ -165,7 +132,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No slides provided" }, { status: 400 });
     }
 
-    const results = await renderAndSave(slides, platform, type, contentId || null, fontData);
+    const results = await renderAndSave(slides, platform, type, contentId || null);
 
     // # Update the Content record if we have a contentId
     if (contentId) {

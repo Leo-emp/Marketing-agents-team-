@@ -1,37 +1,17 @@
 /* ============================================================
    PDF CAROUSEL EXPORT — /api/visual/pdf
    ============================================================
-   POST: Takes a contentId, renders all slides as PNGs via Satori,
+   POST: Takes a contentId, renders all slides as PNGs via Canvas,
    then combines them into a single PDF document for LinkedIn
    carousel posts. Returns the PDF as a downloadable file.
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
-import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import { jsPDF } from "jspdf";
 import { prisma } from "@/lib/prisma";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
-import { renderSlide } from "@/lib/visual/templates";
+import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData } from "@/lib/visual/types";
-
-let fontCache: ArrayBuffer | null = null;
-
-async function loadFont(): Promise<ArrayBuffer> {
-  if (fontCache) return fontCache;
-  try {
-    const fontPath = join(process.cwd(), "public", "fonts", "Geist-Regular.ttf");
-    const buffer = await readFile(fontPath);
-    fontCache = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return fontCache;
-  } catch {
-    const fontPath = join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "Geist-Regular.ttf");
-    const buffer = await readFile(fontPath);
-    fontCache = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    return fontCache;
-  }
-}
 
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) return unauthorized();
@@ -48,9 +28,8 @@ export async function POST(req: NextRequest) {
 
   const slides: SlideData[] = JSON.parse(content.visualData);
   const { width, height } = getDimensions(content.platform, content.contentType);
-  const fontData = await loadFont();
 
-  // # Render each slide to PNG
+  // # Render each slide to PNG via Canvas
   const pngBuffers: Buffer[] = [];
   for (let i = 0; i < slides.length; i++) {
     const slide: SlideData = {
@@ -59,18 +38,11 @@ export async function POST(req: NextRequest) {
       totalSlides: slides[i].totalSlides ?? slides.length,
     };
 
-    const response = new ImageResponse(renderSlide(slide, width, height), {
-      width,
-      height,
-      fonts: [{ name: "Geist", data: fontData, style: "normal", weight: 400 }],
-    });
-
-    const arrayBuffer = await response.arrayBuffer();
-    pngBuffers.push(Buffer.from(arrayBuffer));
+    const pngBuffer = await renderSlideCanvas(slide, width, height);
+    pngBuffers.push(pngBuffer);
   }
 
   // # Combine PNGs into a PDF (each slide = one page)
-  // # LinkedIn carousel PDFs use the slide dimensions as page size
   const pxToMm = (px: number) => px * 0.264583;
   const pageW = pxToMm(width);
   const pageH = pxToMm(height);
