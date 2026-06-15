@@ -18,35 +18,62 @@ import { designVisual } from "@/lib/visual/designer-agent";
 // # Content types that get auto-visual generation
 const VISUAL_CONTENT_TYPES = ["post", "carousel", "single_image", "reel_script"];
 
-// # Auto-generate visual for a content record (non-blocking — failures don't break content creation)
+// # Auto-generate visual for a content record
+// # Retries once on failure, falls back to basic hero slide if both attempts fail
 async function autoGenerateVisual(contentId: string) {
+  const content = await prisma.content.findUnique({ where: { id: contentId } });
+  if (!content) return;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const design = await designVisual(
+        content.body,
+        content.platform,
+        content.contentType,
+        content.mediaPrompt,
+        content.title
+      );
+
+      await prisma.content.update({
+        where: { id: contentId },
+        data: {
+          visualData: JSON.stringify(design.slides),
+          captionText: design.caption || null,
+        },
+      });
+
+      console.log(`[Visual] Auto-design succeeded for ${contentId} (attempt ${attempt})`);
+      return;
+    } catch (e) {
+      console.error(`[Visual] Auto-design attempt ${attempt} failed for ${contentId}:`, e);
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    }
+  }
+
+  // # Both attempts failed — create a fallback hero slide so the post still has a visual
   try {
-    const content = await prisma.content.findUnique({ where: { id: contentId } });
-    if (!content) return;
+    const fallbackSlide = [{
+      headline: content.hook || content.title,
+      subheadline: content.hook && content.title !== content.hook ? content.title : undefined,
+      layout: "hero" as const,
+      slideNumber: 1,
+      totalSlides: 1,
+      photoKeywords: "professional career modern office",
+    }];
 
-    const visualType = content.contentType === "carousel" ? "carousel"
-      : content.contentType === "reel_script" ? "storyboard"
-      : "single_image";
-
-    const design = await designVisual(
-      content.body,
-      content.platform,
-      content.contentType,
-      content.mediaPrompt,
-      content.title
-    );
-
-    // # Save visual data and caption to the content record (no image rendering here — that happens via /api/visual when needed)
     await prisma.content.update({
       where: { id: contentId },
       data: {
-        visualData: JSON.stringify(design.slides),
-        captionText: design.caption || null,
+        visualData: JSON.stringify(fallbackSlide),
+        notes: `${content.notes ? content.notes + " | " : ""}Visual design failed — using fallback hero slide`,
       },
     });
-  } catch (e) {
-    // # Visual design failure should never block content creation
-    console.warn(`Auto-visual design failed for ${contentId}:`, e);
+
+    console.warn(`[Visual] Using fallback hero slide for ${contentId}`);
+  } catch (fallbackErr) {
+    console.error(`[Visual] Even fallback failed for ${contentId}:`, fallbackErr);
   }
 }
 
@@ -87,6 +114,8 @@ export async function POST(req: NextRequest) {
             hook: r.content.hook,
             status: "pending",
             researchBrief: r.content.researchBrief || null,
+            editorialScore: r.content.editorial?.score || null,
+            editorialFeedback: r.content.editorial ? `${r.content.editorial.feedback}${r.content.editorial.issues.length ? " | Issues: " + r.content.editorial.issues.join("; ") : ""}` : null,
           },
         });
         saved.push(record);
@@ -95,7 +124,9 @@ export async function POST(req: NextRequest) {
       // # Auto-design visuals for visual content types (runs in background, non-blocking)
       for (const record of saved) {
         if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
-          autoGenerateVisual(record.id);
+          autoGenerateVisual(record.id).catch((e) =>
+            console.error(`[Visual] Batch auto-visual failed for ${record.id}:`, e)
+          );
         }
       }
 
@@ -149,11 +180,12 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---- Single mode: generate one piece of content (with optional variations) ---- */
+    // # topic is optional — when empty, the agent auto-discovers a trending topic
     const { agentId, topic, contentType, context, tone, variations } = body;
 
-    if (!agentId || !topic || !contentType) {
+    if (!agentId || !contentType) {
       return NextResponse.json(
-        { error: "agentId, topic, and contentType are required" },
+        { error: "agentId and contentType are required" },
         { status: 400 }
       );
     }
@@ -166,7 +198,7 @@ export async function POST(req: NextRequest) {
     const variationCount = typeof variations === "number" ? variations : 1;
 
     if (variationCount > 1) {
-      const allVariants = await generateVariations(agentId, topic, contentType, variationCount, context, tone);
+      const { contents: allVariants, variationGroup } = await generateVariations(agentId, topic, contentType, variationCount, context, tone);
 
       const saved = [];
       for (let i = 0; i < allVariants.length; i++) {
@@ -183,6 +215,9 @@ export async function POST(req: NextRequest) {
             hook: v.hook,
             status: "pending",
             researchBrief: v.researchBrief || null,
+            variationGroup,
+            editorialScore: v.editorial?.score || null,
+            editorialFeedback: v.editorial ? `${v.editorial.feedback}${v.editorial.issues.length ? " | Issues: " + v.editorial.issues.join("; ") : ""}` : null,
             notes: i > 0 ? `Variation ${i + 1} of ${allVariants.length}` : `Original (1 of ${allVariants.length} variations)`,
           },
         });
@@ -193,7 +228,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return NextResponse.json({ variations: saved.length, items: saved });
+      return NextResponse.json({ variations: saved.length, variationGroup, items: saved });
     }
 
     /* # Single generation (default) */
@@ -211,6 +246,8 @@ export async function POST(req: NextRequest) {
         hook: content.hook,
         status: "pending",
         researchBrief: content.researchBrief || null,
+        editorialScore: content.editorial?.score || null,
+        editorialFeedback: content.editorial ? `${content.editorial.feedback}${content.editorial.issues.length ? " | Issues: " + content.editorial.issues.join("; ") : ""}` : null,
       },
     });
 

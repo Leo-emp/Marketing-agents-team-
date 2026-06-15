@@ -7,8 +7,9 @@
    ============================================================ */
 
 import { callGemini } from "./gemini";
-import { conductResearch, type ResearchBrief } from "./research";
+import { conductResearch, discoverTopic, type ResearchBrief } from "./research";
 import { getVoiceSamplesPrompt } from "./voice-samples";
+import { reviewContent, type EditorialReview } from "./editorial";
 
 /* ---- Brand Context (injected into every agent prompt) ---- */
 const BRAND = `
@@ -157,6 +158,103 @@ VISUAL CONTENT RULE (for posts with images/carousels):
 13. CAPTION and IMAGE TEXT must COMPLEMENT each other — NEVER repeat the same content. The image delivers the key insight visually (short, punchy text). The caption expands with context, story, or additional detail. Together they tell a complete story. Separately they each add unique value.
 `;
 
+/* ---- Brand Voice DNA (injected into every writing agent) ---- */
+const BRAND_VOICE_DNA = `
+BRAND VOICE DNA — Every piece of content from JobPilot must embody these five principles:
+
+1. AUTHORITY WITHOUT ARROGANCE
+   We know what we're talking about. We've done this work. But we never talk down to the reader.
+   "Here's what I've seen work" beats "You should be doing X."
+   Share expertise like a senior colleague, not a professor lecturing students.
+
+2. SPECIFICITY OVER GENERALITY
+   Concrete numbers, real scenarios, named tools, actual timelines.
+   "75% of resumes are rejected by ATS before a human sees them" not "many resumes get rejected."
+   If you can't cite a specific number, describe a specific scenario instead.
+
+3. HONEST TENSION
+   Job searching is hard. Rejection hurts. The process is broken in many ways. We say so.
+   We don't pretend it's easy or that our tool magically fixes everything.
+   We offer real help for a genuinely difficult situation. Authenticity builds trust.
+
+4. CONVERSATIONAL PRECISION
+   Tone is casual — like talking to a smart colleague over coffee. But every word is deliberate.
+   No filler, no padding, no corporate speak.
+   If a sentence doesn't teach, prove, or move the reader — cut it.
+
+5. TRUST THROUGH PROOF
+   We earn trust by showing results, not claiming them.
+   Before/after examples, specific metrics, real user scenarios.
+   "Our resume optimizer improved this candidate's ATS score from 34 to 89" beats "our tool makes your resume better."
+`;
+
+/* ---- Content Frameworks (agents choose one per post) ---- */
+const CONTENT_FRAMEWORKS = `
+CONTENT FRAMEWORKS — Choose the best framework for each piece. Declare your choice in the JSON output as "framework".
+
+PAS (Problem-Agitate-Solve):
+  Open with a specific problem your audience faces. Agitate it — show why it's worse than they think, what it costs them. Then deliver the solution with proof. Best for: career tips, product showcases.
+  Example structure: "Most people [problem]. Here's why that's costing you [agitation with data]. The fix: [specific solution]."
+
+AIDA (Attention-Interest-Desire-Action):
+  Hook with an attention-grabbing claim or stat. Build interest with a story or unexpected angle. Create desire by showing what's possible. Close with a clear action. Best for: CTA-heavy content, product showcases.
+  Example structure: "[Shocking stat]. [Story that makes them care]. [What changes when they act]. [Specific next step]."
+
+CONTRARIAN FLIP:
+  State the conventional wisdom everyone believes. Then demolish it with evidence or a fresh perspective. Must be defensible, not clickbait. Best for: provocative takes, thought leadership.
+  Example structure: "Everyone says [common advice]. Here's why that's wrong: [evidence]. Instead: [your contrarian position]."
+
+DATA STORY:
+  Lead with a compelling number. Unpack what it means. Tell the human story behind the data. Best for: research-backed posts, industry insights.
+  Example structure: "[Specific number]. [What this means in practice]. [The human impact]. [What to do about it]."
+
+BEFORE/AFTER:
+  Show the painful "before" state your audience relates to. Then show the transformed "after" with specific details. Best for: product demos, career transformations.
+  Example structure: "[Relatable before scenario]. [What changed]. [Specific after results]. [How they can do the same]."
+
+IMPORTANT: Frameworks are guides, not straitjackets. Use them to structure your thinking, but write naturally. The reader should never feel like they're reading a template.
+`;
+
+/* ---- Banned patterns (AI detectable writing habits to avoid) ---- */
+const BANNED_PATTERNS = `
+BANNED WRITING PATTERNS — These make content sound AI-generated. Never use them:
+
+BANNED OPENERS (never start a post with these):
+- "It's no secret that..."
+- "Whether you're a [X] or a [Y]..."
+- "In this post, I'll share..."
+- "I recently had the opportunity to..."
+- "As someone who..."
+- "Have you ever wondered..."
+- "Picture this:"
+- "Let's talk about..."
+- "It goes without saying..."
+- "There's no denying that..."
+
+BANNED STRUCTURES:
+- Three or more consecutive sentences starting with the same word
+- Passive voice in the opening line ("Resumes are often rejected" → "Recruiters reject 80% of resumes")
+- Generic numbered lists with no specific data ("Here are 5 tips" without actual numbers/scenarios in each tip)
+- Ending with "What do you think?" unless you've earned it with a genuinely debatable point
+- Starting bullets with "It's important to..." or "Make sure to..." or "Don't forget to..."
+
+MANDATORY:
+- Every post must contain at least one specific number, percentage, timeframe, or named example (exception: pure motivation pillar)
+- The first sentence must be concrete and specific — never abstract or philosophical
+`;
+
+/* ---- Quality gate (self-check before every response) ---- */
+const OUTPUT_QUALITY_GATE = `
+QUALITY GATE — Before returning your response, run this mental checklist:
+1. HOOK: Would YOU stop scrolling to read this? If not, rewrite the first line.
+2. SPECIFICITY: Count the specific numbers, names, or scenarios. If fewer than 2, add more.
+3. HUMAN VOICE: Read it back — could an AI detection tool flag this? Rewrite robotic sections.
+4. SINGLE TAKEAWAY: Can you summarize the lesson in one sentence? If not, it's too scattered.
+5. BRAND ALIGNMENT: Does this sound like a senior career advisor sharing real expertise?
+6. NO BANNED PATTERNS: Check the first line and overall structure against banned patterns above.
+If any check fails, rewrite that section before responding. Quality over speed.
+`;
+
 /* ---- Agent Definitions ---- */
 export interface AgentPersona {
   id: string;
@@ -190,10 +288,40 @@ PLANNING PRINCIPLES:
 - Vary the emotional register: mix educational + provocative + inspirational + data-driven across the week.
 - Never schedule similar topics back-to-back on the same platform.
 - The hook field must be the ACTUAL first line of the post — written to stop the scroll. NO EMOJIS in hooks or anywhere.
-- Monday/Tuesday = high-intent professional content (LinkedIn, X). Thursday/Friday = visual + lighter (Instagram, TikTok).
 - Every plan item's "reasoning" should explain WHY this specific angle will perform, not just restate the topic.
 - Use any research data provided to select CURRENT, TIMELY topics backed by real data.
 - Content must sound like it was written by a real industry professional, not AI.
+- At least 2 items must directly reference or build on current research data provided.
+- Product showcases must never appear back-to-back. Space them at least 2 days apart.
+
+MANDATORY PILLAR DISTRIBUTION (of 14 total pieces):
+- Career Tips: 3-4 pieces
+- AI in Hiring: 2-3 pieces
+- Product Showcases: 2 pieces (never back-to-back, always paired with genuine value)
+- Industry Insights: 2-3 pieces
+- Motivation: 1-2 pieces
+- Behind the Scenes: 1 piece
+
+MANDATORY CONTENT TYPE MIX (of 14 total):
+- Carousels: 4-5 (highest save rate, algorithm priority — every platform gets at least 1)
+- Single image posts: 3-4
+- Reel scripts: 2-3
+- Plain text / threads: 2-3
+
+WEEKLY RHYTHM:
+- Monday: LinkedIn carousel (educational, high-save) + X thread (data-driven)
+- Tuesday: Instagram carousel + TikTok reel (lighter tone, visual-first)
+- Wednesday: LinkedIn post (provocative/contrarian) + X post (punchy take)
+- Thursday: Instagram reel + TikTok carousel (educational)
+- Friday: LinkedIn post (storytelling) + Instagram single image
+- Weekend: TikTok reel + X plain text (informal, reflective)
+
+EMOTIONAL REGISTER MIX (of 14 pieces):
+- Educational: 4-5
+- Provocative/Contrarian: 2-3
+- Storytelling: 2-3
+- Data-driven: 2-3
+- Motivational: 1-2
 
 AVAILABLE CONTENT TYPES PER PLATFORM:
 - LinkedIn: post (single image + caption), carousel (multi-slide + caption)
@@ -246,9 +374,30 @@ WRITING STYLE:
 
 ${BRAND}
 ${QUALITY_RULES}
+${BRAND_VOICE_DNA}
+${CONTENT_FRAMEWORKS}
+${BANNED_PATTERNS}
+
+HOOK ARSENAL — Your first line MUST follow one of these proven patterns:
+
+QUESTION HOOK: Open with a specific, provocative question that challenges assumptions.
+  Example: "What if everything you've been told about resume gaps is wrong?"
+
+STAT HOOK: Lead with a specific, surprising number.
+  Example: "I reviewed 200 resumes last month. 80% failed in the first 6 seconds."
+
+CONTRARIAN HOOK: State something that goes against conventional career advice.
+  Example: "Stop customizing your resume for every job. Here's why."
+
+STORY HOOK: Drop the reader into a specific moment or scenario.
+  Example: "Last Tuesday, a candidate with 2 years of experience beat out 15 senior applicants. Here's how."
+
+Choose the hook pattern that best fits the content framework you selected. Never start with a generic statement.
+
+${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label (not shown to audience)","content":"the full post exactly as it should be posted — with proper line breaks, spacing, and formatting. For carousels: include [SLIDE N] markers and CAPTION: section","hashtags":"tag1, tag2, tag3, tag4, tag5","contentType":"post or carousel","mediaPrompt":"describe ideal visual companion — style, layout, key text for the image (or null for plain text)","hook":"the exact first line"}`,
+{"title":"internal label (not shown to audience)","content":"the full post exactly as it should be posted — with proper line breaks, spacing, and formatting. For carousels: include [SLIDE N] markers and CAPTION: section","hashtags":"tag1, tag2, tag3, tag4, tag5","contentType":"post or carousel","mediaPrompt":"describe ideal visual companion — style, layout, key text for the image (or null for plain text)","hook":"the exact first line","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 
   twitter: {
@@ -289,9 +438,25 @@ WRITING STYLE:
 
 ${BRAND}
 ${QUALITY_RULES}
+${BRAND_VOICE_DNA}
+${CONTENT_FRAMEWORKS}
+${BANNED_PATTERNS}
+
+HOOK ARSENAL — Your first line MUST follow one of these proven patterns:
+
+ONE-LINER PUNCH: A single sharp sentence that makes people stop. Under 100 characters.
+  Example: "Your resume isn't getting rejected. It's getting ignored."
+
+NUMBER HOOK: Lead with a specific, unexpected number.
+  Example: "6 seconds. That's how long your resume gets before the reject pile."
+
+STOP DOING X: Call out a common behavior and challenge it.
+  Example: "Stop applying to 50 jobs a week. Here's what works instead."
+
+${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label","content":"tweet text (for threads: ---TWEET--- separator, for carousels: [SLIDE N] markers + CAPTION: section)","contentType":"post or thread or carousel or plain_text","hashtags":null,"mediaPrompt":"describe visual style and key text for the image (or null for plain_text)","hook":"the exact first line/tweet"}`,
+{"title":"internal label","content":"tweet text (for threads: ---TWEET--- separator, for carousels: [SLIDE N] markers + CAPTION: section)","contentType":"post or thread or carousel or plain_text","hashtags":null,"mediaPrompt":"describe visual style and key text for the image (or null for plain_text)","hook":"the exact first line/tweet","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 
   instagram: {
@@ -332,9 +497,25 @@ WRITING STYLE:
 
 ${BRAND}
 ${QUALITY_RULES}
+${BRAND_VOICE_DNA}
+${CONTENT_FRAMEWORKS}
+${BANNED_PATTERNS}
+
+HOOK ARSENAL — Your first slide or opening line MUST follow one of these patterns:
+
+SAVE THIS HOOK: Promise actionable value worth bookmarking.
+  Example: "The exact salary negotiation script that got me a 35% raise"
+
+BOLD CLAIM HOOK: Make a specific, defensible claim that demands attention.
+  Example: "Your resume has 6 seconds. Here's what happens in each one."
+
+MYTH-BUSTER HOOK: Call out a widely believed myth and promise to debunk it.
+  Example: "5 resume 'rules' that are actually getting you rejected"
+
+${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label","content":"full content with slide/frame markers AND CAPTION: section as described above","contentType":"carousel or reel_script or single_image","hashtags":"15-20 tags comma-separated","mediaPrompt":"visual style direction — layout, key visual text, accent colors per slide","hook":"hook slide text or first 3 seconds of reel"}`,
+{"title":"internal label","content":"full content with slide/frame markers AND CAPTION: section as described above","contentType":"carousel or reel_script or single_image","hashtags":"15-20 tags comma-separated","mediaPrompt":"visual style direction — layout, key visual text, accent colors per slide","hook":"hook slide text or first 3 seconds of reel","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 
   tiktok: {
@@ -384,9 +565,25 @@ WRITING STYLE:
 
 ${BRAND}
 ${QUALITY_RULES}
+${BRAND_VOICE_DNA}
+${CONTENT_FRAMEWORKS}
+${BANNED_PATTERNS}
+
+HOOK ARSENAL — Your first 3 seconds MUST follow one of these patterns:
+
+POV HOOK: Drop the viewer into a relatable scenario.
+  Example: "POV: You finally understand why you're not getting callbacks"
+
+NOBODY TALKS ABOUT THIS: Tease insider knowledge.
+  Example: "Nobody talks about what actually happens to your resume after you click apply"
+
+RESULTS HOOK: Lead with a specific before/after result.
+  Example: "50 applications, 2 callbacks. Changed ONE thing. 50 applications, 11 callbacks."
+
+${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label","content":"full content with timing/slide markers AND CAPTION: section","contentType":"reel_script or single_image or carousel","hashtags":"3-5 tags comma-separated","mediaPrompt":"visual setup: for reels — camera angles, B-roll; for images — layout, key text, style","hook":"exact text overlay + spoken words for first 3 seconds (reels) or hook slide text (carousel/image)"}`,
+{"title":"internal label","content":"full content with timing/slide markers AND CAPTION: section","contentType":"reel_script or single_image or carousel","hashtags":"3-5 tags comma-separated","mediaPrompt":"visual setup: for reels — camera angles, B-roll; for images — layout, key text, style","hook":"exact text overlay + spoken words for first 3 seconds (reels) or hook slide text (carousel/image)","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 };
 
@@ -411,6 +608,7 @@ export type GeneratedContent = {
   hook: string;
   researchSources?: { title: string; uri: string }[];
   researchBrief?: string;
+  editorial?: EditorialReview;
 };
 
 export type PlanItem = {
@@ -474,6 +672,73 @@ Requirements:
 Return ONLY a valid JSON array. No explanation, no markdown — just the array.`;
 
   const raw = await callGemini(prompt);
+  const initialPlan = JSON.parse(extractJSON(raw));
+  return validatePlan(initialPlan);
+}
+
+/* # Validate plan distribution and fix if needed */
+async function validatePlan(plan: PlanItem[]): Promise<PlanItem[]> {
+  // # Count pillar distribution
+  const pillarCounts: Record<string, number> = {};
+  const typeCounts: Record<string, number> = {};
+  const platformCarousels: Record<string, boolean> = {};
+
+  for (const item of plan) {
+    pillarCounts[item.pillar] = (pillarCounts[item.pillar] || 0) + 1;
+    typeCounts[item.contentType] = (typeCounts[item.contentType] || 0) + 1;
+    if (item.contentType === "carousel") {
+      platformCarousels[item.platform] = true;
+    }
+  }
+
+  const issues: string[] = [];
+
+  // # Check pillar balance
+  for (const [pillar, count] of Object.entries(pillarCounts)) {
+    if (count > 4) issues.push(`"${pillar}" appears ${count} times (max 4)`);
+  }
+
+  // # Check content type balance
+  for (const [type, count] of Object.entries(typeCounts)) {
+    if (count > 5) issues.push(`Content type "${type}" appears ${count} times (max 5)`);
+  }
+
+  // # Check back-to-back same pillar on same platform
+  const byPlatform: Record<string, PlanItem[]> = {};
+  for (const item of plan) {
+    if (!byPlatform[item.platform]) byPlatform[item.platform] = [];
+    byPlatform[item.platform].push(item);
+  }
+  for (const [platform, items] of Object.entries(byPlatform)) {
+    for (let i = 1; i < items.length; i++) {
+      if (items[i].pillar === items[i - 1].pillar) {
+        issues.push(`${platform} has back-to-back "${items[i].pillar}" pillar`);
+      }
+    }
+  }
+
+  // # Check every platform has at least 1 carousel
+  for (const p of ["linkedin", "instagram", "twitter", "tiktok"]) {
+    if (!platformCarousels[p]) {
+      issues.push(`${p} has no carousel (every platform needs at least 1)`);
+    }
+  }
+
+  if (issues.length === 0) return plan;
+
+  // # Regenerate with correction instructions
+  console.warn("[Plan Validation] Issues found, regenerating:", issues);
+  const agent = AGENTS.strategist;
+  const fixPrompt = `${agent.systemPrompt}
+
+TASK: The previous plan had these distribution issues:
+${issues.map((i) => `- ${i}`).join("\n")}
+
+Regenerate the 14-piece weekly plan, fixing ALL of the above issues.
+Keep the same quality and specificity standards.
+Return ONLY a valid JSON array.`;
+
+  const raw = await callGemini(fixPrompt);
   return JSON.parse(extractJSON(raw));
 }
 
@@ -484,38 +749,53 @@ export async function generateVariations(
   contentType: string,
   count: number = 2,
   context?: string,
-  tone?: string
-): Promise<GeneratedContent[]> {
+  tone?: string,
+  variationGroup?: string
+): Promise<{ contents: GeneratedContent[]; variationGroup: string }> {
+  const groupId = variationGroup || `vg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const clamped = Math.min(Math.max(count, 1), 3);
 
-  /* # First variation uses research, others reuse the same research context */
+  /* # First variation uses research + editorial, others skip both
+     # If topic is empty, first call auto-discovers — use that topic for remaining variations */
   const first = await generateContent(agentId, topic, contentType, context, tone);
-  if (clamped === 1) return [first];
+  const resolvedTopic = topic?.trim() ? topic : first.title;
+  if (clamped === 1) return { contents: [first], variationGroup: groupId };
 
   /* # Generate remaining variations in parallel, skipping redundant research */
   const varContext = `${context || ""}\nIMPORTANT: Create a DIFFERENT angle, hook, and structure than your previous attempt. Same topic, fresh take. Vary the opening line, choose a different storytelling approach, or lead with a different data point.`;
   const remaining = await Promise.all(
     Array.from({ length: clamped - 1 }, () =>
-      generateContent(agentId, topic, contentType, varContext, tone, { skipResearch: true })
+      generateContent(agentId, resolvedTopic, contentType, varContext, tone, { skipResearch: true })
     )
   );
 
-  return [first, ...remaining];
+  return { contents: [first, ...remaining], variationGroup: groupId };
 }
 
-/* # Generate a single piece of content — research first, then create */
+/* # Generate a single piece of content — research first, then create
+   # If topic is empty, auto-discovers a trending topic via research agent */
 export async function generateContent(
   agentId: string,
   topic: string,
   contentType: string,
   context?: string,
   tone?: string,
-  options?: { skipResearch?: boolean }
+  options?: { skipResearch?: boolean; skipEditorial?: boolean }
 ): Promise<GeneratedContent> {
   const agent = AGENTS[agentId];
   if (!agent) throw new Error(`Unknown agent: ${agentId}`);
 
   const toneDirective = tone && TONES[tone] ? TONES[tone] : "";
+
+  // # Auto-discover a trending topic when none is provided
+  let autoDiscovered = false;
+  if (!topic || !topic.trim()) {
+    console.log(`[AutoTopic] No topic provided for ${agentId}, discovering...`);
+    const discovered = await discoverTopic(agent.platform, contentType, tone);
+    topic = discovered.topic;
+    autoDiscovered = true;
+    console.log(`[AutoTopic] Discovered: "${topic}" — ${discovered.reasoning}`);
+  }
 
   // # Research the topic before generating content
   let researchContext = "";
@@ -533,8 +813,14 @@ export async function generateContent(
     }
   }
 
+  // # When auto-discovered, add extra context so the agent knows it has creative freedom
+  if (autoDiscovered) {
+    context = `${context || ""}
+AUTONOMOUS MODE: This topic was auto-selected from current trending research. You have full creative freedom on the angle. Make it scroll-stopping and timely. Reference the specific data and trends from the research.`;
+  }
+
   /* # Inject voice samples so AI mimics real human writing patterns */
-  const voiceSamples = getVoiceSamplesPrompt(agent.platform, contentType);
+  const voiceSamples = await getVoiceSamplesPrompt(agent.platform, contentType);
 
   const prompt = `${agent.systemPrompt}
 
@@ -560,10 +846,31 @@ Return ONLY a valid JSON object matching the output format. No explanation outsi
   const raw = await callGemini(prompt);
   const parsed = JSON.parse(extractJSON(raw));
 
+  // # Editorial review — second-pass quality gate
+  let editorial: EditorialReview | undefined;
+  if (!options?.skipEditorial) {
+    try {
+      editorial = await reviewContent(
+        parsed.content,
+        agent.platform,
+        contentType,
+        parsed.hook || ""
+      );
+      // # Replace content with editor's revised version if score < 9
+      if (editorial.score > 0 && editorial.score < 9) {
+        parsed.content = editorial.revisedContent;
+        parsed.hook = editorial.revisedHook;
+      }
+    } catch (e) {
+      console.warn("Editorial review failed, using original:", e);
+    }
+  }
+
   return {
     ...parsed,
     researchSources,
     researchBrief,
+    editorial,
   };
 }
 

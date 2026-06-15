@@ -31,6 +31,15 @@ interface ContentItem {
   imageUrl: string | null;
   videoUrl: string | null;
   videoRenderId: string | null;
+  editorialScore: number | null;
+  editorialFeedback: string | null;
+  variationGroup: string | null;
+  engagementLikes: number | null;
+  engagementComments: number | null;
+  engagementShares: number | null;
+  engagementSaves: number | null;
+  engagementImpressions: number | null;
+  engagementScore: number | null;
   createdAt: string;
 }
 
@@ -183,6 +192,11 @@ export default function Dashboard() {
   /* ---- Video generation ---- */
   const [generatingVideo, setGeneratingVideo] = useState<string | null>(null);
   const [videoProgress, setVideoProgress] = useState<Record<string, number>>({});
+
+  /* ---- Engagement tracking ---- */
+  const [engagementOpen, setEngagementOpen] = useState<string | null>(null);
+  const [engagementValues, setEngagementValues] = useState<Record<string, string>>({});
+  const [savingEngagement, setSavingEngagement] = useState(false);
 
   /* ---- KPI ---- */
   const [kpiPlatform, setKpiPlatform] = useState("all");
@@ -374,29 +388,43 @@ export default function Dashboard() {
   const pendingCount = content.filter(c => c.status === "pending").length;
 
   /* ---- Content Actions ---- */
+  // # Generate content — if no topic is provided, the agent auto-discovers a trending topic
   const handleGenerate = async () => {
-    if (!genTopic.trim()) return;
+    const isAuto = !genTopic.trim();
     setGenerating(true);
-    setGenStep("Researching trends...");
+    setGenStep(isAuto ? "Discovering trending topics..." : "Researching trends...");
     try {
       // # Step indicator updates while API does research + generation + visual design
-      const stepTimer = setTimeout(() => setGenStep("Writing content..."), 8000);
-      const stepTimer2 = setTimeout(() => setGenStep("Designing visuals..."), 18000);
+      // # Auto mode takes longer because it runs topic discovery first
+      const stepTimer = setTimeout(() => setGenStep(isAuto ? "Picking the best angle..." : "Writing content..."), isAuto ? 12000 : 8000);
+      const stepTimer2 = setTimeout(() => setGenStep("Writing content..."), isAuto ? 20000 : 99999);
+      const stepTimer3 = setTimeout(() => setGenStep("Designing visuals..."), isAuto ? 32000 : 18000);
 
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId: genAgent, topic: genTopic, contentType: genType, tone: genTone }),
+        body: JSON.stringify({
+          agentId: genAgent,
+          topic: genTopic.trim() || "",
+          contentType: genType,
+          tone: genTone,
+        }),
       });
       clearTimeout(stepTimer);
       clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
 
       if (res.ok) {
         const data = await res.json();
         setGenTopic("");
         setNewContentId(data.id);
         setTimeout(() => setNewContentId(null), 5000);
-        showToast(`${AGENT_META[genAgent]?.name || genAgent} generated content with visuals`, "success");
+        showToast(
+          isAuto
+            ? `${AGENT_META[genAgent]?.name || genAgent} found a trending topic and generated content`
+            : `${AGENT_META[genAgent]?.name || genAgent} generated content with visuals`,
+          "success"
+        );
         fetchContent();
       } else {
         const data = await res.json().catch(() => ({}));
@@ -747,6 +775,46 @@ export default function Dashboard() {
     } finally { setPosting(null); }
   };
 
+  /* ---- Engagement tracking ---- */
+  const handleSaveEngagement = async (itemId: string) => {
+    setSavingEngagement(true);
+    try {
+      const res = await fetch(`/api/content/${itemId}/engagement`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          likes: parseInt(engagementValues[`${itemId}_likes`] || "0") || 0,
+          comments: parseInt(engagementValues[`${itemId}_comments`] || "0") || 0,
+          shares: parseInt(engagementValues[`${itemId}_shares`] || "0") || 0,
+          saves: parseInt(engagementValues[`${itemId}_saves`] || "0") || 0,
+          impressions: parseInt(engagementValues[`${itemId}_impressions`] || "0") || 0,
+        }),
+      });
+      if (res.ok) {
+        showToast("Engagement saved", "success");
+        setEngagementOpen(null);
+        fetchContent();
+      } else {
+        showToast("Failed to save engagement", "error");
+      }
+    } catch {
+      showToast("Failed to save engagement", "error");
+    }
+    setSavingEngagement(false);
+  };
+
+  const openEngagement = (item: ContentItem) => {
+    setEngagementOpen(engagementOpen === item.id ? null : item.id);
+    setEngagementValues((prev) => ({
+      ...prev,
+      [`${item.id}_likes`]: String(item.engagementLikes || 0),
+      [`${item.id}_comments`]: String(item.engagementComments || 0),
+      [`${item.id}_shares`]: String(item.engagementShares || 0),
+      [`${item.id}_saves`]: String(item.engagementSaves || 0),
+      [`${item.id}_impressions`]: String(item.engagementImpressions || 0),
+    }));
+  };
+
   const copyContent = (item: ContentItem) => {
     let text = item.body;
     if (item.hashtags && item.platform !== "twitter") {
@@ -914,17 +982,17 @@ export default function Dashboard() {
                   ))}
                 </select>
 
-                {/* Topic input */}
+                {/* Topic input — leave empty to let the agent auto-discover a trending topic */}
                 <input
                   type="text"
                   value={genTopic}
                   onChange={(e) => setGenTopic(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                  placeholder="Topic -- be specific (e.g. 'Why applying to 100 jobs a week actually hurts your chances')"
+                  placeholder="Leave empty for auto-trending, or enter a specific topic"
                   className="flex-1 min-w-[300px] px-4 py-2 bg-space-700 border border-card-border rounded-lg text-sm text-text-primary focus:outline-none focus:border-indigo-500"
                 />
-                <button onClick={handleGenerate} disabled={generating || !genTopic.trim()} className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition-opacity">
-                  {generating ? genStep || "Generating..." : "Generate"}
+                <button onClick={handleGenerate} disabled={generating} className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition-opacity whitespace-nowrap">
+                  {generating ? genStep || "Generating..." : genTopic.trim() ? "Generate" : "Auto Generate"}
                 </button>
               </div>
             </div>
@@ -1003,7 +1071,28 @@ export default function Dashboard() {
                               <p className="text-text-muted text-xs">{item.title}</p>
                             </div>
                           </div>
-                          <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_STYLES[item.status] || ""}`}>{item.status}</span>
+                          <div className="flex items-center gap-2">
+                            {/* # Editorial quality score badge */}
+                            {item.editorialScore != null && item.editorialScore > 0 && (
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-help ${
+                                  item.editorialScore >= 8 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
+                                  item.editorialScore >= 6 ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" :
+                                  "bg-red-500/15 text-red-400 border-red-500/30"
+                                }`}
+                                title={item.editorialFeedback || "Editorial review score"}
+                              >
+                                {item.editorialScore}/10
+                              </span>
+                            )}
+                            {/* # Variation group indicator */}
+                            {item.variationGroup && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium" title={`Variation group: ${item.variationGroup}`}>
+                                A/B
+                              </span>
+                            )}
+                            <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_STYLES[item.status] || ""}`}>{item.status}</span>
+                          </div>
                         </div>
 
                         {/* Hook */}
@@ -1075,6 +1164,52 @@ export default function Dashboard() {
                         {item.notes && (
                           <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2 mb-3">
                             <p className="text-yellow-400/70 text-xs">{item.notes}</p>
+                          </div>
+                        )}
+
+                        {/* # Engagement metrics display — shows after metrics have been entered */}
+                        {item.engagementScore != null && item.engagementScore > 0 && (
+                          <div className="bg-space-700/50 rounded-lg px-3 py-2 mb-3">
+                            <div className="flex items-center gap-4 text-xs">
+                              <span className="text-text-muted">Performance:</span>
+                              {item.engagementImpressions != null && <span className="text-text-secondary">{item.engagementImpressions.toLocaleString()} views</span>}
+                              {item.engagementLikes != null && <span className="text-text-secondary">{item.engagementLikes} likes</span>}
+                              {item.engagementComments != null && <span className="text-text-secondary">{item.engagementComments} comments</span>}
+                              {item.engagementShares != null && <span className="text-text-secondary">{item.engagementShares} shares</span>}
+                              {item.engagementSaves != null && <span className="text-text-secondary">{item.engagementSaves} saves</span>}
+                              <span className="text-indigo-400 font-medium ml-auto">Score: {item.engagementScore.toFixed(0)}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* # Engagement input form — appears when "Track" button is clicked on posted items */}
+                        {engagementOpen === item.id && (
+                          <div className="bg-indigo-500/5 border border-indigo-500/15 rounded-lg px-3 py-3 mb-3">
+                            <p className="text-text-muted text-xs mb-2">Enter engagement metrics from the platform:</p>
+                            <div className="grid grid-cols-5 gap-2 mb-2">
+                              {(["impressions", "likes", "comments", "shares", "saves"] as const).map((metric) => (
+                                <div key={metric}>
+                                  <label className="block text-text-muted text-xs mb-0.5 capitalize">{metric}</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={engagementValues[`${item.id}_${metric}`] || "0"}
+                                    onChange={(e) => setEngagementValues((prev) => ({ ...prev, [`${item.id}_${metric}`]: e.target.value }))}
+                                    className="w-full px-2 py-1 bg-space-700 border border-card-border rounded text-xs text-text-primary focus:outline-none focus:border-indigo-500"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSaveEngagement(item.id)}
+                                disabled={savingEngagement}
+                                className="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs font-medium rounded hover:bg-indigo-500/30 transition-colors disabled:opacity-50"
+                              >
+                                {savingEngagement ? "Saving..." : "Save Metrics"}
+                              </button>
+                              <button onClick={() => setEngagementOpen(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">Cancel</button>
+                            </div>
                           </div>
                         )}
 
@@ -1165,6 +1300,12 @@ export default function Dashboard() {
                           >
                             {regenerating === item.id ? "Regenerating..." : "Regenerate"}
                           </button>
+                          {/* # Track engagement button — only for posted content */}
+                          {item.status === "posted" && (
+                            <button onClick={() => openEngagement(item)} className="px-3 py-1.5 bg-emerald-500/15 text-emerald-400 text-xs font-medium rounded-lg hover:bg-emerald-500/25 transition-colors">
+                              {item.engagementScore ? "Update Metrics" : "Track"}
+                            </button>
+                          )}
                           <button onClick={() => copyContent(item)} className="px-3 py-1.5 bg-space-600 text-text-secondary text-xs font-medium rounded-lg hover:text-text-primary transition-colors">Copy</button>
                           <button onClick={() => { setEditing(item); setEditBody(item.body); setEditNotes(item.notes || ""); }} className="px-3 py-1.5 bg-space-600 text-text-secondary text-xs font-medium rounded-lg hover:text-text-primary transition-colors">Edit</button>
                           <button onClick={() => deleteContent(item.id)} className="px-3 py-1.5 text-text-muted text-xs hover:text-red-400 transition-colors ml-auto">Delete</button>

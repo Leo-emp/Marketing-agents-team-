@@ -6,7 +6,7 @@
    and angles to ensure content is timely and relevant.
    ============================================================ */
 
-import { callGeminiWithSearch } from "./gemini";
+import { callGemini, callGeminiWithSearch } from "./gemini";
 
 /* ---- Types ---- */
 export interface ResearchBrief {
@@ -132,6 +132,136 @@ function buildRawBrief(
   }
 
   return parts.join("\n\n");
+}
+
+/* # Discover a high-potential topic autonomously via real-time research
+   # Called when no topic is provided — the agent picks its own angle */
+export async function discoverTopic(
+  platform: string,
+  contentType: string,
+  tone?: string
+): Promise<{ topic: string; reasoning: string; researchBrief: ResearchBrief }> {
+  // # Step 1: Research what's trending right now in the career/hiring space
+  const researchPrompt = `You are a research analyst specializing in the career tech and job search industry. Your job is to find what's CURRENTLY VIRAL, TRENDING, or generating high engagement in the career and job search space.
+
+TARGET PLATFORM: ${platform}
+CONTENT FORMAT: ${contentType}
+${tone ? `DESIRED TONE: ${tone}` : ""}
+
+RESEARCH TASK:
+1. What career/hiring topics are going VIRAL on ${platform} right now? (last 7 days)
+2. What controversial or surprising job market news just dropped?
+3. What are job seekers complaining about or celebrating right now?
+4. What content from career influencers is getting massive engagement?
+5. Any new AI hiring tools, layoff news, salary reports, or workplace policy changes?
+
+INDUSTRY CONTEXT:
+- Brand: JobPilot AI — all-in-one AI career platform (resume tools, interview prep, cover letters, LinkedIn optimization, portfolio builder)
+- Audience: active job seekers, career changers, recent grads, international professionals
+- Voice: expert career advisor, not salesy — builds trust through real expertise
+
+Return a JSON object:
+{
+  "trending": ["specific trending topic with detail", ...],
+  "viral_angles": ["specific angle that's getting engagement", ...],
+  "dataPoints": ["recent stat or finding", ...],
+  "news": ["recent career/hiring news item", ...],
+  "avoidTopics": ["oversaturated topic to skip", ...],
+  "summary": "2-3 paragraph landscape brief"
+}
+
+Be SPECIFIC and CURRENT. Reference real events, real numbers, real trends from the last 7-14 days.
+Return ONLY valid JSON.`;
+
+  let research: ResearchBrief;
+  let rawResearch: { trending?: string[]; viral_angles?: string[]; dataPoints?: string[]; news?: string[]; avoidTopics?: string[]; summary?: string } = {};
+
+  try {
+    const { text, sources } = await callGeminiWithSearch(researchPrompt);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      rawResearch = JSON.parse(jsonMatch[0]);
+    }
+    research = {
+      trends: rawResearch.trending || [],
+      dataPoints: rawResearch.dataPoints || [],
+      angles: rawResearch.viral_angles || [],
+      avoidTopics: rawResearch.avoidTopics || [],
+      sources,
+      rawBrief: buildRawBrief({
+        trends: rawResearch.trending,
+        dataPoints: rawResearch.dataPoints,
+        angles: rawResearch.viral_angles,
+        avoidTopics: rawResearch.avoidTopics,
+        summary: rawResearch.summary,
+      }, sources),
+    };
+  } catch (e) {
+    console.error("Topic discovery research failed:", e);
+    research = buildFallbackBrief("career tips job search AI hiring", platform, []);
+    rawResearch = {};
+  }
+
+  // # Step 2: Pick the single best topic from the research — specific angle, not generic
+  const pickPrompt = `You are a content strategist for a career tech brand (JobPilot AI). Based on the research below, pick ONE specific, high-potential content topic.
+
+PLATFORM: ${platform}
+CONTENT TYPE: ${contentType}
+${tone ? `TONE: ${tone}` : ""}
+
+RESEARCH DATA:
+${research.rawBrief}
+
+RULES FOR PICKING A TOPIC:
+- Pick something TIMELY — connected to current news, trends, or viral conversations
+- Be SPECIFIC — "Why applying to 100 jobs a week actually hurts your chances" not "Resume tips"
+- Pick an angle that will STOP THE SCROLL — counterintuitive, data-backed, or emotionally resonant
+- Consider what performs best on ${platform}: ${
+    platform === "linkedin" ? "thought leadership, data stories, contrarian takes, frameworks"
+    : platform === "twitter" ? "punchy takes, surprising stats, hot takes, thread-worthy topics"
+    : platform === "instagram" ? "save-worthy tips, carousel-friendly frameworks, visual before/afters"
+    : "relatable scenarios, POV hooks, quick tips, surprising reveals"
+  }
+- The topic should naturally relate to job searching, careers, resumes, interviews, or professional growth
+- Avoid generic evergreen topics unless you have a genuinely fresh angle backed by current data
+- NEVER pick topics from the "avoid" list
+
+Return a JSON object:
+{
+  "topic": "The specific, scroll-stopping topic with a clear thesis (this gets passed to the writing agent)",
+  "reasoning": "Why this topic will perform well right now — what trend or data point makes it timely"
+}
+
+Return ONLY valid JSON.`;
+
+  try {
+    const pickRaw = await callGemini(pickPrompt);
+    const pickMatch = pickRaw.match(/\{[\s\S]*\}/);
+    if (!pickMatch) throw new Error("No JSON in topic pick response");
+    const picked = JSON.parse(pickMatch[0]);
+
+    // # Cache the research so the content generator doesn't repeat it
+    const key = getCacheKey(picked.topic, platform);
+    cache.set(key, { brief: research, timestamp: Date.now() });
+
+    return {
+      topic: picked.topic,
+      reasoning: picked.reasoning,
+      researchBrief: research,
+    };
+  } catch (e) {
+    console.error("Topic pick failed, using fallback:", e);
+    // # Fallback: use the first trend or angle from the research
+    const fallbackTopic = research.trends[0] || research.angles[0] || "How AI is changing the way companies screen resumes in 2026";
+    const key = getCacheKey(fallbackTopic, platform);
+    cache.set(key, { brief: research, timestamp: Date.now() });
+
+    return {
+      topic: fallbackTopic,
+      reasoning: "Auto-selected from trending research data",
+      researchBrief: research,
+    };
+  }
 }
 
 /* # Minimal brief when research fails — content gen can still proceed */
