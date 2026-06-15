@@ -30,7 +30,7 @@ export async function GET(
     // # Render via Canvas
     const pngBuffer = await renderSlideCanvas(slideData, visual.width, visual.height);
 
-    return new NextResponse(pngBuffer, {
+    return new NextResponse(new Uint8Array(pngBuffer), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=3600",

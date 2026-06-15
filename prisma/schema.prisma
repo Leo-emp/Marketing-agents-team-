@@ -38,12 +38,26 @@ model Content {
   imageUrl       String?                           // URL/path to generated image(s)
   videoUrl       String?                           // S3 URL of rendered video (reels)
   videoRenderId  String?                           // Remotion Lambda render ID for progress polling
+  // # Editorial review fields — second-pass AI quality check
+  editorialScore    Float?                         // 1-10 score from editorial review agent
+  editorialFeedback String?                        // Specific feedback: what was fixed, what passed
+  // # A/B variation tracking — groups variations for performance comparison
+  variationGroup String?                           // Shared ID linking A/B variations together
+  // # Engagement metrics — populated after posting for feedback loop
+  engagementLikes       Int?                       // Likes/reactions count
+  engagementComments    Int?                       // Comments count
+  engagementShares      Int?                       // Shares/reposts count
+  engagementSaves       Int?                       // Saves/bookmarks count
+  engagementImpressions Int?                       // Total impressions/views
+  engagementScore       Float?                     // Computed composite score for ranking
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
   @@index([status])
   @@index([platform])
   @@index([scheduledFor])
+  @@index([variationGroup])
+  @@index([engagementScore])
 }
 
 // ---- Content Plans ----

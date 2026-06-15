@@ -56,8 +56,14 @@ PLATFORM: ${platform}
 CONTENT TYPE: ${contentType}
 
 TASK:
-${contentType === "carousel" ? `Create 7-10 slides for a carousel. First slide = "hero" hook. Last slide = "cta". Middle slides mix layouts based on the content. Each slide's headline must be SHORT (15-25 words max — this text appears ON the image).` : ""}
-${contentType === "single_image" || contentType === "post" ? `Create exactly 1 slide. Choose the best layout for this content. The headline must be SHORT and impactful (15-25 words max — this text appears ON the image).` : ""}
+${contentType === "carousel" ? `Create 7-10 slides for a carousel. Rules:
+- First slide MUST be "hero" layout (bold hook slide)
+- Last slide MUST be "cta" layout (call-to-action with brand URL)
+- Middle slides MUST use at least 4 DIFFERENT layout types — vary between: stat_card, tip, quote, list, gradient_text, highlight_box, numbered_steps, before_after, comparison, split_image, data_chart
+- NO two consecutive slides should use the same layout type
+- Each slide's headline must be SHORT (15-25 words max — this text appears ON the image)
+- Each slide MUST have UNIQUE photoKeywords — no repeating the same search terms across slides. Choose visually distinct backgrounds that create variety as the user swipes.` : ""}
+${contentType === "single_image" || contentType === "post" ? `Create exactly 1 slide. Choose the most impactful layout for this content (hero for bold statements, stat_card for data, quote for insights, gradient_text for one-liners). The headline must be SHORT and impactful (15-25 words max — this text appears ON the image). Choose specific, visually striking photoKeywords — not generic terms like "office" or "business".` : ""}
 ${contentType === "reel_script" ? `Create 4-6 storyboard frames showing the key visual moments. Use "hero" for hooks, "tip" for main points, "stat_card" for data, "cta" for ending.` : ""}
 
 CRITICAL RULES:
@@ -95,20 +101,33 @@ Return a JSON object:
 Only include fields relevant to each layout. For stat_card, include "stat". For list, include "bullets". For others, use headline + optional subheadline/body.
 Return ONLY a valid JSON object.`;
 
-  const raw = await callGemini(prompt);
+  let raw = await callGemini(prompt);
 
-  // # Parse the response
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error("Visual designer returned no valid JSON");
+  // # Parse the response — retry once if JSON is malformed
+  let parsed: { slides?: unknown[]; caption?: string };
+  try {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON object found");
+    parsed = JSON.parse(jsonMatch[0]);
+  } catch (firstErr) {
+    console.warn("[Visual Designer] First JSON parse failed, retrying:", firstErr);
+    raw = await callGemini(
+      `Your previous response was not valid JSON. Return ONLY a valid JSON object with "slides" array and "caption" string. No explanation, no markdown. The original request was:\n\n${prompt}`
+    );
+    const retryMatch = raw.match(/\{[\s\S]*\}/);
+    if (!retryMatch) throw new Error("Visual designer returned no valid JSON after retry");
+    parsed = JSON.parse(retryMatch[0]);
   }
 
-  const parsed = JSON.parse(jsonMatch[0]);
+  // # Validate slides array exists and is non-empty
+  if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
+    throw new Error("Visual designer returned empty or missing slides array");
+  }
 
   // # Validate and normalize slide data
   const validLayouts: SlideLayout[] = ["hero", "stat_card", "tip", "quote", "list", "cta", "before_after", "screenshot", "data_chart", "comparison", "numbered_steps", "gradient_text", "highlight_box", "split_image", "progress_bar"];
 
-  const rawSlides = (parsed.slides || []).map((slide: Record<string, unknown>, index: number) => {
+  const rawSlides = ((parsed.slides || []) as Record<string, unknown>[]).map((slide: Record<string, unknown>, index: number) => {
     const layout = validLayouts.includes(slide.layout as SlideLayout)
       ? (slide.layout as SlideLayout)
       : "hero";
