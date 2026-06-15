@@ -124,6 +124,56 @@ CONTENT RULES FOR PRODUCT MENTIONS:
 - NEVER list all features in one post. Pick ONE and go deep.
 `;
 
+/* ---- Competitor Intelligence (injected into every agent prompt) ---- */
+const COMPETITOR_INTEL = `
+COMPETITOR INTELLIGENCE — Know these players so you can outperform their content:
+
+1. TEAL (tealhq.com) — $29/mo
+   SOCIAL: 108K TikTok followers, ~9K Instagram, strong LinkedIn. They grew from 200 to 100K on TikTok via #CareerTok.
+   CONTENT STRATEGY: Heavy influencer marketing on LinkedIn — they pay career creators to promote them. TikTok demos of their resume builder and Achievement Assistant tool. Instagram is mostly recycled tips. Their LinkedIn presence leans on third-party creators, not original thought leadership.
+   FEATURES: AI resume builder, job tracker, Chrome extension for job saving, resume analysis (structure/keywords/measurable results). NO mock interviews, NO portfolio builder, NO LinkedIn content strategy tool, NO outreach crafter.
+   WEAKNESSES TO EXPLOIT: $29/mo for less than we offer. No interview prep at all. No cover letter generator. No portfolio builder. Their content is product-demo heavy — lacks the authoritative, educational depth we can offer. They rely on influencers, which means their brand voice is inconsistent.
+   WHAT THEY DO WELL: Clean product demos on TikTok, strong Chrome extension UX, good job tracker. Learn from their short-form video hooks — they keep TikToks under 30s and lead with specific results.
+
+2. JOBSCAN (jobscan.co) — $49.95/mo
+   SOCIAL: Moderate LinkedIn presence, minimal TikTok/Instagram. Content is very feature-focused and dry.
+   CONTENT STRATEGY: Blog-heavy SEO play. Their social content is mostly blog repurposing — lacks personality, very corporate tone. LinkedIn posts are generic ATS tips without specific data. Almost no TikTok or Instagram presence.
+   FEATURES: ATS resume scanner, LinkedIn optimization, cover letter generator, resume builder. Strong on keyword matching.
+   WEAKNESSES TO EXPLOIT: $49.95/mo — nearly 2x Teal and way more than us. No mock interviews, no portfolio builder, no outreach crafter. Their content is bland and corporate — exactly what the 2026 LinkedIn algorithm punishes (AI-generated formulaic content gets 47% less reach). Zero personality in their brand voice.
+   WHAT THEY DO WELL: Strong SEO ranking for "ATS resume" keywords. Their keyword match scoring is well-known. Reference their pricing gap in competitive content.
+
+3. KICKRESUME (kickresume.com) — $19/mo
+   SOCIAL: Small social footprint. Blog and template gallery drive most traffic.
+   CONTENT STRATEGY: Template-first — they rely on beautiful resume template galleries for organic search. Very little social media content. When they do post, it's generic career tips without original angles.
+   FEATURES: AI resume builder, cover letter builder, personal website builder, resume templates. Decent template variety.
+   WEAKNESSES TO EXPLOIT: Free plan is very restrictive. Their "personal website builder" is basic compared to our portfolio builder with 9 premium templates. No interview prep, no job tracking, no LinkedIn tools. Their content lacks authority — it reads like content-mill SEO articles.
+
+4. REZI (rezi.ai) — $29/mo
+   SOCIAL: Small but growing. Technical audience.
+   CONTENT STRATEGY: ATS-focused content. They position as the most technical resume optimizer. Content is very niche — deep ATS analysis, keyword targeting. Limited reach outside the tech job seeker segment.
+   FEATURES: ATS keyword targeting, resume scoring, AI content writing. Strongest ATS focus among competitors.
+   WEAKNESSES TO EXPLOIT: Too niche — only useful for ATS optimization. No interview prep, no portfolio, no networking tools. Not a full career platform. Their content only appeals to people who already know what ATS is.
+
+5. RESUME.IO / NOVORESUME / ENHANCV — $10-20/mo
+   SOCIAL: Minimal social presence across all three. Blog/SEO traffic is primary.
+   CONTENT STRATEGY: These are template-first builders. Their "content" is mostly resume examples and template galleries optimized for Google. Almost no social media strategy to speak of. They compete on design aesthetics, not features.
+   WEAKNESSES TO EXPLOIT: These are glorified template galleries with paywalls. Resume.io lets you build for free but charges to download — deceptive UX. None offer interview prep, job tracking, outreach tools, or career intelligence. They're feature-shallow compared to JobPilot.
+
+HOW TO USE THIS INTELLIGENCE IN CONTENT:
+- NEVER name competitors directly in posts (looks petty and gives them free exposure)
+- DO reference their gaps indirectly: "Most resume tools stop at the resume. But getting the interview is only half the battle — you also need to prepare for it, track your applications, and follow up strategically. That's why we built an all-in-one platform."
+- DO exploit pricing gaps: "Some tools charge $50/month just to scan your resume for keywords. You shouldn't need a subscription to know if your resume will pass ATS."
+- DO differentiate on breadth: Competitors are resume-only or ATS-only. We cover the ENTIRE job search journey.
+- DO outperform their content quality: Teal relies on influencers, Jobscan is corporate, Kickresume/Rezi/Resume.io barely post. We can OWN the thought leadership space with authoritative, data-backed, human-voiced content.
+- LEARN from Teal's TikTok: Short product demos with specific results ("I went from 2 callbacks to 11 by changing ONE thing") perform well.
+
+PLATFORM ALGORITHM INTELLIGENCE (2026):
+- LinkedIn: Carousels get 11x more interactions than images. AI-generated formulaic content gets 47% LESS reach. Human-voiced, expertise-driven content wins. Employee/founder storytelling outperforms brand-page content.
+- TikTok: #CareerTok has 2B+ views. 46% of Gen Z found a job via TikTok. Under-30s content with text overlays, specific results, and pattern interrupts every 5-7 seconds.
+- Instagram: Saves are the #1 algorithm signal. Save-worthy = actionable frameworks, checklists, step-by-step carousels. Gen Z uses Instagram 76% vs LinkedIn 34% for career content.
+- X/Twitter: Contrarian takes and punchy data hooks outperform everything else. No hashtags (looks corporate). Threads with 5-8 tweets get high engagement when each tweet stands alone.
+`;
+
 const PILLARS = `
 CONTENT PILLARS (rotate between these):
 1. CAREER TIPS — Resume writing, interview techniques, salary negotiation, job search strategies
@@ -281,6 +331,7 @@ export const AGENTS: Record<string, AgentPersona> = {
 YOUR ROLE: Plan weekly content calendars across LinkedIn, X/Twitter, Instagram, and TikTok. Every piece of content must serve our primary goal of building a trustworthy, credible brand image, and our secondary goal of driving awareness and traffic.
 
 ${BRAND}
+${COMPETITOR_INTEL}
 ${PILLARS}
 
 PLANNING PRINCIPLES:
@@ -373,6 +424,7 @@ WRITING STYLE:
 - Never use emojis. Professional formatting only.
 
 ${BRAND}
+${COMPETITOR_INTEL}
 ${QUALITY_RULES}
 ${BRAND_VOICE_DNA}
 ${CONTENT_FRAMEWORKS}
@@ -437,6 +489,7 @@ WRITING STYLE:
 - Never use emojis. Let the words do the work.
 
 ${BRAND}
+${COMPETITOR_INTEL}
 ${QUALITY_RULES}
 ${BRAND_VOICE_DNA}
 ${CONTENT_FRAMEWORKS}
@@ -496,6 +549,7 @@ WRITING STYLE:
 - Never use emojis. Professional formatting only. Let clean design and strong words carry the message.
 
 ${BRAND}
+${COMPETITOR_INTEL}
 ${QUALITY_RULES}
 ${BRAND_VOICE_DNA}
 ${CONTENT_FRAMEWORKS}
@@ -564,6 +618,7 @@ WRITING STYLE:
 - Never use emojis. Let personality and substance carry the message.
 
 ${BRAND}
+${COMPETITOR_INTEL}
 ${QUALITY_RULES}
 ${BRAND_VOICE_DNA}
 ${CONTENT_FRAMEWORKS}
