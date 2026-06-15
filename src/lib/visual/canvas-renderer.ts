@@ -1,15 +1,16 @@
 /* ============================================================
-   CANVAS RENDERING ENGINE
+   CANVAS RENDERING ENGINE — PREMIUM VISUAL SYSTEM
    ============================================================
-   Replaces Satori with @napi-rs/canvas for full pixel control.
-   Supports multiple font weights, shadows, gradients, stock
-   photo compositing, geometric accents, and glass-morphism cards.
+   @napi-rs/canvas renderer producing clean, professional
+   branded images. Adaptive scaling for all platform sizes.
+   Premium glassmorphism, indigo/violet gradients, and
+   refined typography with Apple/Linear-level aesthetics.
    ============================================================ */
 
-import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D, type Canvas, type Image } from "@napi-rs/canvas";
+import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D, type Image } from "@napi-rs/canvas";
 import { join } from "path";
 import type { SlideData } from "./types";
-import { BG, BG_CARD, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, ACCENT_1, ACCENT_2, ACCENT_3, BRAND_NAME, BRAND_URL } from "./brand";
+import { BG, BG_CARD, BG_ELEVATED, BORDER_STRONG, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, ACCENT_1, ACCENT_2, ACCENT_3, BRAND_NAME, BRAND_URL } from "./brand";
 
 /* ---- Font Registration ---- */
 
@@ -27,9 +28,16 @@ function registerFonts() {
   fontsRegistered = true;
 }
 
+/* ---- Adaptive Scaling ---- */
+
+// # Returns a scale function based on 1080px reference width
+function createScale(w: number) {
+  const sf = w / 1080;
+  return (v: number) => Math.round(v * sf);
+}
+
 /* ---- Color Helpers ---- */
 
-// # Parse hex to rgb components
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
@@ -40,9 +48,8 @@ function rgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/* ---- Drawing Utilities ---- */
+/* ---- Drawing Primitives ---- */
 
-// # Draw a rounded rectangle path (does not fill/stroke)
 function roundedRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number) {
   const radius = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -58,43 +65,39 @@ function roundedRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: num
   ctx.closePath();
 }
 
-// # Fill a rounded rectangle
-function fillRoundedRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, fill: string | CanvasGradient) {
+function fillRR(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, fill: string | CanvasGradient) {
   roundedRect(ctx, x, y, w, h, r);
   ctx.fillStyle = fill;
   ctx.fill();
 }
 
-// # Draw a rounded rectangle with border
-function strokeRoundedRect(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, strokeColor: string, lineWidth: number) {
+function strokeRR(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number, color: string, lw: number) {
   roundedRect(ctx, x, y, w, h, r);
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
   ctx.stroke();
 }
 
-// # Create a horizontal gradient
-function hGradient(ctx: SKRSContext2D, x1: number, x2: number, y: number, colors: string[]): CanvasGradient {
+function hGrad(ctx: SKRSContext2D, x1: number, x2: number, y: number, colors: string[]): CanvasGradient {
   const g = ctx.createLinearGradient(x1, y, x2, y);
   colors.forEach((c, i) => g.addColorStop(i / (colors.length - 1), c));
   return g;
 }
 
-// # Create a vertical gradient
-function vGradient(ctx: SKRSContext2D, y1: number, y2: number, x: number, colors: string[]): CanvasGradient {
+function vGrad(ctx: SKRSContext2D, y1: number, y2: number, x: number, colors: string[]): CanvasGradient {
   const g = ctx.createLinearGradient(x, y1, x, y2);
   colors.forEach((c, i) => g.addColorStop(i / (colors.length - 1), c));
   return g;
 }
 
-// # Create a diagonal gradient (135deg)
-function diagGradient(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, colors: string[]): CanvasGradient {
+function dGrad(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, colors: string[]): CanvasGradient {
   const g = ctx.createLinearGradient(x, y, x + w, y + h);
   colors.forEach((c, i) => g.addColorStop(i / (colors.length - 1), c));
   return g;
 }
 
-// # Word-wrap text into lines that fit maxWidth
+/* ---- Text Utilities ---- */
+
 function wrapText(ctx: SKRSContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(" ");
   const lines: string[] = [];
@@ -112,10 +115,10 @@ function wrapText(ctx: SKRSContext2D, text: string, maxWidth: number): string[] 
   return lines;
 }
 
-// # Draw wrapped text, returns Y position after last line
-function drawWrappedText(
+// # Draw wrapped text with optional drop shadow — returns Y after last line
+function drawText(
   ctx: SKRSContext2D, text: string, x: number, y: number,
-  maxWidth: number, lineHeight: number, maxLines?: number
+  maxWidth: number, lineHeight: number, maxLines?: number, shadow?: boolean
 ): number {
   const lines = wrapText(ctx, text, maxWidth);
   const limited = maxLines ? lines.slice(0, maxLines) : lines;
@@ -124,30 +127,25 @@ function drawWrappedText(
     if (maxLines && i === maxLines - 1 && lines.length > maxLines) {
       line = line.replace(/\s*\S*$/, "...");
     }
+    if (shadow) {
+      const saved = ctx.fillStyle;
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillText(line, x + 1, y + i * lineHeight + 2);
+      ctx.fillStyle = saved;
+    }
     ctx.fillText(line, x, y + i * lineHeight);
   }
   return y + limited.length * lineHeight;
 }
 
-// # Draw text with gradient fill
-function drawGradientText(
-  ctx: SKRSContext2D, text: string, x: number, y: number,
-  font: string, colors: string[], maxWidth?: number
-) {
-  ctx.font = font;
-  const width = maxWidth || ctx.measureText(text).width;
-  const gradient = ctx.createLinearGradient(x, y - 30, x + width, y + 10);
-  colors.forEach((c, i) => gradient.addColorStop(i / (colors.length - 1), c));
-  ctx.fillStyle = gradient;
-  ctx.fillText(text, x, y);
-}
+/* ---- Premium Visual Elements ---- */
 
-// # Draw a glowing circle accent — high visibility for premium look
-function drawGlowCircle(ctx: SKRSContext2D, cx: number, cy: number, radius: number, color: string, opacity: number = 0.30) {
+// # Soft ambient glow orb — clean radial falloff
+function drawGlow(ctx: SKRSContext2D, cx: number, cy: number, radius: number, color: string, opacity: number = 0.20) {
   const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
   gradient.addColorStop(0, rgba(color, opacity));
-  gradient.addColorStop(0.5, rgba(color, opacity * 0.4));
-  gradient.addColorStop(0.8, rgba(color, opacity * 0.12));
+  gradient.addColorStop(0.35, rgba(color, opacity * 0.4));
+  gradient.addColorStop(0.65, rgba(color, opacity * 0.1));
   gradient.addColorStop(1, rgba(color, 0));
   ctx.fillStyle = gradient;
   ctx.beginPath();
@@ -155,568 +153,589 @@ function drawGlowCircle(ctx: SKRSContext2D, cx: number, cy: number, radius: numb
   ctx.fill();
 }
 
-// # Draw rich ambient glow accents across the canvas
-function drawCornerAccents(ctx: SKRSContext2D, w: number, h: number) {
-  // # Large top-right primary glow
-  drawGlowCircle(ctx, w * 0.82, h * 0.08, w * 0.45, ACCENT_1, 0.22);
-  // # Bottom-left secondary glow
-  drawGlowCircle(ctx, w * 0.12, h * 0.88, w * 0.38, ACCENT_2, 0.18);
-  // # Center-right subtle tertiary warmth
-  drawGlowCircle(ctx, w * 0.7, h * 0.55, w * 0.28, ACCENT_3, 0.10);
-}
+// # Glass morphism card — premium dark glass with border highlight
+function drawCard(
+  ctx: SKRSContext2D, x: number, y: number, w: number, h: number,
+  r: number = 20, options?: { glow?: boolean; accentTop?: string }
+) {
+  if (options?.glow) {
+    ctx.shadowColor = rgba(ACCENT_1, 0.12);
+    ctx.shadowBlur = 48;
+    ctx.shadowOffsetY = 10;
+  }
 
-// # Draw visible grid dots for texture
-function drawGridDots(ctx: SKRSContext2D, x: number, y: number, cols: number, rows: number, spacing: number, color: string) {
-  ctx.fillStyle = color;
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      ctx.beginPath();
-      ctx.arc(x + c * spacing, y + r * spacing, 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  // # Semi-transparent dark fill
+  fillRR(ctx, x, y, w, h, r, "rgba(14,14,18,0.82)");
+
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // # Border
+  strokeRR(ctx, x, y, w, h, r, BORDER_STRONG, 1);
+
+  // # Top-edge inner highlight
+  ctx.save();
+  roundedRect(ctx, x + 1, y + 1, w - 2, h - 2, Math.max(r - 1, 0));
+  ctx.clip();
+  const hl = ctx.createLinearGradient(x, y, x, y + 5);
+  hl.addColorStop(0, "rgba(255,255,255,0.10)");
+  hl.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = hl;
+  ctx.fillRect(x, y, w, 5);
+  ctx.restore();
+
+  // # Gradient accent stripe at top of card
+  if (options?.accentTop) {
+    ctx.save();
+    roundedRect(ctx, x, y, w, r, r);
+    ctx.clip();
+    const ag = hGrad(ctx, x, x + w * 0.45, y, [options.accentTop, ACCENT_2]);
+    ctx.fillStyle = ag;
+    ctx.fillRect(x, y, w, 3);
+    ctx.restore();
   }
 }
 
-// # Draw a glass morphism card with semi-transparent fill and subtle border
-function drawGlassCard(ctx: SKRSContext2D, x: number, y: number, w: number, h: number, radius: number = 20) {
-  // # Semi-transparent dark fill
-  fillRoundedRect(ctx, x, y, w, h, radius, "rgba(17,17,19,0.65)");
-  // # Inner highlight at top edge
-  const highlight = ctx.createLinearGradient(x, y, x, y + 3);
-  highlight.addColorStop(0, "rgba(255,255,255,0.10)");
-  highlight.addColorStop(1, "rgba(255,255,255,0)");
-  fillRoundedRect(ctx, x, y, w, 3, radius, highlight);
-  // # Border
-  strokeRoundedRect(ctx, x, y, w, h, radius, "rgba(255,255,255,0.08)", 1);
-}
+/* ---- Background System ---- */
 
-/* ---- Background ---- */
-
-// # Rich layered background — looks premium even without stock photos
 async function drawBackground(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
-  // # Base: dark diagonal gradient (not flat)
-  const baseGrad = ctx.createLinearGradient(0, 0, w * 0.4, h);
-  baseGrad.addColorStop(0, "#0c0c10");
-  baseGrad.addColorStop(0.5, BG);
-  baseGrad.addColorStop(1, "#08080c");
-  ctx.fillStyle = baseGrad;
+  // # Rich multi-stop diagonal gradient base
+  const base = ctx.createLinearGradient(0, 0, w * 0.3, h);
+  base.addColorStop(0, "#0e0e14");
+  base.addColorStop(0.35, BG);
+  base.addColorStop(0.65, "#0a0a10");
+  base.addColorStop(1, "#080810");
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, w, h);
 
-  // # Stock photo layer (if available)
+  // # Stock photo compositing
   if (data.backgroundImageUrl) {
     try {
       const img = await loadImage(data.backgroundImageUrl);
-      const imgRatio = (img as Image).width / (img as Image).height;
+      const imgW = (img as Image).width;
+      const imgH = (img as Image).height;
+      const imgRatio = imgW / imgH;
       const canvasRatio = w / h;
-      let sx = 0, sy = 0, sw = (img as Image).width, sh = (img as Image).height;
+      let sx = 0, sy = 0, sw = imgW, sh = imgH;
       if (imgRatio > canvasRatio) {
-        sw = (img as Image).height * canvasRatio;
-        sx = ((img as Image).width - sw) / 2;
+        sw = imgH * canvasRatio;
+        sx = (imgW - sw) / 2;
       } else {
-        sh = (img as Image).width / canvasRatio;
-        sy = ((img as Image).height - sh) / 2;
+        sh = imgW / canvasRatio;
+        sy = (imgH - sh) / 2;
       }
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
 
-      const overlay = ctx.createLinearGradient(0, 0, 0, h);
-      overlay.addColorStop(0, "rgba(9,9,11,0.78)");
-      overlay.addColorStop(0.3, "rgba(9,9,11,0.55)");
-      overlay.addColorStop(0.7, "rgba(9,9,11,0.55)");
-      overlay.addColorStop(1, "rgba(9,9,11,0.82)");
-      ctx.fillStyle = overlay;
+      // # Overlay — translucent enough to let photo add atmosphere
+      const ov = ctx.createLinearGradient(0, 0, 0, h);
+      ov.addColorStop(0, "rgba(9,9,11,0.70)");
+      ov.addColorStop(0.35, "rgba(9,9,11,0.48)");
+      ov.addColorStop(0.65, "rgba(9,9,11,0.48)");
+      ov.addColorStop(1, "rgba(9,9,11,0.72)");
+      ctx.fillStyle = ov;
       ctx.fillRect(0, 0, w, h);
     } catch {
-      // # Photo load failed — gradient base is already drawn
+      // # Photo load failed — base gradient remains
     }
   }
 
-  // # Rich ambient glows for depth
-  drawCornerAccents(ctx, w, h);
+  // # Ambient glow orbs for depth — indigo top-right, violet bottom-left
+  drawGlow(ctx, w * 0.82, h * 0.08, w * 0.48, ACCENT_1, 0.16);
+  drawGlow(ctx, w * 0.14, h * 0.88, w * 0.40, ACCENT_2, 0.12);
 
-  // # Subtle noise-like grid texture across canvas
-  ctx.fillStyle = rgba("#ffffff", 0.015);
-  for (let ny = 0; ny < h; ny += 24) {
-    for (let nx = 0; nx < w; nx += 24) {
-      if (Math.sin(nx * 0.1 + ny * 0.13) > 0.6) {
-        ctx.fillRect(nx, ny, 1, 1);
-      }
-    }
-  }
+  // # Subtle vignette — darkened edges
+  const vig = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, "rgba(0,0,0,0.22)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, w, h);
 }
 
 /* ---- Header & Footer ---- */
 
-function drawHeader(ctx: SKRSContext2D, w: number, pad: number, slideNumber?: number, totalSlides?: number) {
-  const y = pad + 28;
+function drawHeader(ctx: SKRSContext2D, w: number, pad: number, s: (v: number) => number, slideNum?: number, totalSlides?: number) {
+  const y = pad + s(22);
 
-  // # Brand logo circle
-  const logoSize = 36;
-  const logoGrad = diagGradient(ctx, pad, y - logoSize / 2, logoSize, logoSize, [ACCENT_1, ACCENT_2]);
-  fillRoundedRect(ctx, pad, y - logoSize / 2, logoSize, logoSize, 10, logoGrad);
-
-  // # "J" letter in logo
-  ctx.font = "18px GeistBold";
+  // # Logo mark — gradient rounded square
+  const ls = s(32);
+  const lg = dGrad(ctx, pad, y - ls / 2, ls, ls, [ACCENT_1, ACCENT_2]);
+  fillRR(ctx, pad, y - ls / 2, ls, ls, s(8), lg);
+  ctx.font = `${s(15)}px GeistBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("J", pad + logoSize / 2, y + 1);
+  ctx.fillText("J", pad + ls / 2, y + 1);
 
   // # Brand name
-  ctx.font = "16px GeistSemiBold";
-  ctx.fillStyle = TEXT_SECONDARY;
+  ctx.font = `${s(13)}px GeistSemiBold`;
+  ctx.fillStyle = TEXT_MUTED;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillText(BRAND_NAME, pad + logoSize + 12, y);
+  ctx.fillText(BRAND_NAME, pad + ls + s(10), y);
 
-  // # Slide counter
-  if (slideNumber !== undefined && totalSlides !== undefined) {
-    ctx.font = "14px GeistMedium";
+  // # Slide counter pill
+  if (slideNum !== undefined && totalSlides !== undefined) {
+    const lbl = `${slideNum} / ${totalSlides}`;
+    ctx.font = `${s(11)}px GeistMedium`;
+    const tw = ctx.measureText(lbl).width;
+    const pw = tw + s(18);
+    const ph = s(22);
+    const px = w - pad - pw;
+    const py = y - ph / 2;
+    fillRR(ctx, px, py, pw, ph, ph / 2, "rgba(255,255,255,0.06)");
+    strokeRR(ctx, px, py, pw, ph, ph / 2, "rgba(255,255,255,0.08)", 1);
     ctx.fillStyle = TEXT_MUTED;
-    ctx.textAlign = "right";
-    ctx.fillText(`${slideNumber}/${totalSlides}`, w - pad, y);
+    ctx.textAlign = "center";
+    ctx.fillText(lbl, px + pw / 2, y + 1);
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
 }
 
-function drawFooter(ctx: SKRSContext2D, w: number, h: number, pad: number) {
-  const y = h - pad - 8;
+function drawFooter(ctx: SKRSContext2D, w: number, h: number, pad: number, s: (v: number) => number) {
+  const y = h - pad - s(2);
+
+  // # Separator — gradient fade line
+  const sepGrad = hGrad(ctx, pad, w - pad, 0, [rgba(ACCENT_1, 0.15), rgba(ACCENT_2, 0.06), "rgba(255,255,255,0)"]);
+  ctx.fillStyle = sepGrad;
+  ctx.fillRect(pad, y - s(18), w - pad * 2, 1);
 
   // # Brand URL
-  ctx.font = "14px GeistMedium";
+  ctx.font = `${s(11)}px GeistMedium`;
   ctx.fillStyle = TEXT_MUTED;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillText(BRAND_URL, pad, y);
 
-  // # Gradient accent line
-  const lineW = 60;
-  const lineGrad = hGradient(ctx, w - pad - lineW, w - pad, y - 4, [ACCENT_1, ACCENT_2]);
-  fillRoundedRect(ctx, w - pad - lineW, y - 6, lineW, 3, 2, lineGrad);
+  // # Small gradient accent mark
+  const dotR = s(3);
+  const dotGrad = dGrad(ctx, w - pad - dotR * 2, y - dotR * 2, dotR * 4, dotR * 4, [ACCENT_1, ACCENT_2]);
+  ctx.beginPath();
+  ctx.arc(w - pad - dotR, y - s(3), dotR, 0, Math.PI * 2);
+  ctx.fillStyle = dotGrad;
+  ctx.fill();
 }
 
-/* ---- Template Functions ---- */
+/* ---- Content Area Helper ---- */
 
-const PAD = 52; // # Standard padding
+function contentArea(pad: number, s: (v: number) => number, h: number) {
+  const top = pad + s(54);
+  const bot = h - pad - s(26);
+  return { top, bot, h: bot - top, cy: top + (bot - top) / 2 };
+}
 
-// # HERO: Bold headline with glass card, gradient accents, premium look
+/* ============================================================
+   TEMPLATE FUNCTIONS — 15 Premium Layouts
+   ============================================================ */
+
+// # HERO — Bold headline in a glass card with gradient accent
 async function drawHero(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  // # Decorative dot grid — top-right, more prominent
-  drawGridDots(ctx, w - PAD - 120, PAD + 70, 8, 6, 16, rgba(ACCENT_1, 0.25));
+  const area = contentArea(pad, s, h);
+  const inner = s(36);
+  const cardW = w - pad * 2;
+  const cardH = Math.min(area.h * 0.78, s(540));
+  const cardX = pad;
+  const cardY = area.cy - cardH / 2;
+  drawCard(ctx, cardX, cardY, cardW, cardH, s(22), { accentTop: data.accentColor || ACCENT_1 });
 
-  // # Glass card behind content
-  const cardX = PAD - 16;
-  const cardY = h * 0.28;
-  const cardW = w - PAD * 2 + 32;
-  const cardH = h * 0.52;
-  drawGlassCard(ctx, cardX, cardY, cardW, cardH, 24);
+  // # Gradient accent bar inside card
+  const barGrad = hGrad(ctx, cardX + inner, cardX + inner + s(110), 0, [data.accentColor || ACCENT_1, ACCENT_2]);
+  fillRR(ctx, cardX + inner, cardY + inner, s(110), s(5), s(3), barGrad);
 
-  // # Gradient accent bar at top of card — wide and prominent
-  const accentColor = data.accentColor || ACCENT_1;
-  const barGrad = hGradient(ctx, cardX, cardX + 160, cardY + 24, [accentColor, ACCENT_2]);
-  fillRoundedRect(ctx, cardX + 24, cardY + 24, 160, 6, 3, barGrad);
-
-  // # Small accent dot
-  ctx.beginPath();
-  ctx.arc(cardX + 24 + 170, cardY + 27, 4, 0, Math.PI * 2);
-  ctx.fillStyle = ACCENT_3;
-  ctx.fill();
-
-  // # Headline — bold, large
-  const fontSize = w >= 1200 ? 54 : 46;
-  ctx.font = `${fontSize}px GeistBold`;
+  // # Headline
+  const fs = s(w >= 1200 ? 48 : 42);
+  ctx.font = `${fs}px GeistBold`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textBaseline = "top";
-  const headY = cardY + 56;
-  const maxW = cardW - 56;
-  const nextY = drawWrappedText(ctx, data.headline, cardX + 28, headY, maxW, fontSize + 12, 3);
+  const headY = cardY + inner + s(26);
+  const maxW = cardW - inner * 2;
+  const lh = Math.round(fs * 1.22);
+  const nextY = drawText(ctx, data.headline, cardX + inner, headY, maxW, lh, 3, true);
 
   // # Subheadline
   if (data.subheadline) {
-    ctx.font = "22px GeistMedium";
+    ctx.font = `${s(19)}px GeistMedium`;
     ctx.fillStyle = TEXT_SECONDARY;
-    drawWrappedText(ctx, data.subheadline, cardX + 28, nextY + 20, maxW, 34, 2);
+    drawText(ctx, data.subheadline, cardX + inner, nextY + s(18), maxW, s(28), 2, true);
   }
 
-  // # Decorative gradient line at bottom-left of card
-  const lineGrad = vGradient(ctx, cardY + cardH - 100, cardY + cardH - 20, cardX + 28, [ACCENT_2, rgba(ACCENT_2, 0)]);
-  ctx.fillStyle = lineGrad;
-  fillRoundedRect(ctx, cardX + 28, cardY + cardH - 100, 3, 80, 2, lineGrad);
-
-  // # Bottom-right decorative ring
-  ctx.beginPath();
-  ctx.arc(w - PAD - 30, cardY + cardH - 40, 24, 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_1, 0.20);
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  drawFooter(ctx, w, h, PAD);
+  ctx.textBaseline = "alphabetic";
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # STAT CARD: Large centered stat with glass card and gradient coloring
+// # STAT CARD — Large centered statistic with gradient coloring
 async function drawStatCard(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const centerX = w / 2;
-  const centerY = h / 2;
+  const area = contentArea(pad, s, h);
+  const cx = w / 2;
 
   // # Glass card behind stat
-  const cardW = w * 0.7;
-  const cardH = h * 0.35;
-  drawGlassCard(ctx, centerX - cardW / 2, centerY - cardH / 2, cardW, cardH, 24);
+  const cardW = Math.min(w * 0.74, s(720));
+  const cardH = Math.min(area.h * 0.58, s(380));
+  drawCard(ctx, cx - cardW / 2, area.cy - cardH / 2, cardW, cardH, s(24));
 
-  // # Visible ring behind stat
+  // # Decorative ring
   ctx.beginPath();
-  ctx.arc(centerX, centerY - 10, 110, 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_1, 0.20);
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // # Second outer ring
-  ctx.beginPath();
-  ctx.arc(centerX, centerY - 10, 140, 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_2, 0.08);
-  ctx.lineWidth = 1;
+  ctx.arc(cx, area.cy - s(10), s(105), 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(ACCENT_1, 0.12);
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   if (data.stat) {
     // # Large stat value with bold gradient
-    const statFont = `${data.stat.value.length > 4 ? 76 : 100}px GeistBlack`;
-    ctx.font = statFont;
+    const vLen = data.stat.value.length;
+    const statFs = s(vLen > 5 ? 72 : vLen > 3 ? 100 : 128);
+    ctx.font = `${statFs}px GeistBlack`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const grad = diagGradient(ctx, centerX - 140, centerY - 70, 280, 120, [ACCENT_1, ACCENT_3, ACCENT_2]);
-    ctx.fillStyle = grad;
-    ctx.fillText(data.stat.value, centerX, centerY - 10);
+    const sg = dGrad(ctx, cx - s(150), area.cy - s(70), s(300), s(130), [ACCENT_1, ACCENT_3, ACCENT_2]);
+    ctx.fillStyle = sg;
+    ctx.fillText(data.stat.value, cx, area.cy - s(14));
 
-    // # Label below
-    ctx.font = "22px GeistSemiBold";
+    // # Label
+    ctx.font = `${s(20)}px GeistSemiBold`;
     ctx.fillStyle = TEXT_SECONDARY;
-    const labelLines = wrapText(ctx, data.stat.label, w * 0.65);
-    labelLines.forEach((line, i) => {
-      ctx.fillText(line, centerX, centerY + 70 + i * 32);
+    const labels = wrapText(ctx, data.stat.label, cardW * 0.75);
+    labels.slice(0, 2).forEach((line, i) => {
+      ctx.fillText(line, cx, area.cy + s(58) + i * s(30));
     });
   } else if (data.headline) {
-    ctx.font = "38px GeistBold";
+    ctx.font = `${s(36)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const lines = wrapText(ctx, data.headline, w * 0.65);
-    lines.forEach((line, i) => {
-      ctx.fillText(line, centerX, centerY - ((lines.length - 1) * 24) + i * 48);
+    const lines = wrapText(ctx, data.headline, cardW * 0.8);
+    lines.slice(0, 3).forEach((line, i) => {
+      ctx.fillText(line, cx, area.cy - ((lines.length - 1) * s(24)) + i * s(48));
     });
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # TIP: Numbered tip with glass card, gradient border, and body text
+// # TIP — Numbered tip with accent line, headline, and body text
 async function drawTip(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const accentColor = data.accentColor || ACCENT_1;
+  const area = contentArea(pad, s, h);
+  const accent = data.accentColor || ACCENT_1;
 
-  // # Glass card for content
-  const cardX = PAD - 8;
-  const cardY = h * 0.24;
-  const cardW = w - PAD * 2 + 16;
-  const cardH = h * 0.56;
-  drawGlassCard(ctx, cardX, cardY, cardW, cardH, 20);
+  // # Glass card
+  const cardW = w - pad * 2 + s(16);
+  const cardH = Math.min(area.h * 0.72, s(520));
+  const cardX = pad - s(8);
+  const cardY = area.cy - cardH / 2;
+  drawCard(ctx, cardX, cardY, cardW, cardH, s(20));
 
-  const contentX = cardX + 24;
-  const maxW = cardW - 60;
+  const inner = s(28);
 
-  // # Vertical accent line — thicker and more visible
-  const lineGrad = vGradient(ctx, cardY + 20, cardY + cardH - 20, contentX, [accentColor, ACCENT_2]);
-  fillRoundedRect(ctx, contentX, cardY + 20, 5, cardH - 40, 3, lineGrad);
+  // # Left accent line — thick gradient
+  const lineGrad = vGrad(ctx, cardY + inner, cardY + cardH - inner, 0, [accent, ACCENT_2]);
+  fillRR(ctx, cardX + inner, cardY + inner, s(5), cardH - inner * 2, s(3), lineGrad);
 
-  const textX = contentX + 36;
+  const textX = cardX + inner + s(32);
+  const textMaxW = cardW - inner * 2 - s(36);
 
   // # Tip number badge
   if (data.slideNumber) {
-    const badgeSize = 48;
-    fillRoundedRect(ctx, textX, cardY + 28, badgeSize, badgeSize, 14, rgba(accentColor, 0.20));
-    strokeRoundedRect(ctx, textX, cardY + 28, badgeSize, badgeSize, 14, rgba(accentColor, 0.30), 1);
-    ctx.font = "22px GeistBold";
-    ctx.fillStyle = accentColor;
+    const bSize = s(44);
+    const bGrad = dGrad(ctx, textX, cardY + inner, bSize, bSize, [accent, ACCENT_2]);
+    fillRR(ctx, textX, cardY + inner, bSize, bSize, s(12), bGrad);
+    ctx.font = `${s(20)}px GeistBold`;
+    ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(String(data.slideNumber), textX + badgeSize / 2, cardY + 28 + badgeSize / 2);
+    ctx.fillText(String(data.slideNumber), textX + bSize / 2, cardY + inner + bSize / 2 + 1);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   }
 
   // # Headline
-  const headY = cardY + (data.slideNumber ? 98 : 36);
-  ctx.font = "34px GeistBold";
+  const headY = cardY + inner + (data.slideNumber ? s(62) : 0);
+  const headFs = s(32);
+  ctx.font = `${headFs}px GeistBold`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textBaseline = "top";
-  const afterHead = drawWrappedText(ctx, data.headline, textX, headY, maxW - 30, 46, 3);
+  const afterHead = drawText(ctx, data.headline, textX, headY, textMaxW, Math.round(headFs * 1.3), 3, true);
 
   // # Body text
   if (data.body) {
-    ctx.font = "20px GeistMedium";
+    ctx.font = `${s(18)}px GeistMedium`;
     ctx.fillStyle = TEXT_SECONDARY;
-    drawWrappedText(ctx, data.body, textX, afterHead + 20, maxW - 30, 32, 5);
+    drawText(ctx, data.body, textX, afterHead + s(16), textMaxW, s(28), 5, true);
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # QUOTE: Large quotation mark with glass card and centered quote text
+// # QUOTE — Large quotation mark with centered quote text
 async function drawQuote(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const centerX = w / 2;
-  const maxW = w * 0.75;
+  const area = contentArea(pad, s, h);
+  const cx = w / 2;
+  const maxW = w * 0.76;
 
-  // # Glass card behind quote
-  const cardW = w * 0.85;
-  const cardH = h * 0.48;
-  const cardX = centerX - cardW / 2;
-  const cardY = h * 0.28;
-  drawGlassCard(ctx, cardX, cardY, cardW, cardH, 24);
+  // # Glass card
+  const cardW = w * 0.84;
+  const cardH = Math.min(area.h * 0.60, s(440));
+  const cardX = cx - cardW / 2;
+  const cardY = area.cy - cardH / 2;
+  drawCard(ctx, cardX, cardY, cardW, cardH, s(24));
 
   // # Large gradient quotation mark
-  ctx.font = "160px GeistBlack";
+  ctx.font = `${s(140)}px GeistBlack`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const quoteGrad = diagGradient(ctx, centerX - 60, h * 0.24, 120, 100, [ACCENT_1, ACCENT_2]);
-  ctx.fillStyle = quoteGrad;
-  ctx.fillText("“", centerX, h * 0.32);
+  const qGrad = dGrad(ctx, cx - s(50), cardY + s(10), s(100), s(80), [ACCENT_1, ACCENT_2]);
+  ctx.fillStyle = qGrad;
+  ctx.fillText("“", cx, cardY + s(55));
 
   // # Quote text
-  ctx.font = "28px GeistSemiBold";
+  ctx.font = `${s(26)}px GeistSemiBold`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textBaseline = "top";
   const lines = wrapText(ctx, data.headline, maxW);
-  const startY = h * 0.42;
+  const textH = Math.min(lines.length, 4) * s(40);
+  const startY = area.cy - textH / 2 + s(20);
   lines.slice(0, 4).forEach((line, i) => {
     ctx.textAlign = "center";
-    ctx.fillText(line, centerX, startY + i * 42);
+    ctx.fillText(line, cx, startY + i * s(40));
   });
 
   // # Attribution
   if (data.subheadline) {
-    ctx.font = "17px GeistMedium";
-    ctx.fillStyle = ACCENT_2;
+    ctx.font = `${s(16)}px GeistMedium`;
+    ctx.fillStyle = ACCENT_3;
     ctx.textAlign = "center";
-    ctx.fillText(`— ${data.subheadline}`, centerX, startY + Math.min(lines.length, 4) * 42 + 28);
+    ctx.fillText(`— ${data.subheadline}`, cx, startY + Math.min(lines.length, 4) * s(40) + s(20));
   }
-
-  // # Decorative dot grid below quote
-  drawGridDots(ctx, centerX - 40, cardY + cardH - 30, 6, 2, 14, rgba(ACCENT_1, 0.20));
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # LIST: Title + bullet items with glass card and gradient indicators
+// # LIST — Title with gradient-accented bullet items inside a glass card
 async function drawList(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const maxW = w - PAD * 2;
-  let y = h * 0.18;
+  const area = contentArea(pad, s, h);
+  const maxW = w - pad * 2;
+  let y = area.top + s(8);
 
-  // # Headline with gradient accent underline
-  ctx.font = "34px GeistBold";
+  // # Headline
+  const headFs = s(32);
+  ctx.font = `${headFs}px GeistBold`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textBaseline = "top";
-  y = drawWrappedText(ctx, data.headline, PAD, y, maxW, 44, 2);
-  const underGrad = hGradient(ctx, PAD, PAD + 120, y + 8, [ACCENT_1, ACCENT_2]);
-  fillRoundedRect(ctx, PAD, y + 8, 120, 4, 2, underGrad);
-  y += 32;
+  y = drawText(ctx, data.headline, pad, y, maxW, Math.round(headFs * 1.3), 2, true);
 
-  // # Bullet items inside glass card
+  // # Gradient underline
+  const ulGrad = hGrad(ctx, pad, pad + s(100), 0, [ACCENT_1, ACCENT_2]);
+  fillRR(ctx, pad, y + s(8), s(100), s(4), s(2), ulGrad);
+  y += s(28);
+
+  // # Bullet items in glass card
   if (data.bullets) {
-    const cardX = PAD - 12;
-    const cardW = w - PAD * 2 + 24;
-    const bulletH = Math.min(data.bullets.length, 6) * 56 + 32;
-    drawGlassCard(ctx, cardX, y - 8, cardW, bulletH, 16);
-
-    const bulletMaxW = maxW - 48;
     const maxBullets = Math.min(data.bullets.length, 6);
+    const bulletH = maxBullets * s(52) + s(32);
+    const cardX = pad - s(12);
+    const cardW = w - pad * 2 + s(24);
+    drawCard(ctx, cardX, y - s(8), cardW, bulletH, s(16));
+
+    const bulletMaxW = maxW - s(40);
     for (let i = 0; i < maxBullets; i++) {
-      // # Gradient dot indicator
-      const dotY = y + 12 + i * 56;
-      const dotGrad = diagGradient(ctx, PAD + 8, dotY, 10, 10, [ACCENT_1, ACCENT_2]);
+      const dotY = y + s(10) + i * s(52);
+
+      // # Gradient bullet dot
+      const dotGrad = dGrad(ctx, pad + s(8), dotY, s(8), s(8), [ACCENT_1, ACCENT_2]);
       ctx.beginPath();
-      ctx.arc(PAD + 12, dotY + 4, 5, 0, Math.PI * 2);
+      ctx.arc(pad + s(12), dotY + s(4), s(4), 0, Math.PI * 2);
       ctx.fillStyle = dotGrad;
       ctx.fill();
 
       // # Bullet text
-      ctx.font = "20px GeistMedium";
+      ctx.font = `${s(18)}px GeistMedium`;
       ctx.fillStyle = TEXT_PRIMARY;
-      drawWrappedText(ctx, data.bullets[i], PAD + 36, dotY - 4, bulletMaxW, 30, 2);
+      drawText(ctx, data.bullets[i], pad + s(32), dotY - s(4), bulletMaxW, s(28), 2);
     }
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # CTA: Call-to-action with glass card and gradient button
+// # CTA — Call-to-action with centered card, logo, and gradient button
 async function drawCta(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  // # Decorative dot grid
-  drawGridDots(ctx, PAD, h * 0.2, 5, 3, 16, rgba(ACCENT_2, 0.18));
+  const area = contentArea(pad, s, h);
+  const cx = w / 2;
 
-  const cardW = w * 0.80;
-  const cardH = h * 0.50;
-  const cardX = (w - cardW) / 2;
-  const cardY = (h - cardH) / 2;
+  // # Card with glow shadow
+  const cardW = Math.min(w * 0.78, s(740));
+  const cardH = Math.min(area.h * 0.62, s(440));
+  const cardX = cx - cardW / 2;
+  const cardY = area.cy - cardH / 2;
+  drawCard(ctx, cardX, cardY, cardW, cardH, s(24), { glow: true, accentTop: ACCENT_1 });
 
-  // # Card shadow — more prominent
-  ctx.shadowColor = rgba(ACCENT_1, 0.18);
-  ctx.shadowBlur = 60;
-  ctx.shadowOffsetY = 12;
-  drawGlassCard(ctx, cardX, cardY, cardW, cardH, 24);
-  ctx.shadowColor = "transparent";
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
+  const inner = s(40);
 
-  // # Top gradient accent on card — thicker
-  ctx.save();
-  roundedRect(ctx, cardX, cardY, cardW, 5, 24);
-  ctx.clip();
-  const topGrad = hGradient(ctx, cardX, cardX + cardW, cardY, [ACCENT_1, ACCENT_2]);
-  ctx.fillStyle = topGrad;
-  ctx.fillRect(cardX, cardY, cardW, 5);
-  ctx.restore();
-
-  const innerPad = 44;
-  const centerX = w / 2;
-
-  // # Logo inside card
-  const logoY = cardY + innerPad;
-  const logoSize = 52;
-  const logoGrad = diagGradient(ctx, centerX - logoSize / 2, logoY, logoSize, logoSize, [ACCENT_1, ACCENT_2]);
-  fillRoundedRect(ctx, centerX - logoSize / 2, logoY, logoSize, logoSize, 16, logoGrad);
-  ctx.font = "24px GeistBold";
+  // # Logo
+  const logoY = cardY + inner;
+  const logoSize = s(48);
+  const logoGrad = dGrad(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, [ACCENT_1, ACCENT_2]);
+  fillRR(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, s(14), logoGrad);
+  ctx.font = `${s(22)}px GeistBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("J", centerX, logoY + logoSize / 2 + 1);
+  ctx.fillText("J", cx, logoY + logoSize / 2 + 1);
 
   // # CTA headline
-  ctx.font = "28px GeistBold";
+  const headFs = s(26);
+  ctx.font = `${headFs}px GeistBold`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textBaseline = "top";
-  const headMaxW = cardW - innerPad * 2;
+  const headMaxW = cardW - inner * 2;
   const lines = wrapText(ctx, data.headline, headMaxW);
-  const headY = logoY + logoSize + 24;
+  const headY = logoY + logoSize + s(22);
   lines.slice(0, 2).forEach((line, i) => {
-    ctx.fillText(line, centerX, headY + i * 38);
+    ctx.fillText(line, cx, headY + i * Math.round(headFs * 1.35));
   });
 
-  // # Body text
-  let bodyEndY = headY + Math.min(lines.length, 2) * 38;
+  // # Body
+  let bodyEndY = headY + Math.min(lines.length, 2) * Math.round(headFs * 1.35);
   if (data.body) {
-    ctx.font = "18px Geist";
+    ctx.font = `${s(17)}px Geist`;
     ctx.fillStyle = TEXT_SECONDARY;
     const bodyLines = wrapText(ctx, data.body, headMaxW);
-    bodyEndY += 12;
+    bodyEndY += s(10);
     bodyLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, centerX, bodyEndY + i * 28);
+      ctx.fillText(line, cx, bodyEndY + i * s(26));
     });
-    bodyEndY += Math.min(bodyLines.length, 2) * 28;
+    bodyEndY += Math.min(bodyLines.length, 2) * s(26);
   }
 
   // # Gradient CTA button
-  const btnW = 220;
-  const btnH = 48;
-  const btnX = centerX - btnW / 2;
-  const btnY = bodyEndY + 24;
-  const btnGrad = hGradient(ctx, btnX, btnX + btnW, btnY, [ACCENT_1, ACCENT_2]);
-  fillRoundedRect(ctx, btnX, btnY, btnW, btnH, 14, btnGrad);
-  ctx.font = "18px GeistSemiBold";
+  const btnW = s(200);
+  const btnH = s(46);
+  const btnX = cx - btnW / 2;
+  const btnY = bodyEndY + s(22);
+  const btnGrad = hGrad(ctx, btnX, btnX + btnW, 0, [ACCENT_1, ACCENT_2]);
+  fillRR(ctx, btnX, btnY, btnW, btnH, s(12), btnGrad);
+  ctx.font = `${s(16)}px GeistSemiBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textBaseline = "middle";
-  ctx.fillText(BRAND_URL, centerX, btnY + btnH / 2);
+  ctx.fillText(BRAND_URL, cx, btnY + btnH / 2);
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # BEFORE/AFTER: Side-by-side comparison with glass cards and bold labels
+// # BEFORE/AFTER — Side-by-side comparison with red/green coding
 async function drawBeforeAfter(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const maxW = w - PAD * 2;
+  const area = contentArea(pad, s, h);
 
   // # Title
   if (data.headline) {
-    ctx.font = "30px GeistBold";
+    ctx.font = `${s(28)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    drawWrappedText(ctx, data.headline, w / 2, h * 0.16, maxW, 40, 2);
+    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(38), 2);
     ctx.textAlign = "left";
   }
 
-  const cardGap = 24;
-  const cardW = (maxW - cardGap) / 2;
-  const cardH = h * 0.48;
-  const cardY = h * 0.30;
+  const gap = s(20);
+  const cardW = (w - pad * 2 - gap) / 2;
+  const cardH = Math.min(area.h * 0.62, s(520));
+  const cardY = area.cy - cardH / 2 + s(20);
 
-  // # BEFORE card — red-tinted glass
-  fillRoundedRect(ctx, PAD, cardY, cardW, cardH, 18, "rgba(239,68,68,0.08)");
-  strokeRoundedRect(ctx, PAD, cardY, cardW, cardH, 18, "rgba(239,68,68,0.25)", 1.5);
-  // # Red top accent
-  fillRoundedRect(ctx, PAD, cardY, cardW, 4, 18, "#ef4444");
-  ctx.font = "14px GeistBold";
+  // # BEFORE card — red-tinted
+  fillRR(ctx, pad, cardY, cardW, cardH, s(18), "rgba(239,68,68,0.06)");
+  strokeRR(ctx, pad, cardY, cardW, cardH, s(18), "rgba(239,68,68,0.20)", 1);
+  ctx.save();
+  roundedRect(ctx, pad, cardY, cardW, s(3), s(18));
+  ctx.clip();
+  ctx.fillStyle = "#ef4444";
+  ctx.fillRect(pad, cardY, cardW, s(3));
+  ctx.restore();
+  ctx.font = `${s(12)}px GeistBold`;
   ctx.fillStyle = "#ef4444";
   ctx.textBaseline = "top";
-  ctx.letterSpacing = "3px";
-  ctx.fillText("BEFORE", PAD + 24, cardY + 24);
+  ctx.letterSpacing = `${s(3)}px`;
+  ctx.fillText("BEFORE", pad + s(24), cardY + s(22));
   ctx.letterSpacing = "0px";
-  ctx.font = "18px GeistMedium";
+  ctx.font = `${s(17)}px GeistMedium`;
   ctx.fillStyle = TEXT_SECONDARY;
-  drawWrappedText(ctx, data.beforeText || "", PAD + 24, cardY + 56, cardW - 48, 28, 8);
+  drawText(ctx, data.beforeText || "", pad + s(24), cardY + s(50), cardW - s(48), s(26), 8);
 
-  // # AFTER card — green-tinted glass
-  const afterX = PAD + cardW + cardGap;
-  fillRoundedRect(ctx, afterX, cardY, cardW, cardH, 18, "rgba(34,197,94,0.08)");
-  strokeRoundedRect(ctx, afterX, cardY, cardW, cardH, 18, "rgba(34,197,94,0.25)", 1.5);
-  // # Green top accent
-  fillRoundedRect(ctx, afterX, cardY, cardW, 4, 18, "#22c55e");
-  ctx.font = "14px GeistBold";
+  // # AFTER card — green-tinted
+  const afterX = pad + cardW + gap;
+  fillRR(ctx, afterX, cardY, cardW, cardH, s(18), "rgba(34,197,94,0.06)");
+  strokeRR(ctx, afterX, cardY, cardW, cardH, s(18), "rgba(34,197,94,0.20)", 1);
+  ctx.save();
+  roundedRect(ctx, afterX, cardY, cardW, s(3), s(18));
+  ctx.clip();
   ctx.fillStyle = "#22c55e";
-  ctx.letterSpacing = "3px";
-  ctx.fillText("AFTER", afterX + 24, cardY + 24);
+  ctx.fillRect(afterX, cardY, cardW, s(3));
+  ctx.restore();
+  ctx.font = `${s(12)}px GeistBold`;
+  ctx.fillStyle = "#22c55e";
+  ctx.letterSpacing = `${s(3)}px`;
+  ctx.fillText("AFTER", afterX + s(24), cardY + s(22));
   ctx.letterSpacing = "0px";
-  ctx.font = "18px GeistSemiBold";
+  ctx.font = `${s(17)}px GeistSemiBold`;
   ctx.fillStyle = TEXT_PRIMARY;
-  drawWrappedText(ctx, data.afterText || "", afterX + 24, cardY + 56, cardW - 48, 28, 8);
+  drawText(ctx, data.afterText || "", afterX + s(24), cardY + s(50), cardW - s(48), s(26), 8);
 
-  // # VS divider circle
-  const vsX = PAD + cardW + cardGap / 2;
+  // # VS divider
+  const vsX = pad + cardW + gap / 2;
   const vsY = cardY + cardH / 2;
   ctx.beginPath();
-  ctx.arc(vsX, vsY, 18, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(17,17,19,0.9)";
+  ctx.arc(vsX, vsY, s(16), 0, Math.PI * 2);
+  ctx.fillStyle = BG_ELEVATED;
   ctx.fill();
-  ctx.strokeStyle = rgba(ACCENT_1, 0.30);
-  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(vsX, vsY, s(16), 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(ACCENT_1, 0.25);
+  ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.font = "12px GeistBold";
+  ctx.font = `${s(11)}px GeistBold`;
   ctx.fillStyle = TEXT_SECONDARY;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -724,383 +743,414 @@ async function drawBeforeAfter(ctx: SKRSContext2D, data: SlideData, w: number, h
   ctx.textAlign = "left";
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # SCREENSHOT: Fake tweet/DM/notification card
+// # SCREENSHOT — Fake tweet/DM/notification card
 async function drawScreenshot(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const cardW = w * 0.82;
-  const cardH = h * 0.42;
-  const cardX = (w - cardW) / 2;
-  const cardY = (h - cardH) / 2;
+  const area = contentArea(pad, s, h);
+  const cx = w / 2;
 
-  // # Card with shadow
-  ctx.shadowColor = "rgba(0,0,0,0.3)";
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 6;
-  fillRoundedRect(ctx, cardX, cardY, cardW, cardH, 18, BG_CARD);
+  // # Card with drop shadow
+  const cardW = Math.min(w * 0.82, s(780));
+  const cardH = Math.min(area.h * 0.55, s(380));
+  const cardX = cx - cardW / 2;
+  const cardY = area.cy - cardH / 2;
+
+  ctx.shadowColor = "rgba(0,0,0,0.25)";
+  ctx.shadowBlur = s(28);
+  ctx.shadowOffsetY = s(6);
+  fillRR(ctx, cardX, cardY, cardW, cardH, s(18), BG_CARD);
   ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  strokeRoundedRect(ctx, cardX, cardY, cardW, cardH, 18, rgba(ACCENT_1, 0.1), 1);
+  strokeRR(ctx, cardX, cardY, cardW, cardH, s(18), rgba(ACCENT_1, 0.08), 1);
 
   // # Avatar
-  const avatarSize = 42;
-  const avatarX = cardX + 28;
-  const avatarY = cardY + 28;
-  const avGrad = diagGradient(ctx, avatarX, avatarY, avatarSize, avatarSize, [ACCENT_1, ACCENT_2]);
+  const avSize = s(40);
+  const avX = cardX + s(28);
+  const avY = cardY + s(28);
+  const avGrad = dGrad(ctx, avX, avY, avSize, avSize, [ACCENT_1, ACCENT_2]);
   ctx.beginPath();
-  ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+  ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
   ctx.fillStyle = avGrad;
   ctx.fill();
-  ctx.font = "18px GeistBold";
+  ctx.font = `${s(17)}px GeistBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText((data.screenshotAuthor || "U")[0].toUpperCase(), avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 1);
+  ctx.fillText((data.screenshotAuthor || "U")[0].toUpperCase(), avX + avSize / 2, avY + avSize / 2 + 1);
 
-  // # Author name and type
+  // # Author + type label
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = "17px GeistSemiBold";
+  ctx.font = `${s(16)}px GeistSemiBold`;
   ctx.fillStyle = TEXT_PRIMARY;
-  ctx.fillText(data.screenshotAuthor || "User", avatarX + avatarSize + 14, avatarY + 18);
-  ctx.font = "13px GeistMedium";
+  ctx.fillText(data.screenshotAuthor || "User", avX + avSize + s(12), avY + s(16));
+  ctx.font = `${s(12)}px GeistMedium`;
   ctx.fillStyle = TEXT_MUTED;
   const typeLabel = data.screenshotType === "dm" ? "Direct Message" : data.screenshotType === "email" ? "Email" : "Post";
-  ctx.fillText(typeLabel, avatarX + avatarSize + 14, avatarY + 38);
+  ctx.fillText(typeLabel, avX + avSize + s(12), avY + s(34));
 
   // # Message text
-  ctx.font = "20px Geist";
+  ctx.font = `${s(18)}px Geist`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textBaseline = "top";
-  drawWrappedText(ctx, data.headline, cardX + 28, avatarY + avatarSize + 20, cardW - 56, 32, 6);
+  drawText(ctx, data.headline, cardX + s(28), avY + avSize + s(18), cardW - s(56), s(30), 6);
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # DATA CHART: Horizontal bar chart with gradient bars
+// # DATA CHART — Horizontal bar chart with gradient fills
 async function drawDataChart(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const maxW = w - PAD * 2;
-  let y = h * 0.2;
+  const area = contentArea(pad, s, h);
+  const maxW = w - pad * 2;
+  let y = area.top + s(8);
 
   // # Title
   if (data.headline) {
-    ctx.font = "28px GeistBold";
+    ctx.font = `${s(26)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textBaseline = "top";
-    y = drawWrappedText(ctx, data.headline, PAD, y, maxW, 38, 2);
-    y += 32;
+    y = drawText(ctx, data.headline, pad, y, maxW, s(36), 2, true);
+    y += s(28);
   }
 
   // # Bars
   const bars = data.bars || [];
-  const barH = 10;
+  const barH = s(12);
   const maxBars = Math.min(bars.length, 7);
-  const barSpacing = Math.min(52, (h * 0.55) / maxBars);
+  const barSpacing = Math.min(s(56), (area.bot - y) / maxBars);
 
   for (let i = 0; i < maxBars; i++) {
     const bar = bars[i];
+
     // # Label + value
-    ctx.font = "16px GeistMedium";
+    ctx.font = `${s(15)}px GeistMedium`;
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
-    ctx.fillText(bar.label, PAD, y);
+    ctx.fillText(bar.label, pad, y);
     ctx.textAlign = "right";
-    ctx.font = "16px GeistBold";
+    ctx.font = `${s(15)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.fillText(`${bar.value}%`, PAD + maxW, y);
+    ctx.fillText(`${bar.value}%`, pad + maxW, y);
     ctx.textAlign = "left";
 
-    // # Bar background — visible
-    y += 10;
-    fillRoundedRect(ctx, PAD, y, maxW, barH, 5, rgba(ACCENT_1, 0.18));
+    // # Bar track
+    y += s(10);
+    fillRR(ctx, pad, y, maxW, barH, s(6), rgba(ACCENT_1, 0.12));
 
     // # Bar fill
     const fillW = (Math.min(bar.value, 100) / 100) * maxW;
     if (fillW > 0) {
-      const barGrad = hGradient(ctx, PAD, PAD + fillW, y, [bar.color || ACCENT_1, ACCENT_2]);
-      fillRoundedRect(ctx, PAD, y, fillW, barH, 5, barGrad);
+      const bg = hGrad(ctx, pad, pad + fillW, 0, [bar.color || ACCENT_1, ACCENT_2]);
+      fillRR(ctx, pad, y, fillW, barH, s(6), bg);
     }
 
-    y += barH + barSpacing - 10;
+    y += barH + barSpacing - s(10);
   }
 
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # COMPARISON: Two-column layout with glass cards and accent tops
+// # COMPARISON — Two-column layout with glass cards and accent headers
 async function drawComparison(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+
+  const area = contentArea(pad, s, h);
 
   // # Title
   if (data.headline) {
-    ctx.font = "30px GeistBold";
+    ctx.font = `${s(28)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    drawWrappedText(ctx, data.headline, w / 2, h * 0.14, w - PAD * 2, 40, 2);
+    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(38), 2);
     ctx.textAlign = "left";
   }
 
-  const gap = 24;
-  const colW = (w - PAD * 2 - gap) / 2;
-  const colH = h * 0.56;
-  const colY = h * 0.27;
+  const gap = s(20);
+  const colW = (w - pad * 2 - gap) / 2;
+  const colH = Math.min(area.h * 0.66, s(540));
+  const colY = area.cy - colH / 2 + s(18);
 
-  // # Left column — glass card with accent top
-  drawGlassCard(ctx, PAD, colY, colW, colH, 18);
-  fillRoundedRect(ctx, PAD, colY, colW, 4, 18, ACCENT_1);
-  ctx.font = "14px GeistBold";
+  // # Left column
+  drawCard(ctx, pad, colY, colW, colH, s(18), { accentTop: ACCENT_1 });
+  ctx.font = `${s(12)}px GeistBold`;
   ctx.fillStyle = ACCENT_1;
   ctx.textBaseline = "top";
-  ctx.letterSpacing = "3px";
-  ctx.fillText(data.leftLabel || "OPTION A", PAD + 24, colY + 24);
+  ctx.letterSpacing = `${s(3)}px`;
+  ctx.fillText(data.leftLabel || "OPTION A", pad + s(24), colY + s(20));
   ctx.letterSpacing = "0px";
 
-  let ly = colY + 54;
+  let ly = colY + s(48);
   (data.leftColumn || []).slice(0, 5).forEach((item) => {
-    const dotGrad = diagGradient(ctx, PAD + 24, ly, 8, 8, [ACCENT_1, ACCENT_2]);
     ctx.beginPath();
-    ctx.arc(PAD + 28, ly + 4, 4, 0, Math.PI * 2);
-    ctx.fillStyle = dotGrad;
+    ctx.arc(pad + s(28), ly + s(4), s(3), 0, Math.PI * 2);
+    ctx.fillStyle = ACCENT_1;
     ctx.fill();
-    ctx.font = "16px GeistMedium";
+    ctx.font = `${s(15)}px GeistMedium`;
     ctx.fillStyle = TEXT_SECONDARY;
-    ly = drawWrappedText(ctx, item, PAD + 50, ly, colW - 74, 24, 2) + 12;
+    ly = drawText(ctx, item, pad + s(46), ly, colW - s(70), s(22), 2) + s(10);
   });
 
-  // # Right column — glass card with accent top
-  const rx = PAD + colW + gap;
-  drawGlassCard(ctx, rx, colY, colW, colH, 18);
-  fillRoundedRect(ctx, rx, colY, colW, 4, 18, ACCENT_3);
-  ctx.font = "14px GeistBold";
+  // # Right column
+  const rx = pad + colW + gap;
+  drawCard(ctx, rx, colY, colW, colH, s(18), { accentTop: ACCENT_3 });
+  ctx.font = `${s(12)}px GeistBold`;
   ctx.fillStyle = ACCENT_3;
-  ctx.letterSpacing = "3px";
-  ctx.fillText(data.rightLabel || "OPTION B", rx + 24, colY + 24);
+  ctx.letterSpacing = `${s(3)}px`;
+  ctx.fillText(data.rightLabel || "OPTION B", rx + s(24), colY + s(20));
   ctx.letterSpacing = "0px";
 
-  let ry = colY + 54;
+  let ry = colY + s(48);
   (data.rightColumn || []).slice(0, 5).forEach((item) => {
     ctx.beginPath();
-    ctx.arc(rx + 28, ry + 4, 4, 0, Math.PI * 2);
+    ctx.arc(rx + s(28), ry + s(4), s(3), 0, Math.PI * 2);
     ctx.fillStyle = ACCENT_3;
     ctx.fill();
-    ctx.font = "16px GeistMedium";
+    ctx.font = `${s(15)}px GeistMedium`;
     ctx.fillStyle = TEXT_SECONDARY;
-    ry = drawWrappedText(ctx, item, rx + 50, ry, colW - 74, 24, 2) + 12;
+    ry = drawText(ctx, item, rx + s(46), ry, colW - s(70), s(22), 2) + s(10);
   });
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # NUMBERED STEPS: Step numbers in gradient badges with descriptions
+// # NUMBERED STEPS — Step badges with titles and details
 async function drawNumberedSteps(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const maxW = w - PAD * 2;
-  let y = h * 0.18;
+  const area = contentArea(pad, s, h);
+  const maxW = w - pad * 2;
+  let y = area.top + s(8);
 
   // # Title
   if (data.headline) {
-    ctx.font = "28px GeistBold";
+    ctx.font = `${s(26)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textBaseline = "top";
-    y = drawWrappedText(ctx, data.headline, PAD, y, maxW, 38, 2);
-    y += 28;
+    y = drawText(ctx, data.headline, pad, y, maxW, s(36), 2, true);
+    y += s(26);
   }
 
   const steps = data.steps || [];
   const maxSteps = Math.min(steps.length, 5);
-  const stepSpacing = Math.min(72, (h * 0.55) / maxSteps);
+  const stepSpace = Math.min(s(72), (area.bot - y) / maxSteps);
+  const badgeSize = s(42);
+
+  // # Connecting line between badges
+  if (maxSteps > 1) {
+    const lineX = pad + badgeSize / 2;
+    const lineTop = y + badgeSize;
+    const lineBot = y + (maxSteps - 1) * stepSpace + badgeSize / 2;
+    const lineGrad = vGrad(ctx, lineTop, lineBot, 0, [rgba(ACCENT_1, 0.20), rgba(ACCENT_2, 0.08)]);
+    ctx.fillStyle = lineGrad;
+    ctx.fillRect(lineX - 1, lineTop, 2, lineBot - lineTop);
+  }
 
   for (let i = 0; i < maxSteps; i++) {
     const step = steps[i];
-    const badgeSize = 44;
+    const sy = y + i * stepSpace;
 
     // # Gradient badge
-    const badgeGrad = diagGradient(ctx, PAD, y, badgeSize, badgeSize, [ACCENT_1, ACCENT_2]);
-    fillRoundedRect(ctx, PAD, y, badgeSize, badgeSize, 13, badgeGrad);
-    ctx.font = "20px GeistBold";
+    const bGrad = dGrad(ctx, pad, sy, badgeSize, badgeSize, [ACCENT_1, ACCENT_2]);
+    fillRR(ctx, pad, sy, badgeSize, badgeSize, s(12), bGrad);
+    ctx.font = `${s(18)}px GeistBold`;
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(String(step.number), PAD + badgeSize / 2, y + badgeSize / 2 + 1);
+    ctx.fillText(String(step.number), pad + badgeSize / 2, sy + badgeSize / 2 + 1);
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
 
     // # Step title
-    ctx.font = "20px GeistSemiBold";
+    const textX = pad + badgeSize + s(18);
+    ctx.font = `${s(19)}px GeistSemiBold`;
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.fillText(step.title, PAD + badgeSize + 20, y + 4);
+    ctx.fillText(step.title, textX, sy + s(4));
 
     // # Step detail
     if (step.detail) {
-      ctx.font = "16px Geist";
+      ctx.font = `${s(15)}px Geist`;
       ctx.fillStyle = TEXT_SECONDARY;
-      drawWrappedText(ctx, step.detail, PAD + badgeSize + 20, y + 28, maxW - badgeSize - 20, 24, 1);
+      drawText(ctx, step.detail, textX, sy + s(28), maxW - badgeSize - s(18), s(22), 1);
     }
-
-    y += stepSpacing;
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # GRADIENT TEXT: Large gradient-colored headline with decorative rings
+// # GRADIENT TEXT — Large gradient headline with minimal decoration
 async function drawGradientTextSlide(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const centerX = w / 2;
-  const fontSize = w >= 1200 ? 58 : 50;
+  const area = contentArea(pad, s, h);
+  const cx = w / 2;
   const maxW = w * 0.82;
 
-  // # Decorative rings — visible
+  // # Single decorative ring
   ctx.beginPath();
-  ctx.arc(centerX, h * 0.48, 180, 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_1, 0.15);
+  ctx.arc(cx, area.cy, s(170), 0, Math.PI * 2);
+  ctx.strokeStyle = rgba(ACCENT_1, 0.10);
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(centerX, h * 0.48, 220, 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_2, 0.08);
-  ctx.lineWidth = 1;
-  ctx.stroke();
 
-  // # Large gradient headline — bold
-  ctx.font = `${fontSize}px GeistBlack`;
+  // # Large gradient headline
+  const fs = s(w >= 1200 ? 54 : 48);
+  ctx.font = `${fs}px GeistBlack`;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   const lines = wrapText(ctx, data.headline, maxW);
-  const totalH = lines.length * (fontSize + 12);
-  const startY = (h - totalH) / 2;
+  const lh = Math.round(fs * 1.18);
+  const totalH = Math.min(lines.length, 3) * lh;
+  const startY = area.cy - totalH / 2;
 
-  const grad = diagGradient(ctx, centerX - maxW / 2, startY, maxW, totalH, [ACCENT_1, ACCENT_3, ACCENT_2]);
+  const grad = dGrad(ctx, cx - maxW / 2, startY, maxW, totalH, [ACCENT_1, ACCENT_3, ACCENT_2]);
   ctx.fillStyle = grad;
   lines.slice(0, 3).forEach((line, i) => {
-    ctx.fillText(line, centerX, startY + i * (fontSize + 12));
+    ctx.fillText(line, cx, startY + i * lh);
   });
 
-  // # Gradient underline below text
-  const underY = startY + Math.min(lines.length, 3) * (fontSize + 12) + 8;
-  const underGrad = hGradient(ctx, centerX - 60, centerX + 60, underY, [ACCENT_1, ACCENT_2]);
-  fillRoundedRect(ctx, centerX - 60, underY, 120, 4, 2, underGrad);
+  // # Gradient underline
+  const ulY = startY + Math.min(lines.length, 3) * lh + s(10);
+  const ulGrad = hGrad(ctx, cx - s(50), cx + s(50), 0, [ACCENT_1, ACCENT_2]);
+  fillRR(ctx, cx - s(50), ulY, s(100), s(4), s(2), ulGrad);
 
   // # Subheadline
   if (data.subheadline) {
-    ctx.font = "20px GeistMedium";
+    ctx.font = `${s(19)}px GeistMedium`;
     ctx.fillStyle = TEXT_SECONDARY;
     const subLines = wrapText(ctx, data.subheadline, maxW * 0.85);
     subLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, centerX, underY + 24 + i * 30);
+      ctx.fillText(line, cx, ulY + s(22) + i * s(28));
     });
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # HIGHLIGHT BOX: Key insight in a glowing accent card
+// # HIGHLIGHT BOX — Key insight in a glowing accent card
 async function drawHighlightBox(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const centerX = w / 2;
+  const area = contentArea(pad, s, h);
+  const cx = w / 2;
 
   // # Label above box
   if (data.subheadline) {
-    ctx.font = "15px GeistSemiBold";
+    ctx.font = `${s(13)}px GeistSemiBold`;
     ctx.fillStyle = TEXT_MUTED;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
-    ctx.letterSpacing = "3px";
-    ctx.fillText(data.subheadline.toUpperCase(), centerX, h * 0.32);
+    ctx.letterSpacing = `${s(3)}px`;
+    ctx.fillText(data.subheadline.toUpperCase(), cx, area.cy - s(120));
     ctx.letterSpacing = "0px";
   }
 
-  // # Highlight card with gradient border glow
-  const boxW = w * 0.78;
-  const boxH = h * 0.28;
-  const boxX = (w - boxW) / 2;
-  const boxY = h * 0.38;
+  // # Highlight card with glow
+  const boxW = Math.min(w * 0.78, s(740));
+  const boxH = Math.min(area.h * 0.32, s(260));
+  const boxX = cx - boxW / 2;
+  const boxY = area.cy - boxH / 2;
 
-  // # Outer glow — visible
-  drawGlowCircle(ctx, centerX, boxY + boxH / 2, boxW * 0.45, ACCENT_1, 0.18);
+  drawGlow(ctx, cx, boxY + boxH / 2, boxW * 0.40, ACCENT_1, 0.14);
 
-  // # Card background with richer gradient
-  const bgGrad = diagGradient(ctx, boxX, boxY, boxW, boxH, [rgba(ACCENT_1, 0.14), rgba(ACCENT_2, 0.14)]);
-  fillRoundedRect(ctx, boxX, boxY, boxW, boxH, 22, bgGrad);
-  strokeRoundedRect(ctx, boxX, boxY, boxW, boxH, 22, rgba(ACCENT_1, 0.35), 1.5);
+  const bgGrad = dGrad(ctx, boxX, boxY, boxW, boxH, [rgba(ACCENT_1, 0.10), rgba(ACCENT_2, 0.10)]);
+  fillRR(ctx, boxX, boxY, boxW, boxH, s(22), bgGrad);
+  strokeRR(ctx, boxX, boxY, boxW, boxH, s(22), rgba(ACCENT_1, 0.28), 1.5);
 
   // # Text inside box
-  ctx.font = "26px GeistSemiBold";
+  ctx.font = `${s(24)}px GeistSemiBold`;
   ctx.fillStyle = TEXT_PRIMARY;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  const lines = wrapText(ctx, data.headline, boxW - 64);
-  const textStartY = boxY + (boxH - lines.length * 38) / 2;
+  const lines = wrapText(ctx, data.headline, boxW - s(56));
+  const textStartY = boxY + (boxH - lines.length * s(36)) / 2;
   lines.slice(0, 3).forEach((line, i) => {
-    ctx.fillText(line, centerX, textStartY + i * 38);
+    ctx.fillText(line, cx, textStartY + i * s(36));
   });
 
   // # Body below box
   if (data.body) {
-    ctx.font = "18px Geist";
+    ctx.font = `${s(17)}px Geist`;
     ctx.fillStyle = TEXT_SECONDARY;
-    const bodyLines = wrapText(ctx, data.body, w * 0.75);
+    const bodyLines = wrapText(ctx, data.body, w * 0.72);
     bodyLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, centerX, boxY + boxH + 28 + i * 28);
+      ctx.fillText(line, cx, boxY + boxH + s(24) + i * s(26));
     });
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-// # SPLIT IMAGE: Left gradient accent panel + right text content
+// # SPLIT IMAGE — Left gradient accent panel + right text content
 async function drawSplitImage(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
 
-  const splitW = w * 0.38;
+  const splitW = w * 0.36;
 
   // # Left gradient panel
-  const panelGrad = vGradient(ctx, 0, h, 0, [ACCENT_1, ACCENT_2]);
+  const panelGrad = vGrad(ctx, 0, h, 0, [ACCENT_1, ACCENT_2]);
   ctx.fillStyle = panelGrad;
   ctx.fillRect(0, 0, splitW, h);
 
-  // # Visible pattern on panel
-  drawGridDots(ctx, 24, 24, 5, 10, 18, "rgba(255,255,255,0.15)");
+  // # Subtle horizontal lines on panel for texture
+  for (let py = 0; py < h; py += s(24)) {
+    if (Math.sin(py * 0.01) > 0.3) {
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillRect(0, py, splitW, 1);
+    }
+  }
 
   // # Stat or number on left panel
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   if (data.stat) {
-    ctx.font = `${data.stat.value.length > 4 ? 52 : 68}px GeistBlack`;
+    const vLen = data.stat.value.length;
+    ctx.font = `${s(vLen > 4 ? 48 : 64)}px GeistBlack`;
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(data.stat.value, splitW / 2, h / 2 - 16);
-    ctx.font = "16px GeistMedium";
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    const labelLines = wrapText(ctx, data.stat.label, splitW - 40);
-    labelLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, splitW / 2, h / 2 + 30 + i * 24);
+    ctx.fillText(data.stat.value, splitW / 2, h / 2 - s(16));
+    ctx.font = `${s(15)}px GeistMedium`;
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    const labels = wrapText(ctx, data.stat.label, splitW - s(40));
+    labels.slice(0, 2).forEach((line, i) => {
+      ctx.fillText(line, splitW / 2, h / 2 + s(28) + i * s(22));
     });
   } else if (data.slideNumber) {
-    ctx.font = "64px GeistBlack";
+    ctx.font = `${s(60)}px GeistBlack`;
     ctx.fillStyle = "#ffffff";
     ctx.fillText(String(data.slideNumber), splitW / 2, h / 2);
   }
@@ -1108,97 +1158,99 @@ async function drawSplitImage(ctx: SKRSContext2D, data: SlideData, w: number, h:
   // # Right content
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  const rightX = splitW + 48;
-  const rightMaxW = w - rightX - PAD;
+  const rightX = splitW + s(44);
+  const rightMaxW = w - rightX - pad;
 
-  ctx.font = "28px GeistBold";
+  ctx.font = `${s(26)}px GeistBold`;
   ctx.fillStyle = TEXT_PRIMARY;
-  const headEnd = drawWrappedText(ctx, data.headline, rightX, h * 0.35, rightMaxW, 38, 3);
+  const headEnd = drawText(ctx, data.headline, rightX, h * 0.32, rightMaxW, s(36), 3, true);
 
   if (data.body) {
-    ctx.font = "18px Geist";
+    ctx.font = `${s(17)}px Geist`;
     ctx.fillStyle = TEXT_SECONDARY;
-    drawWrappedText(ctx, data.body, rightX, headEnd + 20, rightMaxW, 28, 4);
+    drawText(ctx, data.body, rightX, headEnd + s(18), rightMaxW, s(26), 4, true);
   }
 
   // # Brand URL at bottom-right
-  ctx.font = "14px GeistMedium";
+  ctx.font = `${s(12)}px GeistMedium`;
   ctx.fillStyle = TEXT_MUTED;
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(BRAND_URL, rightX, h - PAD);
+  ctx.fillText(BRAND_URL, rightX, h - pad);
 }
 
-// # PROGRESS BAR: Multiple progress bars with labels and percentages
+// # PROGRESS BAR — Multiple progress bars with labels and percentages
 async function drawProgressBar(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
+  const s = createScale(w);
+  const pad = s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, PAD, data.slideNumber, data.totalSlides);
+  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
 
-  const maxW = w - PAD * 2;
-  let y = h * 0.2;
+  const area = contentArea(pad, s, h);
+  const maxW = w - pad * 2;
+  let y = area.top + s(8);
 
   // # Title
   if (data.headline) {
-    ctx.font = "28px GeistBold";
+    ctx.font = `${s(26)}px GeistBold`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textBaseline = "top";
-    y = drawWrappedText(ctx, data.headline, PAD, y, maxW, 38, 2);
-    y += 32;
+    y = drawText(ctx, data.headline, pad, y, maxW, s(36), 2, true);
+    y += s(28);
   }
 
   const bars = data.bars || [];
-  const barH = 14;
+  const barH = s(14);
   const maxBars = Math.min(bars.length, 6);
-  const barSpacing = Math.min(60, (h * 0.5) / maxBars);
+  const barSpacing = Math.min(s(60), (area.bot - y) / maxBars);
 
   for (let i = 0; i < maxBars; i++) {
     const bar = bars[i];
 
     // # Label
-    ctx.font = "18px GeistMedium";
+    ctx.font = `${s(16)}px GeistMedium`;
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
-    ctx.fillText(bar.label, PAD, y);
+    ctx.fillText(bar.label, pad, y);
 
     // # Percentage
     ctx.textAlign = "right";
-    ctx.font = "18px GeistBold";
+    ctx.font = `${s(16)}px GeistBold`;
     ctx.fillStyle = ACCENT_3;
-    ctx.fillText(`${bar.value}%`, PAD + maxW, y);
+    ctx.fillText(`${bar.value}%`, pad + maxW, y);
     ctx.textAlign = "left";
 
-    // # Bar track — visible
-    y += 14;
-    fillRoundedRect(ctx, PAD, y, maxW, barH, 7, rgba(ACCENT_1, 0.15));
+    // # Bar track
+    y += s(12);
+    fillRR(ctx, pad, y, maxW, barH, s(7), rgba(ACCENT_1, 0.10));
 
-    // # Bar fill with gradient
+    // # Bar fill
     const fillW = (Math.min(bar.value, 100) / 100) * maxW;
     if (fillW > 0) {
-      const grad = hGradient(ctx, PAD, PAD + fillW, y, [ACCENT_1, bar.color || ACCENT_3]);
-      fillRoundedRect(ctx, PAD, y, fillW, barH, 7, grad);
+      const grad = hGrad(ctx, pad, pad + fillW, 0, [ACCENT_1, bar.color || ACCENT_3]);
+      fillRR(ctx, pad, y, fillW, barH, s(7), grad);
     }
 
-    y += barH + barSpacing - 14;
+    y += barH + barSpacing - s(12);
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, PAD);
+  drawFooter(ctx, w, h, pad, s);
 }
 
-/* ---- Main Renderer ---- */
+/* ============================================================
+   MAIN RENDERER
+   ============================================================ */
 
-// # Renders a SlideData to a PNG Buffer using Canvas 2D
 export async function renderSlideCanvas(data: SlideData, width: number, height: number): Promise<Buffer> {
   registerFonts();
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
 
-  // # Enable font smoothing
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // # Route to the appropriate template
   switch (data.layout) {
     case "hero":           await drawHero(ctx, data, width, height); break;
     case "stat_card":      await drawStatCard(ctx, data, width, height); break;
