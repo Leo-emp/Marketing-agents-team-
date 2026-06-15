@@ -54,6 +54,7 @@ ${mediaPrompt ? `VISUAL DIRECTION: ${mediaPrompt}` : ""}
 ${topic ? `TOPIC: ${topic}` : ""}
 PLATFORM: ${platform}
 CONTENT TYPE: ${contentType}
+IMAGE DIMENSIONS: ${getDimensions(platform, contentType).width}x${getDimensions(platform, contentType).height}px (${getDimensions(platform, contentType).width > getDimensions(platform, contentType).height ? "landscape" : getDimensions(platform, contentType).width === getDimensions(platform, contentType).height ? "square" : "portrait"} format)
 
 TASK:
 ${contentType === "carousel" ? `Create 7-10 slides for a carousel. Rules:

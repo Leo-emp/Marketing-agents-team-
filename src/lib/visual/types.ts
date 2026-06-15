@@ -70,22 +70,28 @@ export interface VisualResult {
   }[];
 }
 
-/* # Platform-specific dimensions */
+/* # Platform-specific dimensions — correct per each platform's 2026 specs */
 export const PLATFORM_DIMENSIONS: Record<string, { width: number; height: number }> = {
-  // # Portrait for IG feed — 1080x1350 gets more screen real estate than square
+  // # Instagram — portrait 4:5 for feed posts/carousels, 9:16 for stories/reels
   "instagram:carousel": { width: 1080, height: 1350 },
   "instagram:single_image": { width: 1080, height: 1350 },
+  "instagram:post": { width: 1080, height: 1350 },
   "instagram:storyboard": { width: 1080, height: 1920 },
-  // # LinkedIn landscape for posts, square for carousel
+  "instagram:reel_script": { width: 1080, height: 1920 },
+  // # LinkedIn — landscape 1.91:1 for single posts, portrait 4:5 for carousel documents
   "linkedin:single_image": { width: 1200, height: 627 },
-  "linkedin:carousel": { width: 1080, height: 1080 },
-  // # Twitter/X landscape
+  "linkedin:post": { width: 1200, height: 627 },
+  "linkedin:carousel": { width: 1080, height: 1350 },
+  // # Twitter/X — landscape 16:9 for single images, square for carousels
   "twitter:single_image": { width: 1200, height: 675 },
+  "twitter:post": { width: 1200, height: 675 },
   "twitter:carousel": { width: 1080, height: 1080 },
-  // # TikTok
-  "tiktok:carousel": { width: 1080, height: 1080 },
-  "tiktok:single_image": { width: 1080, height: 1080 },
+  // # TikTok — portrait 9:16 for everything (full-screen native format)
+  "tiktok:carousel": { width: 1080, height: 1920 },
+  "tiktok:single_image": { width: 1080, height: 1920 },
+  "tiktok:post": { width: 1080, height: 1920 },
   "tiktok:storyboard": { width: 1080, height: 1920 },
+  "tiktok:reel_script": { width: 1080, height: 1920 },
 };
 
 /* # Get dimensions for a platform + content type combo */
