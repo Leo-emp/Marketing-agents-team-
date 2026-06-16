@@ -164,16 +164,16 @@ function drawDiagonalTexture(ctx: SKRSContext2D, w: number, h: number, isSolid: 
 function drawAccentLine(ctx: SKRSContext2D, x: number, y: number, lineW: number, s: (v: number) => number, isSolid: boolean) {
   const grad = ctx.createLinearGradient(x, y, x + lineW, y);
   if (isSolid) {
-    grad.addColorStop(0, "rgba(255,255,255,0.30)");
-    grad.addColorStop(0.7, "rgba(255,255,255,0.08)");
+    grad.addColorStop(0, "rgba(255,255,255,0.45)");
+    grad.addColorStop(0.6, "rgba(255,255,255,0.15)");
     grad.addColorStop(1, "rgba(255,255,255,0)");
   } else {
-    grad.addColorStop(0, rgba(ACCENT_1, 0.50));
-    grad.addColorStop(0.6, rgba(ACCENT_2, 0.20));
+    grad.addColorStop(0, rgba(ACCENT_1, 0.80));
+    grad.addColorStop(0.5, rgba(ACCENT_2, 0.40));
     grad.addColorStop(1, "rgba(255,255,255,0)");
   }
   ctx.fillStyle = grad;
-  ctx.fillRect(x, y, lineW, s(2));
+  ctx.fillRect(x, y, lineW, s(3));
 }
 
 /* ---- Brand Footer Bar — consistent bottom band ---- */
@@ -262,8 +262,8 @@ function drawCard(
 function drawSolidCard(
   ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number = 20
 ) {
-  fillRR(ctx, x, y, w, h, r, "rgba(255,255,255,0.08)");
-  strokeRR(ctx, x, y, w, h, r, "rgba(255,255,255,0.12)", 1);
+  fillRR(ctx, x, y, w, h, r, "rgba(0,0,0,0.18)");
+  strokeRR(ctx, x, y, w, h, r, "rgba(255,255,255,0.10)", 1);
 }
 
 /* ---- Background System — Three Modes ---- */
@@ -468,33 +468,43 @@ async function drawHero(ctx: SKRSContext2D, data: SlideData, w: number, h: numbe
 
   const area = contentArea(pad, s, h, isSolid);
 
-  // # Accent separator line below header — structural clarity
-  drawAccentLine(ctx, pad, area.top - s(6), w * 0.82, s, isSolid);
-
   const maxW = w - pad * 2;
   const fs = s(76);
   const lh = Math.round(fs * 1.18);
 
-  // # Large headline — direct on background for both modes
+  // # Estimate total content height to vertically center
+  ctx.font = `${fs}px GeistBold`;
+  const headLines = wrapText(ctx, data.headline, maxW);
+  let totalH = Math.min(headLines.length, 5) * lh;
+  if (data.subheadline) totalH += s(58) + s(42) * 2;
+  if (data.body) totalH += s(32) + s(36) * 3;
+  totalH += s(30); // accent line + spacing
+
+  const startY = Math.max(area.top + s(10), area.cy - totalH / 2);
+
+  // # Accent separator line — strong structural divider
+  drawAccentLine(ctx, pad, startY, w * 0.85, s, isSolid);
+
+  // # Large headline
   ctx.font = `${fs}px GeistBold`;
   ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
-  const headY = area.top + s(20);
+  const headY = startY + s(22);
   const nextY = drawText(ctx, data.headline, pad, headY, maxW, lh, 5, true);
 
   // # Subheadline in accent color
   if (data.subheadline) {
-    ctx.font = `${s(32)}px GeistMedium`;
+    ctx.font = `${s(32)}px GeistSemiBold`;
     ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_3;
-    drawText(ctx, data.subheadline, pad, nextY + s(16), maxW, s(42), 3, true);
+    drawText(ctx, data.subheadline, pad, nextY + s(24), maxW, s(42), 3, true);
   }
 
-  // # Body text
+  // # Body text — separated with clear gap
   if (data.body) {
-    ctx.font = `${s(26)}px Geist`;
+    ctx.font = `${s(24)}px Geist`;
     ctx.fillStyle = tc.secondary;
-    const bodyY = data.subheadline ? nextY + s(76) : nextY + s(24);
-    drawText(ctx, data.body, pad, bodyY, maxW, s(36), 5, true);
+    const bodyY = data.subheadline ? nextY + s(100) : nextY + s(32);
+    drawText(ctx, data.body, pad, bodyY, maxW * 0.90, s(34), 5, true);
   }
 
   ctx.textBaseline = "alphabetic";
