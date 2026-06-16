@@ -36,6 +36,10 @@ export interface SlideData {
   accentColor?: string;
   slideNumber?: number;
   totalSlides?: number;
+  /* # Background — bold solid color from SLIDE_PALETTE or dark gradient fallback */
+  backgroundColor?: string;
+  /* # When set, renderer uses OpenAI gpt-image-1 instead of Canvas 2D */
+  aiImagePrompt?: string;
   /* # Stock photo background — fetched from Pexels based on AI-chosen keywords */
   backgroundImageUrl?: string;
   photoKeywords?: string;

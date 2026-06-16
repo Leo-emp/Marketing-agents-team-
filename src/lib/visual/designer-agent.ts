@@ -1,18 +1,85 @@
 /* ============================================================
-   VISUAL DESIGNER AGENT
+   VISUAL DESIGNER AGENT V2
    ============================================================
    Takes generated text content and produces structured SlideData
-   for the visual template renderer. Ensures image text and
-   caption complement each other without repetition.
+   for the visual renderer. Routes single images and hero slides
+   to OpenAI gpt-image-1 via aiImagePrompt; inner carousel
+   slides get bold colored backgrounds via Canvas 2D.
+   Post-processes to enforce color rotation and content density.
    ============================================================ */
 
 import { callGemini } from "../gemini";
 import { getBackgroundPhoto } from "./pexels";
-import { getDimensions } from "./types";
-import type { SlideData, SlideLayout } from "./types";
+import { getDimensions, type SlideData, type SlideLayout } from "./types";
+import { SLIDE_PALETTE } from "./brand";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/* # Parse content into visual slides + complementary caption */
+// # Valid layouts for type-checking AI responses
+const VALID_LAYOUTS: SlideLayout[] = [
+  "hero", "stat_card", "tip", "quote", "list", "cta",
+  "before_after", "screenshot", "data_chart", "comparison",
+  "numbered_steps", "gradient_text", "highlight_box",
+  "split_image", "progress_bar",
+];
+
+/* ---- Post-Processing ---- */
+
+// # Ensure 80%+ of Canvas 2D slides have backgroundColor, no consecutive duplicates
+function enforceColors(slides: SlideData[]): SlideData[] {
+  let colorIdx = 0;
+  let lastColor = "";
+
+  return slides.map((slide) => {
+    // # Skip slides rendered by OpenAI (they have aiImagePrompt)
+    if (slide.aiImagePrompt) return slide;
+
+    // # If no backgroundColor, assign one from palette
+    if (!slide.backgroundColor) {
+      let color = SLIDE_PALETTE[colorIdx % SLIDE_PALETTE.length];
+      if (color === lastColor) {
+        colorIdx++;
+        color = SLIDE_PALETTE[colorIdx % SLIDE_PALETTE.length];
+      }
+      slide.backgroundColor = color;
+      lastColor = color;
+      colorIdx++;
+      return slide;
+    }
+
+    // # Prevent consecutive duplicates
+    if (slide.backgroundColor === lastColor) {
+      colorIdx++;
+      slide.backgroundColor = SLIDE_PALETTE[colorIdx % SLIDE_PALETTE.length];
+    }
+    lastColor = slide.backgroundColor;
+    colorIdx++;
+    return slide;
+  });
+}
+
+// # Ensure content density — add body/subheadline if missing
+function enforceContentDensity(slides: SlideData[]): SlideData[] {
+  return slides.map((slide) => {
+    const layout = slide.layout;
+
+    // # Layouts that should always have a body or subheadline
+    const needsBody = ["tip", "hero", "highlight_box", "split_image", "cta"];
+    const needsSub = ["hero", "gradient_text", "quote"];
+
+    if (needsBody.includes(layout) && !slide.body && slide.subheadline) {
+      slide.body = slide.subheadline;
+    }
+
+    if (needsSub.includes(layout) && !slide.subheadline && slide.body) {
+      slide.subheadline = slide.body;
+    }
+
+    return slide;
+  });
+}
+
+/* ---- Main Designer Function ---- */
+
 export async function designVisual(
   content: string,
   platform: string,
@@ -20,32 +87,36 @@ export async function designVisual(
   mediaPrompt: string | null,
   topic?: string
 ): Promise<{ slides: SlideData[]; caption: string }> {
-  const prompt = `You are a visual content designer for a premium career tech brand (JobPilot AI). Your job is to take written content and convert it into structured data for branded image slides.
+  const { width, height } = getDimensions(platform, contentType);
+  const orientation = width > height ? "landscape" : width === height ? "square" : "portrait";
+  const isSingleImage = contentType === "single_image" || contentType === "post";
+
+  const prompt = `You are a premium visual content designer for JobPilot AI, a career tech platform. Convert written content into structured data for branded marketing images.
 
 BRAND VISUAL IDENTITY:
-- Dark background (#09090b), clean white text
-- Indigo-to-purple gradient accents
-- Minimalist, premium aesthetic — think Apple or Linear design
-- No emojis, no clip art, no busy layouts
-- High readability and visibility
+- Bold colored backgrounds — vibrant, professional, white-text-safe
+- Available palette: ${SLIDE_PALETTE.map((c, i) => `"${c}"`).join(", ")}
+- Indigo (#6366f1) and violet (#8b5cf6) accent colors
+- Clean, modern aesthetic — think premium marketing agency output
+- High readability: large text, bold fonts, strong contrast
 - Professional and trustworthy
 
 AVAILABLE SLIDE LAYOUTS:
-- "hero": Full-width bold headline with gradient accent bar. Best for: opening slides, key statements, bold claims.
-- "stat_card": Large centered number/statistic with label below. Best for: data points, percentages, metrics.
-- "tip": Numbered tip with left accent border, headline, and optional body text. Best for: actionable advice, step-by-step content.
-- "quote": Large quotation mark, centered quote text, optional attribution. Best for: testimonials, powerful statements, insights.
-- "list": Title with arrow-pointed bullet items. Best for: lists of 3-5 items, comparisons, checklists.
-- "cta": Call-to-action card with brand logo and URL button. Best for: final slides, directing to website.
-- "before_after": Side-by-side comparison showing bad vs good. Requires "beforeText" and "afterText" fields. Best for: resume rewrites, profile improvements, before/after transformations.
-- "screenshot": Fake tweet/DM/notification card with avatar and author name. Include "screenshotType" (tweet/dm/notification/email) and "screenshotAuthor". Best for: social proof, recruiter messages, email examples.
-- "data_chart": Horizontal bar chart with percentages. Include "bars": [{"label":"label", "value":75}]. Best for: survey results, skill comparisons, market data.
-- "comparison": Two-column layout for pros/cons or versus. Include "leftColumn", "rightColumn", "leftLabel", "rightLabel". Best for: tool comparisons, approach comparisons, do vs don't.
-- "numbered_steps": Step-by-step with large step numbers. Include "steps": [{"number":1, "title":"Step title", "detail":"optional detail"}]. Best for: processes, tutorials, frameworks.
-- "gradient_text": Large gradient-colored headline, minimal design. Best for: powerful one-liners, key takeaways, mic-drop statements.
-- "highlight_box": Key insight centered in a highlighted accent card. Best for: key takeaway slides, featured quotes, important notes.
-- "split_image": Left gradient accent panel + right text content. Include "stat" for the left panel number. Best for: data-driven points, key metrics with explanation.
-- "progress_bar": Multiple progress bars with labels and percentages. Include "bars": [{"label":"label", "value":75}]. Best for: skill levels, completion rates, survey data.
+- "hero": Full-width bold headline. Best for: opening slides, bold claims, hooks.
+- "stat_card": Massive centered number/statistic with label. Best for: data, metrics.
+- "tip": Numbered tip with accent border, headline, and body. Best for: actionable advice.
+- "quote": Large centered quote text with attribution. Best for: testimonials, insights.
+- "list": Title with bullet items (3-6 items). Best for: lists, checklists.
+- "cta": Call-to-action with brand logo and URL. Best for: final slides.
+- "before_after": Side-by-side bad vs good comparison. Requires "beforeText" and "afterText". Best for: transformations.
+- "screenshot": Fake tweet/DM/notification. Requires "screenshotType" and "screenshotAuthor". Best for: social proof.
+- "data_chart": Horizontal bar chart. Requires "bars" array. Best for: survey data, comparisons.
+- "comparison": Two-column pros/cons. Requires "leftColumn", "rightColumn", "leftLabel", "rightLabel". Best for: versus content.
+- "numbered_steps": Step-by-step process. Requires "steps" array. Best for: tutorials, frameworks.
+- "gradient_text": Large gradient headline, minimal design. Best for: powerful statements.
+- "highlight_box": Key insight in highlighted card. Best for: takeaways.
+- "split_image": Left accent panel + right text. Best for: data-driven points.
+- "progress_bar": Multiple progress bars. Requires "bars" array. Best for: skill levels.
 
 CONTENT TO CONVERT:
 ${content}
@@ -54,53 +125,67 @@ ${mediaPrompt ? `VISUAL DIRECTION: ${mediaPrompt}` : ""}
 ${topic ? `TOPIC: ${topic}` : ""}
 PLATFORM: ${platform}
 CONTENT TYPE: ${contentType}
-IMAGE DIMENSIONS: ${getDimensions(platform, contentType).width}x${getDimensions(platform, contentType).height}px (${getDimensions(platform, contentType).width > getDimensions(platform, contentType).height ? "landscape" : getDimensions(platform, contentType).width === getDimensions(platform, contentType).height ? "square" : "portrait"} format)
+IMAGE DIMENSIONS: ${width}x${height}px (${orientation} format)
 
 TASK:
 ${contentType === "carousel" ? `Create 7-10 slides for a carousel. Rules:
-- First slide MUST be "hero" layout (bold hook slide)
-- Last slide MUST be "cta" layout (call-to-action with brand URL)
-- Middle slides MUST use at least 4 DIFFERENT layout types — vary between: stat_card, tip, quote, list, gradient_text, highlight_box, numbered_steps, before_after, comparison, split_image, data_chart
-- NO two consecutive slides should use the same layout type
-- Each slide's headline must be SHORT (15-25 words max — this text appears ON the image)
-- Each slide MUST have UNIQUE photoKeywords — no repeating the same search terms across slides. Choose visually distinct backgrounds that create variety as the user swipes.` : ""}
-${contentType === "single_image" || contentType === "post" ? `Create exactly 1 slide. Choose the most impactful layout for this content (hero for bold statements, stat_card for data, quote for insights, gradient_text for one-liners). The headline must be SHORT and impactful (15-25 words max — this text appears ON the image). Choose specific, visually striking photoKeywords — not generic terms like "office" or "business".` : ""}
-${contentType === "reel_script" ? `Create 4-6 storyboard frames showing the key visual moments. Use "hero" for hooks, "tip" for main points, "stat_card" for data, "cta" for ending.` : ""}
+- Slide 1 MUST be "hero" layout (bold hook that stops the scroll)
+- Last slide MUST be "cta" layout
+- Middle slides: use at least 4 DIFFERENT layout types
+- NO two consecutive slides should use the same layout
+- Slide 1 (hero): include "aiImagePrompt" — a detailed prompt for AI image generation describing the ideal marketing visual for this hook slide. Describe the composition, mood, colors (indigo/violet brand), text placement, and any visual metaphors. This will be used to generate the hero image with AI.
+- Slides 2 through last: include "backgroundColor" from the palette above. Vary colors — no two consecutive slides should have the same backgroundColor.
+- Include "photoKeywords" on 2-3 slides (alongside backgroundColor) for a textured photo-tinted effect. Choose visually distinct, specific keywords.` : ""}
+${isSingleImage ? `Create exactly 1 slide. This slide MUST include "aiImagePrompt" — a detailed prompt for AI image generation. Describe:
+- The visual composition and layout
+- Text to display prominently (the headline)
+- Brand colors: indigo (#6366f1) and violet (#8b5cf6)
+- Mood and atmosphere
+- Any visual metaphors, icons, or decorative elements
+- The platform (${platform}) and orientation (${orientation})
+Choose the most impactful layout (hero, stat_card, quote, gradient_text).` : ""}
+${contentType === "reel_script" ? `Create 4-6 storyboard frames. Use "hero" for hooks, "tip" for main points, "stat_card" for data, "cta" for ending. Include "backgroundColor" from the palette.` : ""}
 
-CRITICAL RULES:
-1. Slide text must be CONCISE — it appears on the image. 15-25 words per slide maximum.
-2. Write a SEPARATE caption that COMPLEMENTS the slide text. The caption must NOT repeat what the slides say. It adds context, story, or detail.
-3. No emojis anywhere.
-4. Professional, clean language only.
-5. For EVERY slide, include "photoKeywords" — 2-4 words describing the ideal stock photo background (e.g. "modern office workspace", "laptop interview", "professional handshake", "city skyline night"). Think about photos that create atmosphere and mood. Avoid generic keywords — be specific and visual.
+CONTENT DENSITY RULES (CRITICAL — follow exactly):
+1. Headline: 5-12 words — punchy and specific, not generic
+2. Body: 15-30 words — REQUIRED for tip, hero, highlight_box, split_image, cta layouts
+3. Subheadline: 8-15 words — REQUIRED for hero and gradient_text layouts
+4. Bullets: 4-6 items of 5-10 words each for list layout
+5. Steps: include both title AND detail for each step
+6. Before/After: 15-25 words each side
+7. Every slide must have the headline PLUS at least one supporting text field (body, subheadline, bullets, stat, etc.)
 
-BACKGROUND PHOTO GUIDELINES:
-- hero slides: dramatic, wide shots (cityscapes, architecture, technology)
-- stat_card slides: abstract, minimal (gradients, textures, geometric)
-- tip slides: professional workplace (desk, meeting, laptop)
-- quote slides: atmospheric, moody (skyline, window light, nature)
-- list slides: organized, structured (workspace, planning, whiteboard)
-- cta slides: aspirational, forward-looking (horizon, path, sunrise)
+BACKGROUND RULES:
+- 80%+ of Canvas 2D slides (non-aiImagePrompt) must have "backgroundColor"
+- Use colors from the palette above — do NOT invent your own colors
+- No two consecutive slides should have the same backgroundColor
+- Include "photoKeywords" on 2-3 slides for texture variety
+
+PHOTO KEYWORDS GUIDELINES (when used):
+- Be specific and visual: "modern glass office building", "laptop coding dark room", "handshake business deal"
+- NOT generic: avoid just "office", "business", "professional"
+- Match the slide's topic and mood
 
 Return a JSON object:
 {
   "slides": [
     {
-      "headline": "The short punchy text on this slide",
-      "subheadline": "optional secondary text",
-      "body": "optional body text (only for tip/list layouts)",
+      "headline": "5-12 word punchy headline",
+      "subheadline": "8-15 word supporting text",
+      "body": "15-30 word body paragraph with real substance",
       "stat": { "value": "75%", "label": "description of the stat" },
-      "bullets": ["item 1", "item 2", "item 3"],
+      "bullets": ["5-10 word item 1", "5-10 word item 2"],
       "footer": "optional small text",
-      "layout": "hero|stat_card|tip|quote|list|cta",
-      "photoKeywords": "relevant stock photo search terms"
+      "layout": "hero|stat_card|tip|quote|list|cta|...",
+      "backgroundColor": "#hex from palette (for Canvas 2D slides)",
+      "aiImagePrompt": "detailed AI image generation prompt (for OpenAI slides)",
+      "photoKeywords": "specific stock photo search terms"
     }
   ],
-  "caption": "The post caption that complements (not repeats) the visual content. 100-300 words for Instagram, 50-200 for Twitter, 100-400 for LinkedIn."
+  "caption": "The post caption that complements the visuals. 100-300 words for Instagram, 50-200 for Twitter, 100-400 for LinkedIn. Do NOT repeat slide text."
 }
 
-Only include fields relevant to each layout. For stat_card, include "stat". For list, include "bullets". For others, use headline + optional subheadline/body.
-Return ONLY a valid JSON object.`;
+Include only fields relevant to each layout. Return ONLY valid JSON.`;
 
   let raw = await callGemini(prompt);
 
@@ -120,16 +205,13 @@ Return ONLY a valid JSON object.`;
     parsed = JSON.parse(retryMatch[0]);
   }
 
-  // # Validate slides array exists and is non-empty
   if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
     throw new Error("Visual designer returned empty or missing slides array");
   }
 
-  // # Validate and normalize slide data
-  const validLayouts: SlideLayout[] = ["hero", "stat_card", "tip", "quote", "list", "cta", "before_after", "screenshot", "data_chart", "comparison", "numbered_steps", "gradient_text", "highlight_box", "split_image", "progress_bar"];
-
+  // # Normalize and validate slide data
   const rawSlides = ((parsed.slides || []) as Record<string, unknown>[]).map((slide: Record<string, unknown>, index: number) => {
-    const layout = validLayouts.includes(slide.layout as SlideLayout)
+    const layout = VALID_LAYOUTS.includes(slide.layout as SlideLayout)
       ? (slide.layout as SlideLayout)
       : "hero";
 
@@ -147,8 +229,9 @@ Return ONLY a valid JSON object.`;
       layout,
       slideNumber: index + 1,
       totalSlides: (parsed.slides || []).length,
+      backgroundColor: slide.backgroundColor ? String(slide.backgroundColor) : undefined,
+      aiImagePrompt: slide.aiImagePrompt ? String(slide.aiImagePrompt) : undefined,
       photoKeywords: slide.photoKeywords ? String(slide.photoKeywords) : undefined,
-      /* # Extended fields for new layouts */
       beforeText: slide.beforeText ? String(slide.beforeText) : undefined,
       afterText: slide.afterText ? String(slide.afterText) : undefined,
       screenshotType: slide.screenshotType ? String(slide.screenshotType) as SlideData["screenshotType"] : undefined,
@@ -166,12 +249,15 @@ Return ONLY a valid JSON object.`;
     };
   });
 
-  // # Fetch stock photo backgrounds from Pexels for slides that have keywords
-  const { width } = getDimensions(platform, contentType);
+  // # Post-process: enforce color rotation and content density
+  let processedSlides = enforceColors(rawSlides);
+  processedSlides = enforceContentDensity(processedSlides);
+
+  // # Fetch stock photos for slides that have photoKeywords (and no aiImagePrompt)
   const slides: SlideData[] = await Promise.all(
-    rawSlides.map(async (slide: SlideData) => {
-      if (slide.photoKeywords) {
-        const photoUrl = await getBackgroundPhoto(slide.photoKeywords, width);
+    processedSlides.map(async (slide: SlideData) => {
+      if (slide.photoKeywords && !slide.aiImagePrompt) {
+        const photoUrl = await getBackgroundPhoto(slide.photoKeywords, width, height);
         if (photoUrl) {
           return { ...slide, backgroundImageUrl: photoUrl };
         }
@@ -182,6 +268,6 @@ Return ONLY a valid JSON object.`;
 
   return {
     slides,
-    caption: parsed.caption || "",
+    caption: parsed.caption ? String(parsed.caption) : "",
   };
 }

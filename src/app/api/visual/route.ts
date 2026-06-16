@@ -2,10 +2,10 @@
    VISUAL API — /api/visual
    ============================================================
    POST: Generate branded PNG images from content.
-   Two modes:
-   - Design mode: pass contentId, AI designer creates slides
-   - Direct mode: pass slides[], renders them directly
-   Renders each slide via @napi-rs/canvas for full pixel control.
+   Two rendering paths per slide:
+   - aiImagePrompt → OpenAI gpt-image-1 (premium AI-generated)
+   - Canvas 2D → @napi-rs/canvas (bold colors + photos)
+   Falls back to Canvas 2D if OpenAI fails or key missing.
    Returns base64-encoded PNG data URLs and saves Visual records.
    ============================================================ */
 
@@ -15,6 +15,25 @@ import { isAdmin, unauthorized } from "@/lib/auth-check";
 import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData, type VisualRequest } from "@/lib/visual/types";
 import { designVisual } from "@/lib/visual/designer-agent";
+import { generateImage } from "@/lib/visual/openai-image";
+
+/* # Render a single slide — OpenAI for aiImagePrompt slides, Canvas 2D for the rest */
+async function renderSlide(
+  slide: SlideData,
+  width: number,
+  height: number,
+  platform: string
+): Promise<Buffer> {
+  // # Try OpenAI if this slide has an AI image prompt
+  if (slide.aiImagePrompt) {
+    const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
+    if (aiBuffer) return aiBuffer;
+    // # Fallback to Canvas 2D if OpenAI fails
+    console.log("[Visual API] OpenAI fallback — rendering with Canvas 2D");
+  }
+
+  return renderSlideCanvas(slide, width, height);
+}
 
 /* # Render slides to PNGs and save to DB */
 async function renderAndSave(
@@ -33,8 +52,8 @@ async function renderAndSave(
       totalSlides: slides[i].totalSlides ?? slides.length,
     };
 
-    // # Render via Canvas
-    const pngBuffer = await renderSlideCanvas(slide, width, height);
+    // # Render via OpenAI or Canvas 2D
+    const pngBuffer = await renderSlide(slide, width, height, platform);
     const base64 = pngBuffer.toString("base64");
     const dataUrl = `data:image/png;base64,${base64}`;
 
@@ -99,7 +118,7 @@ export async function POST(req: NextRequest) {
         caption = design.caption || null;
       }
 
-      // # Render the slides to PNG
+      // # Render the slides to PNG (OpenAI + Canvas 2D)
       const results = await renderAndSave(
         slides,
         content.platform,

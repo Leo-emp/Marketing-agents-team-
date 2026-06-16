@@ -2,14 +2,16 @@
    PEXELS — Stock Photo Search for Visual Backgrounds
    ============================================================
    Fetches relevant, high-quality photos from Pexels based on
-   topic keywords. Returns landscape-cropped URLs sized for
-   social media slides. Caches results to avoid repeat API calls.
+   topic keywords. Orientation-aware for portrait/landscape.
+   Returns highest-resolution results.
    ============================================================ */
 
 const PEXELS_BASE = "https://api.pexels.com/v1";
 
 interface PexelsPhoto {
   id: number;
+  width: number;
+  height: number;
   src: {
     original: string;
     large2x: string;
@@ -26,18 +28,23 @@ const cache = new Map<string, { photos: PexelsPhoto[]; ts: number }>();
 const CACHE_TTL = 3600000;
 
 // # Search Pexels for photos matching the given keywords
-export async function searchPhotos(query: string, count = 5): Promise<PexelsPhoto[]> {
+export async function searchPhotos(
+  query: string,
+  count = 5,
+  orientation: "landscape" | "portrait" | "square" = "landscape"
+): Promise<PexelsPhoto[]> {
   const key = process.env.PEXELS_API_KEY;
   if (!key) return [];
 
-  const cacheKey = `${query}:${count}`;
+  const cacheKey = `${query}:${count}:${orientation}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.photos;
 
   try {
-    const res = await fetch(`${PEXELS_BASE}/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`, {
-      headers: { Authorization: key },
-    });
+    const res = await fetch(
+      `${PEXELS_BASE}/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=${orientation}`,
+      { headers: { Authorization: key } },
+    );
 
     if (!res.ok) return [];
 
@@ -58,13 +65,28 @@ export function getPhotoUrl(photo: PexelsPhoto, width: number): string {
 }
 
 // # Fetch a single relevant photo URL for a topic, ready to use as a background
-export async function getBackgroundPhoto(topic: string, width: number): Promise<string | null> {
-  // # Build a search query that gets professional, abstract, mood-appropriate photos
-  const searchTerms = `${topic} professional modern`;
-  const photos = await searchPhotos(searchTerms, 5);
+// # Picks highest-resolution photo instead of random, and uses AI keywords directly
+export async function getBackgroundPhoto(
+  topic: string,
+  width: number,
+  height: number = 0
+): Promise<string | null> {
+  // # Determine orientation from canvas dimensions
+  const orientation: "landscape" | "portrait" | "square" =
+    height > 0 && width > 0
+      ? width / height > 1.2 ? "landscape"
+        : width / height < 0.83 ? "portrait"
+        : "square"
+      : "landscape";
+
+  // # Search with AI-provided keywords directly — no generic suffix
+  const photos = await searchPhotos(topic, 5, orientation);
   if (photos.length === 0) return null;
 
-  // # Pick a random photo from results to add variety across slides
-  const photo = photos[Math.floor(Math.random() * photos.length)];
-  return getPhotoUrl(photo, width);
+  // # Pick the highest resolution photo (by pixel count)
+  const best = photos.reduce((a, b) =>
+    (a.width * a.height) >= (b.width * b.height) ? a : b
+  );
+
+  return getPhotoUrl(best, width);
 }

@@ -1,16 +1,22 @@
 /* ============================================================
-   CANVAS RENDERING ENGINE — PREMIUM VISUAL SYSTEM
+   CANVAS RENDERING ENGINE V2 — PREMIUM VISUAL SYSTEM
    ============================================================
-   @napi-rs/canvas renderer producing clean, professional
-   branded images. Adaptive scaling for all platform sizes.
-   Premium glassmorphism, indigo/violet gradients, and
-   refined typography with Apple/Linear-level aesthetics.
+   Three background modes: color-tinted photo, bold solid,
+   dark gradient. Dramatically larger fonts, geometric
+   decorations, minimal chrome on colored slides. All 15
+   layouts adapted for both solid and dark backgrounds.
    ============================================================ */
 
 import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D, type Image } from "@napi-rs/canvas";
 import { join } from "path";
 import type { SlideData } from "./types";
-import { BG, BG_CARD, BG_ELEVATED, BORDER_STRONG, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, ACCENT_1, ACCENT_2, ACCENT_3, BRAND_NAME, BRAND_URL } from "./brand";
+import {
+  BG, BG_CARD, BG_ELEVATED, BORDER_STRONG,
+  TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED,
+  SOLID_TEXT, SOLID_TEXT_DIM, SOLID_TEXT_MUTED,
+  ACCENT_1, ACCENT_2, ACCENT_3,
+  BRAND_NAME, BRAND_URL,
+} from "./brand";
 
 /* ---- Font Registration ---- */
 
@@ -30,7 +36,6 @@ function registerFonts() {
 
 /* ---- Adaptive Scaling ---- */
 
-// # Returns a scale function based on 1080px reference width
 function createScale(w: number) {
   const sf = w / 1080;
   return (v: number) => Math.round(v * sf);
@@ -46,6 +51,15 @@ function hexToRgb(hex: string): [number, number, number] {
 function rgba(hex: string, alpha: number): string {
   const [r, g, b] = hexToRgb(hex);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// # Lighten a hex color by mixing with white
+function lighten(hex: string, amount: number): string {
+  const [r, g, b] = hexToRgb(hex);
+  const nr = Math.min(255, Math.round(r + (255 - r) * amount));
+  const ng = Math.min(255, Math.round(g + (255 - g) * amount));
+  const nb = Math.min(255, Math.round(b + (255 - b) * amount));
+  return `rgb(${nr},${ng},${nb})`;
 }
 
 /* ---- Drawing Primitives ---- */
@@ -115,7 +129,6 @@ function wrapText(ctx: SKRSContext2D, text: string, maxWidth: number): string[] 
   return lines;
 }
 
-// # Draw wrapped text with optional drop shadow — returns Y after last line
 function drawText(
   ctx: SKRSContext2D, text: string, x: number, y: number,
   maxWidth: number, lineHeight: number, maxLines?: number, shadow?: boolean
@@ -129,8 +142,8 @@ function drawText(
     }
     if (shadow) {
       const saved = ctx.fillStyle;
-      ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillText(line, x + 1, y + i * lineHeight + 2);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillText(line, x + 2, y + i * lineHeight + 2);
       ctx.fillStyle = saved;
     }
     ctx.fillText(line, x, y + i * lineHeight);
@@ -138,9 +151,59 @@ function drawText(
   return y + limited.length * lineHeight;
 }
 
+/* ---- Geometric Decorations (solid backgrounds only) ---- */
+
+function drawDecorations(ctx: SKRSContext2D, w: number, h: number, slideNum: number, bgColor: string) {
+  const variant = (slideNum - 1) % 4;
+  const lightColor = "rgba(255,255,255,0.06)";
+  const dotColor = "rgba(255,255,255,0.08)";
+
+  if (variant === 0 || variant === 2) {
+    // # Large partial circle bleeding off top-right corner
+    ctx.beginPath();
+    ctx.arc(w + w * 0.08, -h * 0.12, w * 0.42, 0, Math.PI * 2);
+    ctx.strokeStyle = lightColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  if (variant === 1 || variant === 3) {
+    // # Large partial circle bleeding off bottom-left corner
+    ctx.beginPath();
+    ctx.arc(-w * 0.1, h + h * 0.08, w * 0.38, 0, Math.PI * 2);
+    ctx.strokeStyle = lightColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // # 5x5 dot grid in opposite corner
+  const dotSpacing = w * 0.035;
+  const startX = (variant === 0 || variant === 2) ? w * 0.06 : w * 0.72;
+  const startY = (variant === 0 || variant === 2) ? h * 0.78 : h * 0.06;
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 5; col++) {
+      ctx.beginPath();
+      ctx.arc(startX + col * dotSpacing, startY + row * dotSpacing, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+    }
+  }
+
+  // # Subtle gradient wash from one corner
+  const wash = ctx.createRadialGradient(
+    variant < 2 ? 0 : w, variant < 2 ? 0 : h,
+    0,
+    variant < 2 ? 0 : w, variant < 2 ? 0 : h,
+    w * 0.7
+  );
+  wash.addColorStop(0, lighten(bgColor, 0.12).replace("rgb", "rgba").replace(")", ",0.15)"));
+  wash.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, w, h);
+}
+
 /* ---- Premium Visual Elements ---- */
 
-// # Soft ambient glow orb — clean radial falloff
 function drawGlow(ctx: SKRSContext2D, cx: number, cy: number, radius: number, color: string, opacity: number = 0.20) {
   const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
   gradient.addColorStop(0, rgba(color, opacity));
@@ -153,7 +216,7 @@ function drawGlow(ctx: SKRSContext2D, cx: number, cy: number, radius: number, co
   ctx.fill();
 }
 
-// # Glass morphism card — premium dark glass with border highlight
+// # Glass morphism card — used only on dark backgrounds
 function drawCard(
   ctx: SKRSContext2D, x: number, y: number, w: number, h: number,
   r: number = 20, options?: { glow?: boolean; accentTop?: string }
@@ -163,18 +226,11 @@ function drawCard(
     ctx.shadowBlur = 48;
     ctx.shadowOffsetY = 10;
   }
-
-  // # Semi-transparent dark fill
   fillRR(ctx, x, y, w, h, r, "rgba(14,14,18,0.82)");
-
   ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-
-  // # Border
   strokeRR(ctx, x, y, w, h, r, BORDER_STRONG, 1);
-
-  // # Top-edge inner highlight
   ctx.save();
   roundedRect(ctx, x + 1, y + 1, w - 2, h - 2, Math.max(r - 1, 0));
   ctx.clip();
@@ -184,8 +240,6 @@ function drawCard(
   ctx.fillStyle = hl;
   ctx.fillRect(x, y, w, 5);
   ctx.restore();
-
-  // # Gradient accent stripe at top of card
   if (options?.accentTop) {
     ctx.save();
     roundedRect(ctx, x, y, w, r, r);
@@ -197,20 +251,25 @@ function drawCard(
   }
 }
 
-/* ---- Background System ---- */
+// # Light overlay card — used on solid colored backgrounds
+function drawSolidCard(
+  ctx: SKRSContext2D, x: number, y: number, w: number, h: number, r: number = 20
+) {
+  fillRR(ctx, x, y, w, h, r, "rgba(255,255,255,0.08)");
+  strokeRR(ctx, x, y, w, h, r, "rgba(255,255,255,0.12)", 1);
+}
+
+/* ---- Background System — Three Modes ---- */
 
 async function drawBackground(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
-  // # Rich multi-stop diagonal gradient base
-  const base = ctx.createLinearGradient(0, 0, w * 0.3, h);
-  base.addColorStop(0, "#0e0e14");
-  base.addColorStop(0.35, BG);
-  base.addColorStop(0.65, "#0a0a10");
-  base.addColorStop(1, "#080810");
-  ctx.fillStyle = base;
-  ctx.fillRect(0, 0, w, h);
+  const bgColor = data.backgroundColor;
 
-  // # Stock photo compositing
-  if (data.backgroundImageUrl) {
+  if (bgColor && data.backgroundImageUrl) {
+    // # MODE 1: Color-tinted photo — our signature differentiator
+    // # Draw photo full-bleed, then overlay with brand color at 72% opacity
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, w, h);
+
     try {
       const img = await loadImage(data.backgroundImageUrl);
       const imgW = (img as Image).width;
@@ -218,46 +277,122 @@ async function drawBackground(ctx: SKRSContext2D, data: SlideData, w: number, h:
       const imgRatio = imgW / imgH;
       const canvasRatio = w / h;
       let sx = 0, sy = 0, sw = imgW, sh = imgH;
-      if (imgRatio > canvasRatio) {
-        sw = imgH * canvasRatio;
-        sx = (imgW - sw) / 2;
-      } else {
-        sh = imgW / canvasRatio;
-        sy = (imgH - sh) / 2;
-      }
+      if (imgRatio > canvasRatio) { sw = imgH * canvasRatio; sx = (imgW - sw) / 2; }
+      else { sh = imgW / canvasRatio; sy = (imgH - sh) / 2; }
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
 
-      // # Overlay — translucent enough to let photo add atmosphere
+      // # Color overlay — lets photo show through as texture
       const ov = ctx.createLinearGradient(0, 0, 0, h);
-      ov.addColorStop(0, "rgba(9,9,11,0.70)");
-      ov.addColorStop(0.35, "rgba(9,9,11,0.48)");
-      ov.addColorStop(0.65, "rgba(9,9,11,0.48)");
-      ov.addColorStop(1, "rgba(9,9,11,0.72)");
+      ov.addColorStop(0, rgba(bgColor, 0.75));
+      ov.addColorStop(0.5, rgba(bgColor, 0.68));
+      ov.addColorStop(1, rgba(bgColor, 0.78));
       ctx.fillStyle = ov;
       ctx.fillRect(0, 0, w, h);
     } catch {
-      // # Photo load failed — base gradient remains
+      // # Photo failed — solid color remains
     }
+
+    drawDecorations(ctx, w, h, data.slideNumber || 1, bgColor);
+
+  } else if (bgColor) {
+    // # MODE 2: Bold solid — gradient wash + geometric decorations
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, w, h);
+
+    // # Subtle gradient wash for depth
+    const wash = ctx.createLinearGradient(0, 0, w, h);
+    wash.addColorStop(0, "rgba(255,255,255,0.04)");
+    wash.addColorStop(0.5, "rgba(0,0,0,0)");
+    wash.addColorStop(1, "rgba(0,0,0,0.12)");
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, w, h);
+
+    drawDecorations(ctx, w, h, data.slideNumber || 1, bgColor);
+
+  } else {
+    // # MODE 3: Dark gradient — fallback with ambient glows
+    const base = ctx.createLinearGradient(0, 0, w * 0.3, h);
+    base.addColorStop(0, "#0e0e14");
+    base.addColorStop(0.35, BG);
+    base.addColorStop(0.65, "#0a0a10");
+    base.addColorStop(1, "#080810");
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+
+    if (data.backgroundImageUrl) {
+      try {
+        const img = await loadImage(data.backgroundImageUrl);
+        const imgW = (img as Image).width;
+        const imgH = (img as Image).height;
+        const imgRatio = imgW / imgH;
+        const canvasRatio = w / h;
+        let sx = 0, sy = 0, sw = imgW, sh = imgH;
+        if (imgRatio > canvasRatio) { sw = imgH * canvasRatio; sx = (imgW - sw) / 2; }
+        else { sh = imgW / canvasRatio; sy = (imgH - sh) / 2; }
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+        const ov = ctx.createLinearGradient(0, 0, 0, h);
+        ov.addColorStop(0, "rgba(9,9,11,0.70)");
+        ov.addColorStop(0.35, "rgba(9,9,11,0.48)");
+        ov.addColorStop(0.65, "rgba(9,9,11,0.48)");
+        ov.addColorStop(1, "rgba(9,9,11,0.72)");
+        ctx.fillStyle = ov;
+        ctx.fillRect(0, 0, w, h);
+      } catch { /* base gradient remains */ }
+    }
+
+    drawGlow(ctx, w * 0.82, h * 0.08, w * 0.48, ACCENT_1, 0.16);
+    drawGlow(ctx, w * 0.14, h * 0.88, w * 0.40, ACCENT_2, 0.12);
+
+    const vig = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75);
+    vig.addColorStop(0, "rgba(0,0,0,0)");
+    vig.addColorStop(1, "rgba(0,0,0,0.22)");
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, w, h);
   }
-
-  // # Ambient glow orbs for depth — indigo top-right, violet bottom-left
-  drawGlow(ctx, w * 0.82, h * 0.08, w * 0.48, ACCENT_1, 0.16);
-  drawGlow(ctx, w * 0.14, h * 0.88, w * 0.40, ACCENT_2, 0.12);
-
-  // # Subtle vignette — darkened edges
-  const vig = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75);
-  vig.addColorStop(0, "rgba(0,0,0,0)");
-  vig.addColorStop(1, "rgba(0,0,0,0.22)");
-  ctx.fillStyle = vig;
-  ctx.fillRect(0, 0, w, h);
 }
 
 /* ---- Header & Footer ---- */
 
+// # Solid background: minimal header (slide counter only)
+function drawHeaderSolid(ctx: SKRSContext2D, w: number, pad: number, s: (v: number) => number, slideNum?: number, totalSlides?: number) {
+  if (slideNum !== undefined && totalSlides !== undefined) {
+    const lbl = `${slideNum} / ${totalSlides}`;
+    ctx.font = `${s(13)}px GeistMedium`;
+    const tw = ctx.measureText(lbl).width;
+    const pw = tw + s(20);
+    const ph = s(26);
+    const px = w - pad - pw;
+    const py = pad;
+    fillRR(ctx, px, py, pw, ph, ph / 2, "rgba(255,255,255,0.10)");
+    ctx.fillStyle = SOLID_TEXT_DIM;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(lbl, px + pw / 2, py + ph / 2);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+  }
+}
+
+// # Solid background: minimal footer
+function drawFooterSolid(ctx: SKRSContext2D, w: number, h: number, pad: number, s: (v: number) => number) {
+  const y = h - pad - s(2);
+  ctx.font = `${s(14)}px GeistMedium`;
+  ctx.fillStyle = SOLID_TEXT_MUTED;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(BRAND_URL, pad, y);
+
+  // # Small accent dot
+  const dotR = s(3);
+  ctx.beginPath();
+  ctx.arc(w - pad - dotR, y - s(3), dotR, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.30)";
+  ctx.fill();
+}
+
+// # Dark background: full header with logo
 function drawHeader(ctx: SKRSContext2D, w: number, pad: number, s: (v: number) => number, slideNum?: number, totalSlides?: number) {
   const y = pad + s(22);
-
-  // # Logo mark — gradient rounded square
   const ls = s(32);
   const lg = dGrad(ctx, pad, y - ls / 2, ls, ls, [ACCENT_1, ACCENT_2]);
   fillRR(ctx, pad, y - ls / 2, ls, ls, s(8), lg);
@@ -266,15 +401,11 @@ function drawHeader(ctx: SKRSContext2D, w: number, pad: number, s: (v: number) =
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("J", pad + ls / 2, y + 1);
-
-  // # Brand name
   ctx.font = `${s(13)}px GeistSemiBold`;
   ctx.fillStyle = TEXT_MUTED;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.fillText(BRAND_NAME, pad + ls + s(10), y);
-
-  // # Slide counter pill
   if (slideNum !== undefined && totalSlides !== undefined) {
     const lbl = `${slideNum} / ${totalSlides}`;
     ctx.font = `${s(11)}px GeistMedium`;
@@ -289,27 +420,21 @@ function drawHeader(ctx: SKRSContext2D, w: number, pad: number, s: (v: number) =
     ctx.textAlign = "center";
     ctx.fillText(lbl, px + pw / 2, y + 1);
   }
-
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
 }
 
+// # Dark background: full footer
 function drawFooter(ctx: SKRSContext2D, w: number, h: number, pad: number, s: (v: number) => number) {
   const y = h - pad - s(2);
-
-  // # Separator — gradient fade line
   const sepGrad = hGrad(ctx, pad, w - pad, 0, [rgba(ACCENT_1, 0.15), rgba(ACCENT_2, 0.06), "rgba(255,255,255,0)"]);
   ctx.fillStyle = sepGrad;
   ctx.fillRect(pad, y - s(18), w - pad * 2, 1);
-
-  // # Brand URL
   ctx.font = `${s(11)}px GeistMedium`;
   ctx.fillStyle = TEXT_MUTED;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillText(BRAND_URL, pad, y);
-
-  // # Small gradient accent mark
   const dotR = s(3);
   const dotGrad = dGrad(ctx, w - pad - dotR * 2, y - dotR * 2, dotR * 4, dotR * 4, [ACCENT_1, ACCENT_2]);
   ctx.beginPath();
@@ -318,135 +443,197 @@ function drawFooter(ctx: SKRSContext2D, w: number, h: number, pad: number, s: (v
   ctx.fill();
 }
 
+/* ---- Chrome Helpers ---- */
+
+function drawChrome(
+  ctx: SKRSContext2D, w: number, h: number, pad: number, s: (v: number) => number,
+  isSolid: boolean, slideNum?: number, totalSlides?: number
+) {
+  if (isSolid) {
+    drawHeaderSolid(ctx, w, pad, s, slideNum, totalSlides);
+    drawFooterSolid(ctx, w, h, pad, s);
+  } else {
+    drawHeader(ctx, w, pad, s, slideNum, totalSlides);
+    drawFooter(ctx, w, h, pad, s);
+  }
+}
+
 /* ---- Content Area Helper ---- */
 
-function contentArea(pad: number, s: (v: number) => number, h: number) {
-  const top = pad + s(54);
-  const bot = h - pad - s(26);
+function contentArea(pad: number, s: (v: number) => number, h: number, isSolid: boolean) {
+  const top = isSolid ? pad + s(36) : pad + s(54);
+  const bot = isSolid ? h - pad - s(20) : h - pad - s(26);
   return { top, bot, h: bot - top, cy: top + (bot - top) / 2 };
+}
+
+// # Get text colors based on background mode
+function textColors(isSolid: boolean) {
+  return {
+    primary: isSolid ? SOLID_TEXT : TEXT_PRIMARY,
+    secondary: isSolid ? SOLID_TEXT_DIM : TEXT_SECONDARY,
+    muted: isSolid ? SOLID_TEXT_MUTED : TEXT_MUTED,
+  };
 }
 
 /* ============================================================
    TEMPLATE FUNCTIONS — 15 Premium Layouts
    ============================================================ */
 
-// # HERO — Bold headline in a glass card with gradient accent
+// # HERO — Bold headline, large and commanding
 async function drawHero(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
-  const inner = s(36);
-  const cardW = w - pad * 2;
-  const cardH = Math.min(area.h * 0.78, s(540));
-  const cardX = pad;
-  const cardY = area.cy - cardH / 2;
-  drawCard(ctx, cardX, cardY, cardW, cardH, s(22), { accentTop: data.accentColor || ACCENT_1 });
+  const area = contentArea(pad, s, h, isSolid);
 
-  // # Gradient accent bar inside card
-  const barGrad = hGrad(ctx, cardX + inner, cardX + inner + s(110), 0, [data.accentColor || ACCENT_1, ACCENT_2]);
-  fillRR(ctx, cardX + inner, cardY + inner, s(110), s(5), s(3), barGrad);
+  if (!isSolid) {
+    // # Glass card on dark backgrounds
+    const inner = s(36);
+    const cardW = w - pad * 2;
+    const cardH = Math.min(area.h * 0.78, s(640));
+    const cardX = pad;
+    const cardY = area.cy - cardH / 2;
+    drawCard(ctx, cardX, cardY, cardW, cardH, s(22), { accentTop: data.accentColor || ACCENT_1 });
 
-  // # Headline
-  const fs = s(w >= 1200 ? 48 : 42);
-  ctx.font = `${fs}px GeistBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
-  ctx.textBaseline = "top";
-  const headY = cardY + inner + s(26);
-  const maxW = cardW - inner * 2;
-  const lh = Math.round(fs * 1.22);
-  const nextY = drawText(ctx, data.headline, cardX + inner, headY, maxW, lh, 3, true);
+    const barGrad = hGrad(ctx, cardX + inner, cardX + inner + s(110), 0, [data.accentColor || ACCENT_1, ACCENT_2]);
+    fillRR(ctx, cardX + inner, cardY + inner, s(110), s(5), s(3), barGrad);
 
-  // # Subheadline
-  if (data.subheadline) {
-    ctx.font = `${s(19)}px GeistMedium`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    drawText(ctx, data.subheadline, cardX + inner, nextY + s(18), maxW, s(28), 2, true);
+    const fs = s(76);
+    ctx.font = `${fs}px GeistBold`;
+    ctx.fillStyle = tc.primary;
+    ctx.textBaseline = "top";
+    const headY = cardY + inner + s(26);
+    const maxW = cardW - inner * 2;
+    const lh = Math.round(fs * 1.18);
+    const nextY = drawText(ctx, data.headline, cardX + inner, headY, maxW, lh, 5, true);
+
+    if (data.subheadline) {
+      ctx.font = `${s(30)}px GeistMedium`;
+      ctx.fillStyle = tc.secondary;
+      drawText(ctx, data.subheadline, cardX + inner, nextY + s(18), maxW, s(40), 3, true);
+    }
+  } else {
+    // # Direct text on solid background — bigger and bolder
+    const maxW = w - pad * 2;
+
+    // # Gradient accent bar
+    const barGrad = hGrad(ctx, pad, pad + s(120), 0, ["rgba(255,255,255,0.6)", "rgba(255,255,255,0.15)"]);
+    fillRR(ctx, pad, area.cy - s(200), s(120), s(5), s(3), barGrad);
+
+    const fs = s(76);
+    ctx.font = `${fs}px GeistBold`;
+    ctx.fillStyle = tc.primary;
+    ctx.textBaseline = "top";
+    const lh = Math.round(fs * 1.18);
+    const nextY = drawText(ctx, data.headline, pad, area.cy - s(180), maxW, lh, 5, true);
+
+    if (data.subheadline) {
+      ctx.font = `${s(30)}px GeistMedium`;
+      ctx.fillStyle = tc.secondary;
+      drawText(ctx, data.subheadline, pad, nextY + s(18), maxW, s(40), 3, true);
+    }
+
+    if (data.body) {
+      ctx.font = `${s(28)}px Geist`;
+      ctx.fillStyle = tc.secondary;
+      const bodyY = data.subheadline ? nextY + s(80) : nextY + s(24);
+      drawText(ctx, data.body, pad, bodyY, maxW, s(38), 5, true);
+    }
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
-// # STAT CARD — Large centered statistic with gradient coloring
+// # STAT CARD — Large centered statistic
 async function drawStatCard(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
 
-  // # Glass card behind stat
-  const cardW = Math.min(w * 0.74, s(720));
-  const cardH = Math.min(area.h * 0.58, s(380));
-  drawCard(ctx, cx - cardW / 2, area.cy - cardH / 2, cardW, cardH, s(24));
+  if (!isSolid) {
+    const cardW = Math.min(w * 0.74, s(720));
+    const cardH = Math.min(area.h * 0.58, s(420));
+    drawCard(ctx, cx - cardW / 2, area.cy - cardH / 2, cardW, cardH, s(24));
+  }
 
   // # Decorative ring
   ctx.beginPath();
-  ctx.arc(cx, area.cy - s(10), s(105), 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_1, 0.12);
+  ctx.arc(cx, area.cy - s(10), s(115), 0, Math.PI * 2);
+  ctx.strokeStyle = isSolid ? "rgba(255,255,255,0.10)" : rgba(ACCENT_1, 0.12);
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   if (data.stat) {
-    // # Large stat value with bold gradient
     const vLen = data.stat.value.length;
-    const statFs = s(vLen > 5 ? 72 : vLen > 3 ? 100 : 128);
+    const statFs = s(vLen > 5 ? 100 : vLen > 3 ? 140 : 160);
     ctx.font = `${statFs}px GeistBlack`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const sg = dGrad(ctx, cx - s(150), area.cy - s(70), s(300), s(130), [ACCENT_1, ACCENT_3, ACCENT_2]);
-    ctx.fillStyle = sg;
+
+    if (isSolid) {
+      ctx.fillStyle = SOLID_TEXT;
+    } else {
+      const sg = dGrad(ctx, cx - s(150), area.cy - s(70), s(300), s(130), [ACCENT_1, ACCENT_3, ACCENT_2]);
+      ctx.fillStyle = sg;
+    }
     ctx.fillText(data.stat.value, cx, area.cy - s(14));
 
-    // # Label
-    ctx.font = `${s(20)}px GeistSemiBold`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    const labels = wrapText(ctx, data.stat.label, cardW * 0.75);
-    labels.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, cx, area.cy + s(58) + i * s(30));
+    ctx.font = `${s(26)}px GeistSemiBold`;
+    ctx.fillStyle = tc.secondary;
+    const labels = wrapText(ctx, data.stat.label, w * 0.65);
+    labels.slice(0, 3).forEach((line, i) => {
+      ctx.fillText(line, cx, area.cy + s(70) + i * s(36));
     });
   } else if (data.headline) {
-    ctx.font = `${s(36)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(56)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const lines = wrapText(ctx, data.headline, cardW * 0.8);
-    lines.slice(0, 3).forEach((line, i) => {
-      ctx.fillText(line, cx, area.cy - ((lines.length - 1) * s(24)) + i * s(48));
+    const lines = wrapText(ctx, data.headline, w * 0.75);
+    lines.slice(0, 4).forEach((line, i) => {
+      ctx.fillText(line, cx, area.cy - ((lines.length - 1) * s(30)) + i * s(60));
     });
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # TIP — Numbered tip with accent line, headline, and body text
 async function drawTip(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const accent = data.accentColor || ACCENT_1;
 
-  // # Glass card
   const cardW = w - pad * 2 + s(16);
-  const cardH = Math.min(area.h * 0.72, s(520));
+  const cardH = Math.min(area.h * 0.78, s(620));
   const cardX = pad - s(8);
   const cardY = area.cy - cardH / 2;
-  drawCard(ctx, cardX, cardY, cardW, cardH, s(20));
+  if (isSolid) drawSolidCard(ctx, cardX, cardY, cardW, cardH, s(20));
+  else drawCard(ctx, cardX, cardY, cardW, cardH, s(20));
 
   const inner = s(28);
 
-  // # Left accent line — thick gradient
-  const lineGrad = vGrad(ctx, cardY + inner, cardY + cardH - inner, 0, [accent, ACCENT_2]);
+  // # Left accent line
+  const lineColor = isSolid ? "rgba(255,255,255,0.40)" : accent;
+  const lineColor2 = isSolid ? "rgba(255,255,255,0.15)" : ACCENT_2;
+  const lineGrad = vGrad(ctx, cardY + inner, cardY + cardH - inner, 0, [lineColor, lineColor2]);
   fillRR(ctx, cardX + inner, cardY + inner, s(5), cardH - inner * 2, s(3), lineGrad);
 
   const textX = cardX + inner + s(32);
@@ -454,10 +641,14 @@ async function drawTip(ctx: SKRSContext2D, data: SlideData, w: number, h: number
 
   // # Tip number badge
   if (data.slideNumber) {
-    const bSize = s(44);
-    const bGrad = dGrad(ctx, textX, cardY + inner, bSize, bSize, [accent, ACCENT_2]);
-    fillRR(ctx, textX, cardY + inner, bSize, bSize, s(12), bGrad);
-    ctx.font = `${s(20)}px GeistBold`;
+    const bSize = s(52);
+    if (isSolid) {
+      fillRR(ctx, textX, cardY + inner, bSize, bSize, s(14), "rgba(255,255,255,0.15)");
+    } else {
+      const bGrad = dGrad(ctx, textX, cardY + inner, bSize, bSize, [accent, ACCENT_2]);
+      fillRR(ctx, textX, cardY + inner, bSize, bSize, s(14), bGrad);
+    }
+    ctx.font = `${s(24)}px GeistBold`;
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -467,320 +658,348 @@ async function drawTip(ctx: SKRSContext2D, data: SlideData, w: number, h: number
   }
 
   // # Headline
-  const headY = cardY + inner + (data.slideNumber ? s(62) : 0);
-  const headFs = s(32);
+  const headY = cardY + inner + (data.slideNumber ? s(72) : 0);
+  const headFs = s(56);
   ctx.font = `${headFs}px GeistBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
+  ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
-  const afterHead = drawText(ctx, data.headline, textX, headY, textMaxW, Math.round(headFs * 1.3), 3, true);
+  const afterHead = drawText(ctx, data.headline, textX, headY, textMaxW, Math.round(headFs * 1.2), 5, true);
 
   // # Body text
   if (data.body) {
-    ctx.font = `${s(18)}px GeistMedium`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    drawText(ctx, data.body, textX, afterHead + s(16), textMaxW, s(28), 5, true);
+    ctx.font = `${s(28)}px GeistMedium`;
+    ctx.fillStyle = tc.secondary;
+    drawText(ctx, data.body, textX, afterHead + s(18), textMaxW, s(38), 7, true);
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # QUOTE — Large quotation mark with centered quote text
 async function drawQuote(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
-  const maxW = w * 0.76;
+  const maxW = w * 0.80;
 
-  // # Glass card
-  const cardW = w * 0.84;
-  const cardH = Math.min(area.h * 0.60, s(440));
-  const cardX = cx - cardW / 2;
-  const cardY = area.cy - cardH / 2;
-  drawCard(ctx, cardX, cardY, cardW, cardH, s(24));
+  if (!isSolid) {
+    const cardW = w * 0.84;
+    const cardH = Math.min(area.h * 0.65, s(520));
+    drawCard(ctx, cx - cardW / 2, area.cy - cardH / 2, cardW, cardH, s(24));
+  }
 
-  // # Large gradient quotation mark
-  ctx.font = `${s(140)}px GeistBlack`;
+  // # Large quotation mark
+  ctx.font = `${s(160)}px GeistBlack`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const qGrad = dGrad(ctx, cx - s(50), cardY + s(10), s(100), s(80), [ACCENT_1, ACCENT_2]);
-  ctx.fillStyle = qGrad;
-  ctx.fillText("“", cx, cardY + s(55));
+  if (isSolid) {
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+  } else {
+    const qGrad = dGrad(ctx, cx - s(50), area.cy - s(140), s(100), s(80), [ACCENT_1, ACCENT_2]);
+    ctx.fillStyle = qGrad;
+  }
+  ctx.fillText("“", cx, area.cy - s(100));
 
   // # Quote text
-  ctx.font = `${s(26)}px GeistSemiBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
+  ctx.font = `${s(42)}px GeistSemiBold`;
+  ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
   const lines = wrapText(ctx, data.headline, maxW);
-  const textH = Math.min(lines.length, 4) * s(40);
-  const startY = area.cy - textH / 2 + s(20);
-  lines.slice(0, 4).forEach((line, i) => {
+  const lh = s(56);
+  const totalH = Math.min(lines.length, 5) * lh;
+  const startY = area.cy - totalH / 2 + s(10);
+  lines.slice(0, 5).forEach((line, i) => {
     ctx.textAlign = "center";
-    ctx.fillText(line, cx, startY + i * s(40));
+    ctx.fillText(line, cx, startY + i * lh);
   });
 
   // # Attribution
   if (data.subheadline) {
-    ctx.font = `${s(16)}px GeistMedium`;
-    ctx.fillStyle = ACCENT_3;
+    ctx.font = `${s(22)}px GeistMedium`;
+    ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_3;
     ctx.textAlign = "center";
-    ctx.fillText(`— ${data.subheadline}`, cx, startY + Math.min(lines.length, 4) * s(40) + s(20));
+    ctx.fillText(`— ${data.subheadline}`, cx, startY + Math.min(lines.length, 5) * lh + s(24));
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
-// # LIST — Title with gradient-accented bullet items inside a glass card
+// # LIST — Title with bullet items
 async function drawList(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const maxW = w - pad * 2;
   let y = area.top + s(8);
 
   // # Headline
-  const headFs = s(32);
+  const headFs = s(56);
   ctx.font = `${headFs}px GeistBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
+  ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
-  y = drawText(ctx, data.headline, pad, y, maxW, Math.round(headFs * 1.3), 2, true);
+  y = drawText(ctx, data.headline, pad, y, maxW, Math.round(headFs * 1.2), 3, true);
 
   // # Gradient underline
-  const ulGrad = hGrad(ctx, pad, pad + s(100), 0, [ACCENT_1, ACCENT_2]);
-  fillRR(ctx, pad, y + s(8), s(100), s(4), s(2), ulGrad);
-  y += s(28);
+  const ulColor1 = isSolid ? "rgba(255,255,255,0.5)" : ACCENT_1;
+  const ulColor2 = isSolid ? "rgba(255,255,255,0.1)" : ACCENT_2;
+  const ulGrad = hGrad(ctx, pad, pad + s(120), 0, [ulColor1, ulColor2]);
+  fillRR(ctx, pad, y + s(10), s(120), s(4), s(2), ulGrad);
+  y += s(32);
 
-  // # Bullet items in glass card
+  // # Bullet items
   if (data.bullets) {
-    const maxBullets = Math.min(data.bullets.length, 6);
-    const bulletH = maxBullets * s(52) + s(32);
-    const cardX = pad - s(12);
-    const cardW = w - pad * 2 + s(24);
-    drawCard(ctx, cardX, y - s(8), cardW, bulletH, s(16));
+    const maxBullets = Math.min(data.bullets.length, 7);
+    const bulletH = maxBullets * s(58) + s(32);
 
-    const bulletMaxW = maxW - s(40);
+    if (!isSolid) {
+      const cardX = pad - s(12);
+      const cardW = w - pad * 2 + s(24);
+      drawCard(ctx, cardX, y - s(8), cardW, bulletH, s(16));
+    }
+
+    const bulletMaxW = maxW - s(48);
     for (let i = 0; i < maxBullets; i++) {
-      const dotY = y + s(10) + i * s(52);
+      const dotY = y + s(12) + i * s(58);
 
-      // # Gradient bullet dot
-      const dotGrad = dGrad(ctx, pad + s(8), dotY, s(8), s(8), [ACCENT_1, ACCENT_2]);
-      ctx.beginPath();
-      ctx.arc(pad + s(12), dotY + s(4), s(4), 0, Math.PI * 2);
-      ctx.fillStyle = dotGrad;
-      ctx.fill();
+      // # Bullet dot
+      if (isSolid) {
+        ctx.beginPath();
+        ctx.arc(pad + s(12), dotY + s(4), s(5), 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.50)";
+        ctx.fill();
+      } else {
+        const dotGrad = dGrad(ctx, pad + s(8), dotY, s(10), s(10), [ACCENT_1, ACCENT_2]);
+        ctx.beginPath();
+        ctx.arc(pad + s(12), dotY + s(4), s(5), 0, Math.PI * 2);
+        ctx.fillStyle = dotGrad;
+        ctx.fill();
+      }
 
-      // # Bullet text
-      ctx.font = `${s(18)}px GeistMedium`;
-      ctx.fillStyle = TEXT_PRIMARY;
-      drawText(ctx, data.bullets[i], pad + s(32), dotY - s(4), bulletMaxW, s(28), 2);
+      ctx.font = `${s(26)}px GeistMedium`;
+      ctx.fillStyle = tc.primary;
+      drawText(ctx, data.bullets[i], pad + s(36), dotY - s(6), bulletMaxW, s(34), 2, true);
     }
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # CTA — Call-to-action with centered card, logo, and gradient button
 async function drawCta(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
 
-  // # Card with glow shadow
-  const cardW = Math.min(w * 0.78, s(740));
-  const cardH = Math.min(area.h * 0.62, s(440));
+  const cardW = Math.min(w * 0.82, s(780));
+  const cardH = Math.min(area.h * 0.65, s(500));
   const cardX = cx - cardW / 2;
   const cardY = area.cy - cardH / 2;
-  drawCard(ctx, cardX, cardY, cardW, cardH, s(24), { glow: true, accentTop: ACCENT_1 });
+  if (isSolid) drawSolidCard(ctx, cardX, cardY, cardW, cardH, s(24));
+  else drawCard(ctx, cardX, cardY, cardW, cardH, s(24), { glow: true, accentTop: ACCENT_1 });
 
   const inner = s(40);
 
   // # Logo
   const logoY = cardY + inner;
-  const logoSize = s(48);
-  const logoGrad = dGrad(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, [ACCENT_1, ACCENT_2]);
-  fillRR(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, s(14), logoGrad);
-  ctx.font = `${s(22)}px GeistBold`;
+  const logoSize = s(56);
+  if (isSolid) {
+    fillRR(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, s(16), "rgba(255,255,255,0.18)");
+  } else {
+    const logoGrad = dGrad(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, [ACCENT_1, ACCENT_2]);
+    fillRR(ctx, cx - logoSize / 2, logoY, logoSize, logoSize, s(16), logoGrad);
+  }
+  ctx.font = `${s(26)}px GeistBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("J", cx, logoY + logoSize / 2 + 1);
 
   // # CTA headline
-  const headFs = s(26);
+  const headFs = s(42);
   ctx.font = `${headFs}px GeistBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
+  ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
   const headMaxW = cardW - inner * 2;
   const lines = wrapText(ctx, data.headline, headMaxW);
-  const headY = logoY + logoSize + s(22);
-  lines.slice(0, 2).forEach((line, i) => {
-    ctx.fillText(line, cx, headY + i * Math.round(headFs * 1.35));
+  const headY = logoY + logoSize + s(24);
+  lines.slice(0, 3).forEach((line, i) => {
+    ctx.fillText(line, cx, headY + i * Math.round(headFs * 1.25));
   });
 
-  // # Body
-  let bodyEndY = headY + Math.min(lines.length, 2) * Math.round(headFs * 1.35);
+  let bodyEndY = headY + Math.min(lines.length, 3) * Math.round(headFs * 1.25);
   if (data.body) {
-    ctx.font = `${s(17)}px Geist`;
-    ctx.fillStyle = TEXT_SECONDARY;
+    ctx.font = `${s(24)}px Geist`;
+    ctx.fillStyle = tc.secondary;
     const bodyLines = wrapText(ctx, data.body, headMaxW);
-    bodyEndY += s(10);
-    bodyLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, cx, bodyEndY + i * s(26));
+    bodyEndY += s(12);
+    bodyLines.slice(0, 3).forEach((line, i) => {
+      ctx.fillText(line, cx, bodyEndY + i * s(34));
     });
-    bodyEndY += Math.min(bodyLines.length, 2) * s(26);
+    bodyEndY += Math.min(bodyLines.length, 3) * s(34);
   }
 
-  // # Gradient CTA button
-  const btnW = s(200);
-  const btnH = s(46);
+  // # CTA button
+  const btnW = s(240);
+  const btnH = s(54);
   const btnX = cx - btnW / 2;
-  const btnY = bodyEndY + s(22);
-  const btnGrad = hGrad(ctx, btnX, btnX + btnW, 0, [ACCENT_1, ACCENT_2]);
-  fillRR(ctx, btnX, btnY, btnW, btnH, s(12), btnGrad);
-  ctx.font = `${s(16)}px GeistSemiBold`;
+  const btnY = bodyEndY + s(24);
+  if (isSolid) {
+    fillRR(ctx, btnX, btnY, btnW, btnH, s(14), "rgba(255,255,255,0.20)");
+    strokeRR(ctx, btnX, btnY, btnW, btnH, s(14), "rgba(255,255,255,0.30)", 1.5);
+  } else {
+    const btnGrad = hGrad(ctx, btnX, btnX + btnW, 0, [ACCENT_1, ACCENT_2]);
+    fillRR(ctx, btnX, btnY, btnW, btnH, s(14), btnGrad);
+  }
+  ctx.font = `${s(20)}px GeistSemiBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textBaseline = "middle";
   ctx.fillText(BRAND_URL, cx, btnY + btnH / 2);
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
-// # BEFORE/AFTER — Side-by-side comparison with red/green coding
+// # BEFORE/AFTER — Side-by-side comparison
 async function drawBeforeAfter(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
 
-  // # Title
   if (data.headline) {
-    ctx.font = `${s(28)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(44)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(38), 2);
+    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(54), 2, true);
     ctx.textAlign = "left";
   }
 
   const gap = s(20);
   const cardW = (w - pad * 2 - gap) / 2;
-  const cardH = Math.min(area.h * 0.62, s(520));
-  const cardY = area.cy - cardH / 2 + s(20);
+  const cardH = Math.min(area.h * 0.65, s(580));
+  const cardY = area.cy - cardH / 2 + s(24);
 
-  // # BEFORE card — red-tinted
-  fillRR(ctx, pad, cardY, cardW, cardH, s(18), "rgba(239,68,68,0.06)");
-  strokeRR(ctx, pad, cardY, cardW, cardH, s(18), "rgba(239,68,68,0.20)", 1);
+  // # BEFORE card
+  const beforeFill = isSolid ? "rgba(0,0,0,0.20)" : "rgba(239,68,68,0.06)";
+  const beforeBorder = isSolid ? "rgba(255,100,100,0.30)" : "rgba(239,68,68,0.20)";
+  const beforeAccent = isSolid ? "#ff8a8a" : "#ef4444";
+  fillRR(ctx, pad, cardY, cardW, cardH, s(18), beforeFill);
+  strokeRR(ctx, pad, cardY, cardW, cardH, s(18), beforeBorder, 1);
   ctx.save();
-  roundedRect(ctx, pad, cardY, cardW, s(3), s(18));
+  roundedRect(ctx, pad, cardY, cardW, s(4), s(18));
   ctx.clip();
-  ctx.fillStyle = "#ef4444";
-  ctx.fillRect(pad, cardY, cardW, s(3));
+  ctx.fillStyle = beforeAccent;
+  ctx.fillRect(pad, cardY, cardW, s(4));
   ctx.restore();
-  ctx.font = `${s(12)}px GeistBold`;
-  ctx.fillStyle = "#ef4444";
+  ctx.font = `${s(14)}px GeistBold`;
+  ctx.fillStyle = beforeAccent;
   ctx.textBaseline = "top";
   ctx.letterSpacing = `${s(3)}px`;
-  ctx.fillText("BEFORE", pad + s(24), cardY + s(22));
+  ctx.fillText("BEFORE", pad + s(24), cardY + s(24));
   ctx.letterSpacing = "0px";
-  ctx.font = `${s(17)}px GeistMedium`;
-  ctx.fillStyle = TEXT_SECONDARY;
-  drawText(ctx, data.beforeText || "", pad + s(24), cardY + s(50), cardW - s(48), s(26), 8);
+  ctx.font = `${s(24)}px GeistMedium`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : TEXT_SECONDARY;
+  drawText(ctx, data.beforeText || "", pad + s(24), cardY + s(56), cardW - s(48), s(34), 7, true);
 
-  // # AFTER card — green-tinted
+  // # AFTER card
   const afterX = pad + cardW + gap;
-  fillRR(ctx, afterX, cardY, cardW, cardH, s(18), "rgba(34,197,94,0.06)");
-  strokeRR(ctx, afterX, cardY, cardW, cardH, s(18), "rgba(34,197,94,0.20)", 1);
+  const afterFill = isSolid ? "rgba(0,0,0,0.20)" : "rgba(34,197,94,0.06)";
+  const afterBorder = isSolid ? "rgba(100,255,100,0.30)" : "rgba(34,197,94,0.20)";
+  const afterAccent = isSolid ? "#8aff8a" : "#22c55e";
+  fillRR(ctx, afterX, cardY, cardW, cardH, s(18), afterFill);
+  strokeRR(ctx, afterX, cardY, cardW, cardH, s(18), afterBorder, 1);
   ctx.save();
-  roundedRect(ctx, afterX, cardY, cardW, s(3), s(18));
+  roundedRect(ctx, afterX, cardY, cardW, s(4), s(18));
   ctx.clip();
-  ctx.fillStyle = "#22c55e";
-  ctx.fillRect(afterX, cardY, cardW, s(3));
+  ctx.fillStyle = afterAccent;
+  ctx.fillRect(afterX, cardY, cardW, s(4));
   ctx.restore();
-  ctx.font = `${s(12)}px GeistBold`;
-  ctx.fillStyle = "#22c55e";
+  ctx.font = `${s(14)}px GeistBold`;
+  ctx.fillStyle = afterAccent;
   ctx.letterSpacing = `${s(3)}px`;
-  ctx.fillText("AFTER", afterX + s(24), cardY + s(22));
+  ctx.fillText("AFTER", afterX + s(24), cardY + s(24));
   ctx.letterSpacing = "0px";
-  ctx.font = `${s(17)}px GeistSemiBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
-  drawText(ctx, data.afterText || "", afterX + s(24), cardY + s(50), cardW - s(48), s(26), 8);
+  ctx.font = `${s(24)}px GeistSemiBold`;
+  ctx.fillStyle = tc.primary;
+  drawText(ctx, data.afterText || "", afterX + s(24), cardY + s(56), cardW - s(48), s(34), 7, true);
 
   // # VS divider
   const vsX = pad + cardW + gap / 2;
   const vsY = cardY + cardH / 2;
   ctx.beginPath();
-  ctx.arc(vsX, vsY, s(16), 0, Math.PI * 2);
-  ctx.fillStyle = BG_ELEVATED;
+  ctx.arc(vsX, vsY, s(20), 0, Math.PI * 2);
+  ctx.fillStyle = isSolid ? "rgba(0,0,0,0.40)" : BG_ELEVATED;
   ctx.fill();
-  ctx.beginPath();
-  ctx.arc(vsX, vsY, s(16), 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_1, 0.25);
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.font = `${s(11)}px GeistBold`;
-  ctx.fillStyle = TEXT_SECONDARY;
+  strokeRR(ctx, vsX - s(20), vsY - s(20), s(40), s(40), s(20), isSolid ? "rgba(255,255,255,0.20)" : rgba(ACCENT_1, 0.25), 1);
+  ctx.font = `${s(14)}px GeistBold`;
+  ctx.fillStyle = tc.secondary;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("VS", vsX, vsY);
   ctx.textAlign = "left";
-
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # SCREENSHOT — Fake tweet/DM/notification card
 async function drawScreenshot(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
 
-  // # Card with drop shadow
-  const cardW = Math.min(w * 0.82, s(780));
-  const cardH = Math.min(area.h * 0.55, s(380));
+  const cardW = Math.min(w * 0.85, s(820));
+  const cardH = Math.min(area.h * 0.60, s(440));
   const cardX = cx - cardW / 2;
   const cardY = area.cy - cardH / 2;
 
-  ctx.shadowColor = "rgba(0,0,0,0.25)";
-  ctx.shadowBlur = s(28);
-  ctx.shadowOffsetY = s(6);
-  fillRR(ctx, cardX, cardY, cardW, cardH, s(18), BG_CARD);
+  // # Drop shadow + card
+  ctx.shadowColor = "rgba(0,0,0,0.30)";
+  ctx.shadowBlur = s(32);
+  ctx.shadowOffsetY = s(8);
+  fillRR(ctx, cardX, cardY, cardW, cardH, s(20), isSolid ? "rgba(0,0,0,0.35)" : BG_CARD);
   ctx.shadowColor = "transparent";
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
-  strokeRR(ctx, cardX, cardY, cardW, cardH, s(18), rgba(ACCENT_1, 0.08), 1);
+  strokeRR(ctx, cardX, cardY, cardW, cardH, s(20), isSolid ? "rgba(255,255,255,0.10)" : rgba(ACCENT_1, 0.08), 1);
 
   // # Avatar
-  const avSize = s(40);
-  const avX = cardX + s(28);
-  const avY = cardY + s(28);
+  const avSize = s(48);
+  const avX = cardX + s(32);
+  const avY = cardY + s(32);
   const avGrad = dGrad(ctx, avX, avY, avSize, avSize, [ACCENT_1, ACCENT_2]);
   ctx.beginPath();
   ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
   ctx.fillStyle = avGrad;
   ctx.fill();
-  ctx.font = `${s(17)}px GeistBold`;
+  ctx.font = `${s(20)}px GeistBold`;
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -789,181 +1008,181 @@ async function drawScreenshot(ctx: SKRSContext2D, data: SlideData, w: number, h:
   // # Author + type label
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = `${s(16)}px GeistSemiBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
-  ctx.fillText(data.screenshotAuthor || "User", avX + avSize + s(12), avY + s(16));
-  ctx.font = `${s(12)}px GeistMedium`;
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.font = `${s(22)}px GeistSemiBold`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT : TEXT_PRIMARY;
+  ctx.fillText(data.screenshotAuthor || "User", avX + avSize + s(14), avY + s(20));
+  ctx.font = `${s(14)}px GeistMedium`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT_MUTED : TEXT_MUTED;
   const typeLabel = data.screenshotType === "dm" ? "Direct Message" : data.screenshotType === "email" ? "Email" : "Post";
-  ctx.fillText(typeLabel, avX + avSize + s(12), avY + s(34));
+  ctx.fillText(typeLabel, avX + avSize + s(14), avY + s(40));
 
   // # Message text
-  ctx.font = `${s(18)}px Geist`;
-  ctx.fillStyle = TEXT_PRIMARY;
+  ctx.font = `${s(26)}px Geist`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT : TEXT_PRIMARY;
   ctx.textBaseline = "top";
-  drawText(ctx, data.headline, cardX + s(28), avY + avSize + s(18), cardW - s(56), s(30), 6);
+  drawText(ctx, data.headline, cardX + s(32), avY + avSize + s(22), cardW - s(64), s(36), 6, true);
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
-// # DATA CHART — Horizontal bar chart with gradient fills
+// # DATA CHART — Horizontal bar chart
 async function drawDataChart(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const maxW = w - pad * 2;
   let y = area.top + s(8);
 
-  // # Title
   if (data.headline) {
-    ctx.font = `${s(26)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(44)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.textBaseline = "top";
-    y = drawText(ctx, data.headline, pad, y, maxW, s(36), 2, true);
-    y += s(28);
+    y = drawText(ctx, data.headline, pad, y, maxW, s(54), 2, true);
+    y += s(32);
   }
 
-  // # Bars
   const bars = data.bars || [];
-  const barH = s(12);
+  const barH = s(16);
   const maxBars = Math.min(bars.length, 7);
-  const barSpacing = Math.min(s(56), (area.bot - y) / maxBars);
+  const barSpacing = Math.min(s(62), (area.bot - y) / maxBars);
 
   for (let i = 0; i < maxBars; i++) {
     const bar = bars[i];
-
-    // # Label + value
-    ctx.font = `${s(15)}px GeistMedium`;
-    ctx.fillStyle = TEXT_SECONDARY;
+    ctx.font = `${s(20)}px GeistMedium`;
+    ctx.fillStyle = tc.secondary;
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
     ctx.fillText(bar.label, pad, y);
     ctx.textAlign = "right";
-    ctx.font = `${s(15)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(20)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.fillText(`${bar.value}%`, pad + maxW, y);
     ctx.textAlign = "left";
 
-    // # Bar track
-    y += s(10);
-    fillRR(ctx, pad, y, maxW, barH, s(6), rgba(ACCENT_1, 0.12));
+    y += s(12);
+    fillRR(ctx, pad, y, maxW, barH, s(8), isSolid ? "rgba(255,255,255,0.10)" : rgba(ACCENT_1, 0.12));
 
-    // # Bar fill
     const fillW = (Math.min(bar.value, 100) / 100) * maxW;
     if (fillW > 0) {
-      const bg = hGrad(ctx, pad, pad + fillW, 0, [bar.color || ACCENT_1, ACCENT_2]);
-      fillRR(ctx, pad, y, fillW, barH, s(6), bg);
+      const barFill = isSolid
+        ? hGrad(ctx, pad, pad + fillW, 0, ["rgba(255,255,255,0.50)", "rgba(255,255,255,0.25)"])
+        : hGrad(ctx, pad, pad + fillW, 0, [bar.color || ACCENT_1, ACCENT_2]);
+      fillRR(ctx, pad, y, fillW, barH, s(8), barFill);
     }
 
-    y += barH + barSpacing - s(10);
+    y += barH + barSpacing - s(12);
   }
-
-  drawFooter(ctx, w, h, pad, s);
 }
 
-// # COMPARISON — Two-column layout with glass cards and accent headers
+// # COMPARISON — Two-column layout
 async function drawComparison(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
 
-  // # Title
   if (data.headline) {
-    ctx.font = `${s(28)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(44)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(38), 2);
+    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(54), 2, true);
     ctx.textAlign = "left";
   }
 
   const gap = s(20);
   const colW = (w - pad * 2 - gap) / 2;
-  const colH = Math.min(area.h * 0.66, s(540));
-  const colY = area.cy - colH / 2 + s(18);
+  const colH = Math.min(area.h * 0.66, s(580));
+  const colY = area.cy - colH / 2 + s(22);
 
   // # Left column
-  drawCard(ctx, pad, colY, colW, colH, s(18), { accentTop: ACCENT_1 });
-  ctx.font = `${s(12)}px GeistBold`;
-  ctx.fillStyle = ACCENT_1;
+  if (isSolid) drawSolidCard(ctx, pad, colY, colW, colH, s(18));
+  else drawCard(ctx, pad, colY, colW, colH, s(18), { accentTop: ACCENT_1 });
+  ctx.font = `${s(14)}px GeistBold`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_1;
   ctx.textBaseline = "top";
   ctx.letterSpacing = `${s(3)}px`;
-  ctx.fillText(data.leftLabel || "OPTION A", pad + s(24), colY + s(20));
+  ctx.fillText(data.leftLabel || "OPTION A", pad + s(24), colY + s(22));
   ctx.letterSpacing = "0px";
 
-  let ly = colY + s(48);
-  (data.leftColumn || []).slice(0, 5).forEach((item) => {
+  let ly = colY + s(54);
+  (data.leftColumn || []).slice(0, 6).forEach((item) => {
     ctx.beginPath();
-    ctx.arc(pad + s(28), ly + s(4), s(3), 0, Math.PI * 2);
-    ctx.fillStyle = ACCENT_1;
+    ctx.arc(pad + s(28), ly + s(5), s(4), 0, Math.PI * 2);
+    ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_1;
     ctx.fill();
-    ctx.font = `${s(15)}px GeistMedium`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    ly = drawText(ctx, item, pad + s(46), ly, colW - s(70), s(22), 2) + s(10);
+    ctx.font = `${s(20)}px GeistMedium`;
+    ctx.fillStyle = tc.secondary;
+    ly = drawText(ctx, item, pad + s(48), ly, colW - s(72), s(28), 2) + s(12);
   });
 
   // # Right column
   const rx = pad + colW + gap;
-  drawCard(ctx, rx, colY, colW, colH, s(18), { accentTop: ACCENT_3 });
-  ctx.font = `${s(12)}px GeistBold`;
-  ctx.fillStyle = ACCENT_3;
+  if (isSolid) drawSolidCard(ctx, rx, colY, colW, colH, s(18));
+  else drawCard(ctx, rx, colY, colW, colH, s(18), { accentTop: ACCENT_3 });
+  ctx.font = `${s(14)}px GeistBold`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_3;
   ctx.letterSpacing = `${s(3)}px`;
-  ctx.fillText(data.rightLabel || "OPTION B", rx + s(24), colY + s(20));
+  ctx.fillText(data.rightLabel || "OPTION B", rx + s(24), colY + s(22));
   ctx.letterSpacing = "0px";
 
-  let ry = colY + s(48);
-  (data.rightColumn || []).slice(0, 5).forEach((item) => {
+  let ry = colY + s(54);
+  (data.rightColumn || []).slice(0, 6).forEach((item) => {
     ctx.beginPath();
-    ctx.arc(rx + s(28), ry + s(4), s(3), 0, Math.PI * 2);
-    ctx.fillStyle = ACCENT_3;
+    ctx.arc(rx + s(28), ry + s(5), s(4), 0, Math.PI * 2);
+    ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_3;
     ctx.fill();
-    ctx.font = `${s(15)}px GeistMedium`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    ry = drawText(ctx, item, rx + s(46), ry, colW - s(70), s(22), 2) + s(10);
+    ctx.font = `${s(20)}px GeistMedium`;
+    ctx.fillStyle = tc.secondary;
+    ry = drawText(ctx, item, rx + s(48), ry, colW - s(72), s(28), 2) + s(12);
   });
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # NUMBERED STEPS — Step badges with titles and details
 async function drawNumberedSteps(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const maxW = w - pad * 2;
   let y = area.top + s(8);
 
-  // # Title
   if (data.headline) {
-    ctx.font = `${s(26)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(44)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.textBaseline = "top";
-    y = drawText(ctx, data.headline, pad, y, maxW, s(36), 2, true);
-    y += s(26);
+    y = drawText(ctx, data.headline, pad, y, maxW, s(54), 2, true);
+    y += s(28);
   }
 
   const steps = data.steps || [];
   const maxSteps = Math.min(steps.length, 5);
-  const stepSpace = Math.min(s(72), (area.bot - y) / maxSteps);
-  const badgeSize = s(42);
+  const stepSpace = Math.min(s(82), (area.bot - y) / maxSteps);
+  const badgeSize = s(52);
 
-  // # Connecting line between badges
+  // # Connecting line
   if (maxSteps > 1) {
     const lineX = pad + badgeSize / 2;
     const lineTop = y + badgeSize;
     const lineBot = y + (maxSteps - 1) * stepSpace + badgeSize / 2;
-    const lineGrad = vGrad(ctx, lineTop, lineBot, 0, [rgba(ACCENT_1, 0.20), rgba(ACCENT_2, 0.08)]);
+    const lineColor = isSolid ? "rgba(255,255,255,0.12)" : rgba(ACCENT_1, 0.20);
+    const lineColor2 = isSolid ? "rgba(255,255,255,0.04)" : rgba(ACCENT_2, 0.08);
+    const lineGrad = vGrad(ctx, lineTop, lineBot, 0, [lineColor, lineColor2]);
     ctx.fillStyle = lineGrad;
     ctx.fillRect(lineX - 1, lineTop, 2, lineBot - lineTop);
   }
@@ -972,10 +1191,13 @@ async function drawNumberedSteps(ctx: SKRSContext2D, data: SlideData, w: number,
     const step = steps[i];
     const sy = y + i * stepSpace;
 
-    // # Gradient badge
-    const bGrad = dGrad(ctx, pad, sy, badgeSize, badgeSize, [ACCENT_1, ACCENT_2]);
-    fillRR(ctx, pad, sy, badgeSize, badgeSize, s(12), bGrad);
-    ctx.font = `${s(18)}px GeistBold`;
+    if (isSolid) {
+      fillRR(ctx, pad, sy, badgeSize, badgeSize, s(14), "rgba(255,255,255,0.15)");
+    } else {
+      const bGrad = dGrad(ctx, pad, sy, badgeSize, badgeSize, [ACCENT_1, ACCENT_2]);
+      fillRR(ctx, pad, sy, badgeSize, badgeSize, s(14), bGrad);
+    }
+    ctx.font = `${s(22)}px GeistBold`;
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -983,155 +1205,166 @@ async function drawNumberedSteps(ctx: SKRSContext2D, data: SlideData, w: number,
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
 
-    // # Step title
-    const textX = pad + badgeSize + s(18);
-    ctx.font = `${s(19)}px GeistSemiBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    const textX = pad + badgeSize + s(20);
+    ctx.font = `${s(26)}px GeistSemiBold`;
+    ctx.fillStyle = tc.primary;
     ctx.fillText(step.title, textX, sy + s(4));
 
-    // # Step detail
     if (step.detail) {
-      ctx.font = `${s(15)}px Geist`;
-      ctx.fillStyle = TEXT_SECONDARY;
-      drawText(ctx, step.detail, textX, sy + s(28), maxW - badgeSize - s(18), s(22), 1);
+      ctx.font = `${s(20)}px Geist`;
+      ctx.fillStyle = tc.secondary;
+      drawText(ctx, step.detail, textX, sy + s(36), maxW - badgeSize - s(20), s(28), 2, true);
     }
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
-// # GRADIENT TEXT — Large gradient headline with minimal decoration
+// # GRADIENT TEXT — Large gradient headline
 async function drawGradientTextSlide(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
-  const maxW = w * 0.82;
+  const maxW = w * 0.85;
 
-  // # Single decorative ring
+  // # Decorative ring
   ctx.beginPath();
-  ctx.arc(cx, area.cy, s(170), 0, Math.PI * 2);
-  ctx.strokeStyle = rgba(ACCENT_1, 0.10);
+  ctx.arc(cx, area.cy, s(190), 0, Math.PI * 2);
+  ctx.strokeStyle = isSolid ? "rgba(255,255,255,0.06)" : rgba(ACCENT_1, 0.10);
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // # Large gradient headline
-  const fs = s(w >= 1200 ? 54 : 48);
+  // # Large headline
+  const fs = s(72);
   ctx.font = `${fs}px GeistBlack`;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   const lines = wrapText(ctx, data.headline, maxW);
-  const lh = Math.round(fs * 1.18);
-  const totalH = Math.min(lines.length, 3) * lh;
+  const lh = Math.round(fs * 1.16);
+  const totalH = Math.min(lines.length, 4) * lh;
   const startY = area.cy - totalH / 2;
 
-  const grad = dGrad(ctx, cx - maxW / 2, startY, maxW, totalH, [ACCENT_1, ACCENT_3, ACCENT_2]);
-  ctx.fillStyle = grad;
-  lines.slice(0, 3).forEach((line, i) => {
+  if (isSolid) {
+    ctx.fillStyle = SOLID_TEXT;
+  } else {
+    const grad = dGrad(ctx, cx - maxW / 2, startY, maxW, totalH, [ACCENT_1, ACCENT_3, ACCENT_2]);
+    ctx.fillStyle = grad;
+  }
+  lines.slice(0, 4).forEach((line, i) => {
     ctx.fillText(line, cx, startY + i * lh);
   });
 
   // # Gradient underline
-  const ulY = startY + Math.min(lines.length, 3) * lh + s(10);
-  const ulGrad = hGrad(ctx, cx - s(50), cx + s(50), 0, [ACCENT_1, ACCENT_2]);
-  fillRR(ctx, cx - s(50), ulY, s(100), s(4), s(2), ulGrad);
+  const ulY = startY + Math.min(lines.length, 4) * lh + s(12);
+  const ulColor1 = isSolid ? "rgba(255,255,255,0.5)" : ACCENT_1;
+  const ulColor2 = isSolid ? "rgba(255,255,255,0.1)" : ACCENT_2;
+  const ulGrad = hGrad(ctx, cx - s(60), cx + s(60), 0, [ulColor1, ulColor2]);
+  fillRR(ctx, cx - s(60), ulY, s(120), s(4), s(2), ulGrad);
 
   // # Subheadline
   if (data.subheadline) {
-    ctx.font = `${s(19)}px GeistMedium`;
-    ctx.fillStyle = TEXT_SECONDARY;
+    ctx.font = `${s(28)}px GeistMedium`;
+    ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : TEXT_SECONDARY;
     const subLines = wrapText(ctx, data.subheadline, maxW * 0.85);
-    subLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, cx, ulY + s(22) + i * s(28));
+    subLines.slice(0, 3).forEach((line, i) => {
+      ctx.fillText(line, cx, ulY + s(24) + i * s(38));
     });
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # HIGHLIGHT BOX — Key insight in a glowing accent card
 async function drawHighlightBox(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
 
   // # Label above box
   if (data.subheadline) {
-    ctx.font = `${s(13)}px GeistSemiBold`;
-    ctx.fillStyle = TEXT_MUTED;
+    ctx.font = `${s(16)}px GeistSemiBold`;
+    ctx.fillStyle = tc.muted;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     ctx.letterSpacing = `${s(3)}px`;
-    ctx.fillText(data.subheadline.toUpperCase(), cx, area.cy - s(120));
+    ctx.fillText(data.subheadline.toUpperCase(), cx, area.cy - s(130));
     ctx.letterSpacing = "0px";
   }
 
-  // # Highlight card with glow
-  const boxW = Math.min(w * 0.78, s(740));
-  const boxH = Math.min(area.h * 0.32, s(260));
+  const boxW = Math.min(w * 0.82, s(780));
+  const boxH = Math.min(area.h * 0.38, s(320));
   const boxX = cx - boxW / 2;
   const boxY = area.cy - boxH / 2;
 
-  drawGlow(ctx, cx, boxY + boxH / 2, boxW * 0.40, ACCENT_1, 0.14);
+  if (!isSolid) drawGlow(ctx, cx, boxY + boxH / 2, boxW * 0.40, ACCENT_1, 0.14);
 
-  const bgGrad = dGrad(ctx, boxX, boxY, boxW, boxH, [rgba(ACCENT_1, 0.10), rgba(ACCENT_2, 0.10)]);
-  fillRR(ctx, boxX, boxY, boxW, boxH, s(22), bgGrad);
-  strokeRR(ctx, boxX, boxY, boxW, boxH, s(22), rgba(ACCENT_1, 0.28), 1.5);
+  const bgFill = isSolid
+    ? "rgba(255,255,255,0.10)"
+    : dGrad(ctx, boxX, boxY, boxW, boxH, [rgba(ACCENT_1, 0.10), rgba(ACCENT_2, 0.10)]);
+  fillRR(ctx, boxX, boxY, boxW, boxH, s(22), bgFill);
+  strokeRR(ctx, boxX, boxY, boxW, boxH, s(22), isSolid ? "rgba(255,255,255,0.18)" : rgba(ACCENT_1, 0.28), 1.5);
 
-  // # Text inside box
-  ctx.font = `${s(24)}px GeistSemiBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
+  ctx.font = `${s(36)}px GeistSemiBold`;
+  ctx.fillStyle = tc.primary;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  const lines = wrapText(ctx, data.headline, boxW - s(56));
-  const textStartY = boxY + (boxH - lines.length * s(36)) / 2;
-  lines.slice(0, 3).forEach((line, i) => {
-    ctx.fillText(line, cx, textStartY + i * s(36));
+  const lines = wrapText(ctx, data.headline, boxW - s(60));
+  const textStartY = boxY + (boxH - lines.length * s(48)) / 2;
+  lines.slice(0, 4).forEach((line, i) => {
+    ctx.fillText(line, cx, textStartY + i * s(48));
   });
 
-  // # Body below box
   if (data.body) {
-    ctx.font = `${s(17)}px Geist`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    const bodyLines = wrapText(ctx, data.body, w * 0.72);
-    bodyLines.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, cx, boxY + boxH + s(24) + i * s(26));
+    ctx.font = `${s(24)}px Geist`;
+    ctx.fillStyle = tc.secondary;
+    const bodyLines = wrapText(ctx, data.body, w * 0.75);
+    bodyLines.slice(0, 3).forEach((line, i) => {
+      ctx.fillText(line, cx, boxY + boxH + s(28) + i * s(34));
     });
   }
 
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 // # SPLIT IMAGE — Left gradient accent panel + right text content
 async function drawSplitImage(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
 
   const splitW = w * 0.36;
 
-  // # Left gradient panel
-  const panelGrad = vGrad(ctx, 0, h, 0, [ACCENT_1, ACCENT_2]);
-  ctx.fillStyle = panelGrad;
-  ctx.fillRect(0, 0, splitW, h);
-
-  // # Subtle horizontal lines on panel for texture
-  for (let py = 0; py < h; py += s(24)) {
-    if (Math.sin(py * 0.01) > 0.3) {
-      ctx.fillStyle = "rgba(255,255,255,0.04)";
-      ctx.fillRect(0, py, splitW, 1);
+  // # Left panel — gradient or lighter shade of background
+  if (isSolid) {
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fillRect(0, 0, splitW, h);
+    // # Subtle line separator
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillRect(splitW - 1, h * 0.1, 1, h * 0.8);
+  } else {
+    const panelGrad = vGrad(ctx, 0, h, 0, [ACCENT_1, ACCENT_2]);
+    ctx.fillStyle = panelGrad;
+    ctx.fillRect(0, 0, splitW, h);
+    for (let py = 0; py < h; py += s(24)) {
+      if (Math.sin(py * 0.01) > 0.3) {
+        ctx.fillStyle = "rgba(255,255,255,0.04)";
+        ctx.fillRect(0, py, splitW, 1);
+      }
     }
   }
 
@@ -1140,17 +1373,17 @@ async function drawSplitImage(ctx: SKRSContext2D, data: SlideData, w: number, h:
   ctx.textBaseline = "middle";
   if (data.stat) {
     const vLen = data.stat.value.length;
-    ctx.font = `${s(vLen > 4 ? 48 : 64)}px GeistBlack`;
+    ctx.font = `${s(vLen > 4 ? 56 : 72)}px GeistBlack`;
     ctx.fillStyle = "#ffffff";
     ctx.fillText(data.stat.value, splitW / 2, h / 2 - s(16));
-    ctx.font = `${s(15)}px GeistMedium`;
+    ctx.font = `${s(20)}px GeistMedium`;
     ctx.fillStyle = "rgba(255,255,255,0.78)";
     const labels = wrapText(ctx, data.stat.label, splitW - s(40));
     labels.slice(0, 2).forEach((line, i) => {
-      ctx.fillText(line, splitW / 2, h / 2 + s(28) + i * s(22));
+      ctx.fillText(line, splitW / 2, h / 2 + s(32) + i * s(28));
     });
   } else if (data.slideNumber) {
-    ctx.font = `${s(60)}px GeistBlack`;
+    ctx.font = `${s(72)}px GeistBlack`;
     ctx.fillStyle = "#ffffff";
     ctx.fillText(String(data.slideNumber), splitW / 2, h / 2);
   }
@@ -1161,19 +1394,18 @@ async function drawSplitImage(ctx: SKRSContext2D, data: SlideData, w: number, h:
   const rightX = splitW + s(44);
   const rightMaxW = w - rightX - pad;
 
-  ctx.font = `${s(26)}px GeistBold`;
-  ctx.fillStyle = TEXT_PRIMARY;
-  const headEnd = drawText(ctx, data.headline, rightX, h * 0.32, rightMaxW, s(36), 3, true);
+  ctx.font = `${s(44)}px GeistBold`;
+  ctx.fillStyle = tc.primary;
+  const headEnd = drawText(ctx, data.headline, rightX, h * 0.28, rightMaxW, s(54), 4, true);
 
   if (data.body) {
-    ctx.font = `${s(17)}px Geist`;
-    ctx.fillStyle = TEXT_SECONDARY;
-    drawText(ctx, data.body, rightX, headEnd + s(18), rightMaxW, s(26), 4, true);
+    ctx.font = `${s(26)}px Geist`;
+    ctx.fillStyle = tc.secondary;
+    drawText(ctx, data.body, rightX, headEnd + s(22), rightMaxW, s(36), 5, true);
   }
 
-  // # Brand URL at bottom-right
-  ctx.font = `${s(12)}px GeistMedium`;
-  ctx.fillStyle = TEXT_MUTED;
+  ctx.font = `${s(14)}px GeistMedium`;
+  ctx.fillStyle = tc.muted;
   ctx.textBaseline = "alphabetic";
   ctx.fillText(BRAND_URL, rightX, h - pad);
 }
@@ -1181,61 +1413,57 @@ async function drawSplitImage(ctx: SKRSContext2D, data: SlideData, w: number, h:
 // # PROGRESS BAR — Multiple progress bars with labels and percentages
 async function drawProgressBar(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
-  const pad = s(56);
+  const isSolid = !!data.backgroundColor;
+  const pad = isSolid ? s(40) : s(56);
+  const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
-  drawHeader(ctx, w, pad, s, data.slideNumber, data.totalSlides);
+  drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h);
+  const area = contentArea(pad, s, h, isSolid);
   const maxW = w - pad * 2;
   let y = area.top + s(8);
 
-  // # Title
   if (data.headline) {
-    ctx.font = `${s(26)}px GeistBold`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(44)}px GeistBold`;
+    ctx.fillStyle = tc.primary;
     ctx.textBaseline = "top";
-    y = drawText(ctx, data.headline, pad, y, maxW, s(36), 2, true);
-    y += s(28);
+    y = drawText(ctx, data.headline, pad, y, maxW, s(54), 2, true);
+    y += s(32);
   }
 
   const bars = data.bars || [];
-  const barH = s(14);
+  const barH = s(18);
   const maxBars = Math.min(bars.length, 6);
-  const barSpacing = Math.min(s(60), (area.bot - y) / maxBars);
+  const barSpacing = Math.min(s(66), (area.bot - y) / maxBars);
 
   for (let i = 0; i < maxBars; i++) {
     const bar = bars[i];
-
-    // # Label
-    ctx.font = `${s(16)}px GeistMedium`;
-    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = `${s(22)}px GeistMedium`;
+    ctx.fillStyle = tc.primary;
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
     ctx.fillText(bar.label, pad, y);
-
-    // # Percentage
     ctx.textAlign = "right";
-    ctx.font = `${s(16)}px GeistBold`;
-    ctx.fillStyle = ACCENT_3;
+    ctx.font = `${s(22)}px GeistBold`;
+    ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_3;
     ctx.fillText(`${bar.value}%`, pad + maxW, y);
     ctx.textAlign = "left";
 
-    // # Bar track
-    y += s(12);
-    fillRR(ctx, pad, y, maxW, barH, s(7), rgba(ACCENT_1, 0.10));
+    y += s(14);
+    fillRR(ctx, pad, y, maxW, barH, s(9), isSolid ? "rgba(255,255,255,0.10)" : rgba(ACCENT_1, 0.10));
 
-    // # Bar fill
     const fillW = (Math.min(bar.value, 100) / 100) * maxW;
     if (fillW > 0) {
-      const grad = hGrad(ctx, pad, pad + fillW, 0, [ACCENT_1, bar.color || ACCENT_3]);
-      fillRR(ctx, pad, y, fillW, barH, s(7), grad);
+      const grad = isSolid
+        ? hGrad(ctx, pad, pad + fillW, 0, ["rgba(255,255,255,0.50)", "rgba(255,255,255,0.25)"])
+        : hGrad(ctx, pad, pad + fillW, 0, [ACCENT_1, bar.color || ACCENT_3]);
+      fillRR(ctx, pad, y, fillW, barH, s(9), grad);
     }
 
-    y += barH + barSpacing - s(12);
+    y += barH + barSpacing - s(14);
   }
 
   ctx.textBaseline = "alphabetic";
-  drawFooter(ctx, w, h, pad, s);
 }
 
 /* ============================================================
@@ -1247,7 +1475,6 @@ export async function renderSlideCanvas(data: SlideData, width: number, height: 
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
-
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
