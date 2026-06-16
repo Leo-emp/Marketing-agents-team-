@@ -31,6 +31,7 @@ export const ACCENT_WARM = "#f59e0b"; // # Amber (contrast accent for special mo
 // # Brand identity
 export const BRAND_NAME = "JobPilot AI";
 export const BRAND_URL = "jobpilotai.co";
+export const BRAND_TAGLINE = "Your AI Career Co-Pilot";
 export const FONT_FAMILY = "Geist";
 
 // # Bold slide background palette — vibrant, WCAG AA white-text-safe (contrast 4.5:1+)
