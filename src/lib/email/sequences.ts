@@ -113,126 +113,142 @@ export async function evaluateAndSendEmails(): Promise<{
   const processedUsers = new Set<string>();
 
   for (const seq of sequences) {
-    const steps: SequenceStep[] = JSON.parse(seq.steps);
+    // # Fix 1: Wrap JSON.parse in try-catch to prevent malformed steps from crashing
+    let steps: SequenceStep[];
+    try {
+      steps = JSON.parse(seq.steps);
+    } catch (err) {
+      // # Log and skip this sequence if steps JSON is invalid
+      console.error(`Failed to parse steps for sequence ${seq.id}:`, err);
+      errors++;
+      continue;
+    }
     if (steps.length === 0) continue;
 
     // # Find users who match this sequence's trigger
     for (const [userId, events] of eventsByUser) {
-      if (processedUsers.has(userId)) continue;
+      // # Fix 2: Wrap per-user processing in try-catch so one user's error doesn't crash the batch
+      try {
+        if (processedUsers.has(userId)) continue;
 
-      // # Check if this user's events match the sequence trigger
-      const triggerEvent = matchTrigger(seq.trigger, events);
-      if (!triggerEvent) continue;
+        // # Check if this user's events match the sequence trigger
+        const triggerEvent = matchTrigger(seq.trigger, events);
+        if (!triggerEvent) continue;
 
-      const email = triggerEvent.email;
-      if (!email) continue;
+        const email = triggerEvent.email;
+        if (!email) continue;
 
-      // # Determine which step is next for this user in this sequence
-      const existingSends = await prisma.emailSend.findMany({
-        where: { sequenceId: seq.id, recipientUserId: userId },
-        orderBy: { stepIndex: "asc" },
-      });
+        // # Determine which step is next for this user in this sequence
+        const existingSends = await prisma.emailSend.findMany({
+          where: { sequenceId: seq.id, recipientUserId: userId },
+          orderBy: { stepIndex: "asc" },
+        });
 
-      const nextStepIndex = existingSends.length;
-      if (nextStepIndex >= steps.length) {
-        // # User has completed all steps in this sequence
-        continue;
-      }
+        const nextStepIndex = existingSends.length;
+        if (nextStepIndex >= steps.length) {
+          // # User has completed all steps in this sequence
+          continue;
+        }
 
-      const step = steps[nextStepIndex];
+        const step = steps[nextStepIndex];
 
-      // # Check delay — has enough time passed since the trigger event?
-      const triggerDate = triggerEvent.eventDate;
-      const dueDate = new Date(triggerDate.getTime() + step.delayDays * 24 * 60 * 60 * 1000);
-      if (new Date() < dueDate) continue;
+        // # Check delay — has enough time passed since the trigger event?
+        const triggerDate = triggerEvent.eventDate;
+        const dueDate = new Date(triggerDate.getTime() + step.delayDays * 24 * 60 * 60 * 1000);
+        if (new Date() < dueDate) continue;
 
-      // # 24-hour signup protection — only welcome email (step 0 of signup trigger) allowed
-      const signupEvent = events.find((e) => e.eventType === "signup");
-      if (signupEvent) {
-        const hoursSinceSignup = (Date.now() - signupEvent.eventDate.getTime()) / (60 * 60 * 1000);
-        if (hoursSinceSignup < 24 && !(seq.trigger === "signup" && nextStepIndex === 0)) {
+        // # 24-hour signup protection — only welcome email (step 0 of signup trigger) allowed
+        const signupEvent = events.find((e) => e.eventType === "signup");
+        if (signupEvent) {
+          const hoursSinceSignup = (Date.now() - signupEvent.eventDate.getTime()) / (60 * 60 * 1000);
+          if (hoursSinceSignup < 24 && !(seq.trigger === "signup" && nextStepIndex === 0)) {
+            skipped++;
+            continue;
+          }
+        }
+
+        // # Suppression: skip pro drip if user already upgraded
+        if (seq.trigger === "high_usage_free") {
+          const proEvent = events.find((e) => e.eventType === "pro_upgrade");
+          if (proEvent) {
+            skipped++;
+            continue;
+          }
+        }
+
+        // # Anti-annoyance frequency check
+        const capCheck = await canSendToUser(userId, email);
+        if (!capCheck.allowed) {
           skipped++;
           continue;
         }
-      }
 
-      // # Suppression: skip pro drip if user already upgraded
-      if (seq.trigger === "high_usage_free") {
-        const proEvent = events.find((e) => e.eventType === "pro_upgrade");
-        if (proEvent) {
-          skipped++;
-          continue;
+        // # Build and send the email
+        const campaignSlug = seq.name.toLowerCase().replace(/\s+/g, "-");
+        const unsubToken = signUnsubscribeToken(userId);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://jobpilot-marketing.vercel.app";
+        const unsubUrl = `${baseUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
+
+        // # Tag CTA link with UTM params
+        const taggedCtaUrl = step.ctaUrl
+          ? appendUtmParams(step.ctaUrl, "email", "nurture", campaignSlug)
+          : "";
+
+        const html = buildEmailHtml(
+          step.subject,
+          step.bodyTemplate,
+          taggedCtaUrl,
+          step.ctaText,
+          unsubUrl
+        );
+
+        // # List-Unsubscribe header (Gmail/Yahoo 2024+ requirement)
+        const headers: Record<string, string> = {
+          "List-Unsubscribe": `<${unsubUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        };
+
+        const result = await sendEmail(email, step.subject, html, headers);
+
+        if (result) {
+          // # Record the send
+          await prisma.emailSend.create({
+            data: {
+              sequenceId: seq.id,
+              stepIndex: nextStepIndex,
+              recipientEmail: email,
+              recipientUserId: userId,
+              subject: step.subject,
+              status: "sent",
+              resendMessageId: result.id,
+              utmSource: "email",
+              utmMedium: "nurture",
+              utmCampaign: campaignSlug,
+              sentAt: new Date(),
+            },
+          });
+          sent++;
+          processedUsers.add(userId);
+        } else {
+          // # Record the failure
+          await prisma.emailSend.create({
+            data: {
+              sequenceId: seq.id,
+              stepIndex: nextStepIndex,
+              recipientEmail: email,
+              recipientUserId: userId,
+              subject: step.subject,
+              status: "failed",
+              utmSource: "email",
+              utmMedium: "nurture",
+              utmCampaign: campaignSlug,
+            },
+          });
+          errors++;
         }
-      }
-
-      // # Anti-annoyance frequency check
-      const capCheck = await canSendToUser(userId, email);
-      if (!capCheck.allowed) {
-        skipped++;
-        continue;
-      }
-
-      // # Build and send the email
-      const campaignSlug = seq.name.toLowerCase().replace(/\s+/g, "-");
-      const unsubToken = signUnsubscribeToken(userId);
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://jobpilot-marketing.vercel.app";
-      const unsubUrl = `${baseUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
-
-      // # Tag CTA link with UTM params
-      const taggedCtaUrl = step.ctaUrl
-        ? appendUtmParams(step.ctaUrl, "email", "nurture", campaignSlug)
-        : "";
-
-      const html = buildEmailHtml(
-        step.subject,
-        step.bodyTemplate,
-        taggedCtaUrl,
-        step.ctaText,
-        unsubUrl
-      );
-
-      // # List-Unsubscribe header (Gmail/Yahoo 2024+ requirement)
-      const headers: Record<string, string> = {
-        "List-Unsubscribe": `<${unsubUrl}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      };
-
-      const result = await sendEmail(email, step.subject, html, headers);
-
-      if (result) {
-        // # Record the send
-        await prisma.emailSend.create({
-          data: {
-            sequenceId: seq.id,
-            stepIndex: nextStepIndex,
-            recipientEmail: email,
-            recipientUserId: userId,
-            subject: step.subject,
-            status: "sent",
-            resendMessageId: result.id,
-            utmSource: "email",
-            utmMedium: "nurture",
-            utmCampaign: campaignSlug,
-            sentAt: new Date(),
-          },
-        });
-        sent++;
-        processedUsers.add(userId);
-      } else {
-        // # Record the failure
-        await prisma.emailSend.create({
-          data: {
-            sequenceId: seq.id,
-            stepIndex: nextStepIndex,
-            recipientEmail: email,
-            recipientUserId: userId,
-            subject: step.subject,
-            status: "failed",
-            utmSource: "email",
-            utmMedium: "nurture",
-            utmCampaign: campaignSlug,
-          },
-        });
+      } catch (err) {
+        // # Increment error counter and continue to next user
+        console.error(`Error processing user ${userId} in sequence ${seq.id}:`, err);
         errors++;
       }
     }
