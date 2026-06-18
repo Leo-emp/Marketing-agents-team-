@@ -6,6 +6,7 @@
    ============================================================ */
 
 import { Resend } from "resend";
+import { createHmac, timingSafeEqual } from "crypto";
 
 // # Lazy-init so missing env var doesn't crash on import
 let _resend: Resend | null = null;
@@ -55,7 +56,14 @@ export function verifyWebhookSignature(body: string, signature: string): boolean
   }
   // # Resend uses svix for webhook signing — for now, basic HMAC check
   // # In production, use the svix package for full verification
-  const { createHmac } = require("crypto");
-  const expected = createHmac("sha256", secret).update(body).digest("hex");
-  return signature === expected;
+  // # Timing-safe comparison to prevent timing attacks
+  try {
+    const expectedSig = createHmac("sha256", secret).update(body).digest("hex");
+    const a = Buffer.from(signature, "hex");
+    const b = Buffer.from(expectedSig, "hex");
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
