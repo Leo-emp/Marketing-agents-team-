@@ -134,3 +134,90 @@ model KpiGoal {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ---- Email Nurture Sequences ----
+// # Automated email campaigns triggered by user lifecycle events
+// # Links to EmailSend for each email dispatch
+model EmailSequence {
+  id          String   @id @default(cuid())
+  name        String                              // "Welcome Series", "Free-to-Pro Drip"
+  description String?
+  trigger     String                              // signup, high_usage_free, plan_upgrade
+  priority    Int      @default(5)                // # Higher = wins when frequency cap hit
+  status      String   @default("draft")          // # draft, active, paused
+  steps       String                              // # JSON: [{ delayDays, subject, bodyTemplate, ctaUrl, ctaText }]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sends       EmailSend[]                         // # Relation to EmailSend records
+
+  @@index([trigger])
+  @@index([status])
+}
+
+// ---- Email Send Log ----
+// # Every email sent, with delivery/open/click tracking via Resend webhooks
+// # Records the outcome of each email in the sequence for analytics
+model EmailSend {
+  id              String    @id @default(cuid())
+  sequenceId      String
+  stepIndex       Int                             // # Which step in the sequence (0-based)
+  recipientEmail  String
+  recipientUserId String?                         // # Main app user ID
+  subject         String
+  status          String    @default("queued")    // # queued, sent, delivered, opened, clicked, bounced, failed
+  resendMessageId String?                         // # Resend API message ID
+  utmSource       String?                         // # Auto-tagged: email
+  utmMedium       String?                         // # Auto-tagged: nurture
+  utmCampaign     String?                         // # Auto-tagged: sequence slug
+  sentAt          DateTime?
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  sequence EmailSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade) // # Relation back with cascade delete
+
+  @@index([recipientEmail])
+  @@index([recipientUserId])
+  @@index([sequenceId])
+  @@index([status])
+  @@index([sentAt])
+}
+
+// ---- Email Preferences ----
+// # Tracks unsubscribe status per user (permanent opt-out)
+// # Used to respect user preferences before sending any email
+model EmailPreference {
+  id              String    @id @default(cuid())
+  userId          String    @unique               // # Main app user ID
+  email           String
+  unsubscribedAt  DateTime?                       // # Null = subscribed
+  reason          String?                         // # Optional unsubscribe reason
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])
+}
+
+// ---- Funnel Events ----
+// # User lifecycle events polled from the main app for attribution tracking
+// # Captures signup, feature usage, upgrades, and utm params for analytics
+model FunnelEvent {
+  id          String   @id @default(cuid())
+  userId      String                              // # Main app user ID
+  email       String?
+  eventType   String                              // # signup, first_ai_use, fifth_ai_use, pro_upgrade
+  utmSource   String?                             // # twitter, linkedin, blog, email, reddit, extension, direct
+  utmMedium   String?                             // # social, organic, nurture, cpc
+  utmCampaign String?                             // # Specific campaign name
+  utmTerm     String?                             // # Keyword (for paid)
+  utmContent  String?                             // # A/B variant
+  metadata    String?                             // # JSON: { feature, planAmount, etc. }
+  eventDate   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, eventType])
+  @@index([eventType])
+  @@index([utmSource])
+  @@index([eventDate])
+}
