@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { postToPlatform } from "@/lib/social-posting";
+import { tagContentLinks } from "@/lib/funnel/utm";
 
 export async function GET(req: NextRequest) {
   // # Fail closed — CRON_SECRET must be configured
@@ -49,6 +50,8 @@ export async function GET(req: NextRequest) {
   for (const item of due) {
     // # Build the post text — use caption for visual posts, fall back to body
     let postText = item.captionText || item.body;
+    // # Auto-tag jobpilotai.co links with UTM params for attribution tracking
+    postText = tagContentLinks(postText, item.platform, item.id);
     if (item.hashtags && item.platform !== "twitter") {
       const tags = item.hashtags.split(",").map((t) => `#${t.trim()}`).join(" ");
       postText += `\n\n${tags}`;
