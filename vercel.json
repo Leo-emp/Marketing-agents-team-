@@ -1,8 +1,20 @@
 {
+  /* # Vercel Cron Jobs Configuration
+     # - Scheduler: Daily at 9 AM UTC (analytics, maintenance)
+     # - Email Send: Every 30 minutes (outbound email queue processing)
+     # - Funnel Sync: Hourly (sync funnel/cohort data from connected services) */
   "crons": [
     {
       "path": "/api/scheduler",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/email/send",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/funnel/sync",
+      "schedule": "0 * * * *"
     }
   ]
 }
