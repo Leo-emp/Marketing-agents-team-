@@ -145,7 +145,7 @@ export default function Dashboard() {
   const [authError, setAuthError] = useState("");
 
   /* ---- Tabs & data ---- */
-  const [tab, setTab] = useState<"queue" | "agents" | "plans" | "kpi" | "settings">("queue");
+  const [tab, setTab] = useState<"queue" | "agents" | "plans" | "kpi" | "emails" | "funnel" | "settings">("queue");
   const [content, setContent] = useState<ContentItem[]>([]);
   const [plans, setPlans] = useState<ContentPlan[]>([]);
   const [total, setTotal] = useState(0);
@@ -208,6 +208,18 @@ export default function Dashboard() {
   const [kpiMetricType, setKpiMetricType] = useState("impressions");
   const [kpiValue, setKpiValue] = useState("");
   const [kpiDate, setKpiDate] = useState(new Date().toISOString().split("T")[0]);
+
+  /* ---- Email Nurture state ---- */
+  const [sequences, setSequences] = useState<{ id: string; name: string; description: string | null; trigger: string; priority: number; status: string; steps: string; createdAt: string }[]>([]);
+  const [emailSends, setEmailSends] = useState<{ id: string; sequenceId: string; recipientEmail: string; subject: string; status: string; sentAt: string | null; openedAt: string | null; clickedAt: string | null }[]>([]);
+  const [emailsLoading, setEmailsLoading] = useState(false);
+
+  /* ---- Funnel state ---- */
+  const [funnelData, setFunnelData] = useState<{ stages: { name: string; count: number; percent: number }[]; totalSignups: number } | null>(null);
+  const [attribution, setAttribution] = useState<{ channel: string; signups: number; firstUse: number; proUpgrades: number; convRate: number; estRevenue: number }[]>([]);
+  const [funnelInsights, setFunnelInsights] = useState<{ insights: string[]; recommendations: string[] } | null>(null);
+  const [funnelLoading, setFunnelLoading] = useState(false);
+  const [funnelAnalyzing, setFunnelAnalyzing] = useState(false);
 
   /* ---- Settings / Platform Connections ---- */
   const [platformStatus, setPlatformStatus] = useState<Record<string, { connected: boolean; expiresAt: string | null }>>({});
@@ -843,6 +855,49 @@ export default function Dashboard() {
     if (authed && tab === "kpi") fetchKpi();
   }, [authed, tab, fetchKpi]);
 
+  /* # Fetch email sequences and recent sends */
+  const fetchEmails = useCallback(async () => {
+    setEmailsLoading(true);
+    try {
+      const [seqRes, sendsRes] = await Promise.all([
+        fetch("/api/email/sequences"),
+        fetch("/api/email/sends?limit=50"),
+      ]);
+      if (seqRes.ok) setSequences(await seqRes.json());
+      if (sendsRes.ok) setEmailSends(await sendsRes.json());
+    } catch (e) { console.error("Email fetch failed:", e); }
+    setEmailsLoading(false);
+  }, []);
+
+  /* # Fetch funnel data and attribution */
+  const fetchFunnel = useCallback(async () => {
+    setFunnelLoading(true);
+    try {
+      const [funnelRes, attrRes] = await Promise.all([
+        fetch("/api/funnel"),
+        fetch("/api/funnel/attribution"),
+      ]);
+      if (funnelRes.ok) setFunnelData(await funnelRes.json());
+      if (attrRes.ok) setAttribution(await attrRes.json());
+    } catch (e) { console.error("Funnel fetch failed:", e); }
+    setFunnelLoading(false);
+  }, []);
+
+  /* # Run AI funnel analysis */
+  const analyzeFunnelData = useCallback(async () => {
+    setFunnelAnalyzing(true);
+    try {
+      const res = await fetch("/api/funnel", { method: "POST" });
+      if (res.ok) setFunnelInsights(await res.json());
+    } catch (e) { console.error("Funnel analysis failed:", e); }
+    setFunnelAnalyzing(false);
+  }, []);
+
+  useEffect(() => {
+    if (authed && tab === "emails") fetchEmails();
+    if (authed && tab === "funnel") fetchFunnel();
+  }, [authed, tab, fetchEmails, fetchFunnel]);
+
   const handleAddMetric = async () => {
     if (!kpiValue.trim()) return;
     try {
@@ -936,11 +991,11 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {(["queue", "plans", "agents", "kpi", "settings"] as const).map((t) => (
+          {(["queue", "plans", "agents", "kpi", "emails", "funnel", "settings"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               tab === t ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20" : "text-text-secondary hover:text-text-primary hover:bg-space-700"
             }`}>
-              {t === "queue" ? `Content${total ? ` (${total})` : ""}` : t === "plans" ? "Plans" : t === "kpi" ? "KPIs" : t === "settings" ? "Settings" : "Agents"}
+              {t === "queue" ? `Content${total ? ` (${total})` : ""}` : t === "plans" ? "Plans" : t === "kpi" ? "KPIs" : t === "emails" ? "Emails" : t === "funnel" ? "Funnel" : t === "settings" ? "Settings" : "Agents"}
             </button>
           ))}
           <div className="w-px h-6 bg-card-border mx-1" />
@@ -1628,6 +1683,237 @@ export default function Dashboard() {
               </div>
             )}
           </>
+        )}
+
+        {/* ---- EMAILS TAB ---- */}
+        {tab === "emails" && (
+          <div className="space-y-6">
+            {/* # Sequences list */}
+            <div>
+              <h2 className="text-lg font-semibold text-text-primary mb-4">Email Sequences</h2>
+              {emailsLoading ? (
+                <p className="text-text-secondary">Loading...</p>
+              ) : sequences.length === 0 ? (
+                <div className="text-center py-12 text-text-secondary">
+                  <p className="text-lg mb-2">No sequences yet</p>
+                  <p className="text-sm">Run <code className="bg-space-700 px-2 py-1 rounded">node scripts/seed-sequences.mjs</code> to create the default Welcome + Pro drip sequences.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {sequences.map((seq) => {
+                    // # Parse the JSON steps array stored as a string in the DB
+                    const steps = JSON.parse(seq.steps) as { delayDays: number; subject: string }[];
+                    return (
+                      <div key={seq.id} className="bg-space-800 border border-space-600 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold text-text-primary">{seq.name}</h3>
+                            <p className="text-sm text-text-secondary mt-1">{seq.description}</p>
+                          </div>
+                          {/* # Status badge — color-coded by state */}
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                            seq.status === "active" ? "bg-green-500/15 text-green-400 border-green-500/30" :
+                            seq.status === "paused" ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" :
+                            "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"
+                          }`}>{seq.status}</span>
+                        </div>
+                        <div className="flex gap-4 text-xs text-text-secondary mb-3">
+                          <span>Trigger: <strong className="text-text-primary">{seq.trigger}</strong></span>
+                          <span>Priority: <strong className="text-text-primary">{seq.priority}</strong></span>
+                          <span>Steps: <strong className="text-text-primary">{steps.length}</strong></span>
+                        </div>
+                        {/* # Step timeline — shows each email in the drip sequence */}
+                        <div className="space-y-2">
+                          {steps.map((step, i) => (
+                            <div key={i} className="flex items-center gap-3 text-sm">
+                              <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold">{i + 1}</div>
+                              <span className="text-text-secondary">Day {step.delayDays}:</span>
+                              <span className="text-text-primary">{step.subject}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* # Recent sends table */}
+            <div>
+              <h2 className="text-lg font-semibold text-text-primary mb-4">Recent Sends</h2>
+              {emailSends.length === 0 ? (
+                <p className="text-text-secondary text-sm">No emails sent yet. Activate a sequence and wait for the cron to run.</p>
+              ) : (
+                <div className="bg-space-800 border border-space-600 rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-space-600 text-text-secondary">
+                        <th className="text-left p-3">Recipient</th>
+                        <th className="text-left p-3">Subject</th>
+                        <th className="text-left p-3">Status</th>
+                        <th className="text-left p-3">Sent</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {emailSends.map((send) => (
+                        <tr key={send.id} className="border-b border-space-700 last:border-0">
+                          <td className="p-3 text-text-primary">{send.recipientEmail}</td>
+                          <td className="p-3 text-text-secondary">{send.subject}</td>
+                          <td className="p-3">
+                            {/* # Status badge — color shows delivery/engagement outcome */}
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              send.status === "clicked" ? "bg-green-500/15 text-green-400" :
+                              send.status === "opened" ? "bg-blue-500/15 text-blue-400" :
+                              send.status === "delivered" ? "bg-emerald-500/15 text-emerald-300" :
+                              send.status === "sent" ? "bg-zinc-500/15 text-zinc-400" :
+                              send.status === "bounced" || send.status === "failed" ? "bg-red-500/15 text-red-400" :
+                              "bg-yellow-500/15 text-yellow-400"
+                            }`}>{send.status}</span>
+                          </td>
+                          <td className="p-3 text-text-secondary">{send.sentAt ? new Date(send.sentAt).toLocaleDateString() : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ---- FUNNEL TAB ---- */}
+        {tab === "funnel" && (
+          <div className="space-y-6">
+            {funnelLoading ? (
+              <p className="text-text-secondary">Loading funnel data...</p>
+            ) : (
+              <>
+                {/* # Conversion funnel visualization */}
+                <div>
+                  <h2 className="text-lg font-semibold text-text-primary mb-4">Conversion Funnel</h2>
+                  {!funnelData || funnelData.totalSignups === 0 ? (
+                    <div className="text-center py-12 text-text-secondary">
+                      <p className="text-lg mb-2">No funnel data yet</p>
+                      <p className="text-sm">Configure <code className="bg-space-700 px-2 py-1 rounded">JOBPILOT_API_URL</code> and <code className="bg-space-700 px-2 py-1 rounded">JOBPILOT_API_SECRET</code> to start syncing.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-space-800 border border-space-600 rounded-xl p-6">
+                      <div className="space-y-3">
+                        {funnelData.stages.map((stage, i) => {
+                          // # Human-readable labels for each funnel stage key
+                          const labels: Record<string, string> = {
+                            signup: "Signups",
+                            first_ai_use: "First AI Use",
+                            fifth_ai_use: "5th AI Use",
+                            pro_upgrade: "Pro Upgrade",
+                          };
+                          // # Color gradient from indigo to green across stages
+                          const colors = ["#6366f1", "#8b5cf6", "#a78bfa", "#10b981"];
+                          return (
+                            <div key={stage.name}>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="text-text-primary font-medium">{labels[stage.name] || stage.name}</span>
+                                <span className="text-text-secondary">{stage.count} ({stage.percent}%)</span>
+                              </div>
+                              <div className="h-8 bg-space-700 rounded-lg overflow-hidden">
+                                <div
+                                  className="h-full rounded-lg transition-all duration-500"
+                                  style={{ width: `${Math.max(stage.percent, 2)}%`, backgroundColor: colors[i] || colors[0] }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* # Attribution table — shows which channel drives the most conversions */}
+                <div>
+                  <h2 className="text-lg font-semibold text-text-primary mb-4">Attribution by Channel</h2>
+                  {attribution.length === 0 ? (
+                    <p className="text-text-secondary text-sm">No attribution data yet.</p>
+                  ) : (
+                    <div className="bg-space-800 border border-space-600 rounded-xl overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-space-600 text-text-secondary">
+                            <th className="text-left p-3">Channel</th>
+                            <th className="text-right p-3">Signups</th>
+                            <th className="text-right p-3">First Use</th>
+                            <th className="text-right p-3">Pro</th>
+                            <th className="text-right p-3">Conv. Rate</th>
+                            <th className="text-right p-3">Est. Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attribution.map((row) => (
+                            <tr key={row.channel} className="border-b border-space-700 last:border-0">
+                              <td className="p-3 text-text-primary font-medium capitalize">{row.channel}</td>
+                              <td className="p-3 text-right text-text-secondary">{row.signups}</td>
+                              <td className="p-3 text-right text-text-secondary">{row.firstUse}</td>
+                              <td className="p-3 text-right text-text-primary font-medium">{row.proUpgrades}</td>
+                              <td className="p-3 text-right">
+                                {/* # Color-code conversion rate: green >= 10%, yellow >= 5%, grey below */}
+                                <span className={row.convRate >= 10 ? "text-green-400" : row.convRate >= 5 ? "text-yellow-400" : "text-text-secondary"}>
+                                  {row.convRate}%
+                                </span>
+                              </td>
+                              <td className="p-3 text-right text-emerald-400">£{row.estRevenue}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* # AI Insights panel — triggers Gemini analysis of funnel data */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-text-primary">AI Insights</h2>
+                    <button
+                      onClick={analyzeFunnelData}
+                      disabled={funnelAnalyzing}
+                      className="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/25 transition-colors disabled:opacity-50"
+                    >
+                      {funnelAnalyzing ? "Analyzing..." : "Run Analysis"}
+                    </button>
+                  </div>
+                  {funnelInsights ? (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-space-800 border border-space-600 rounded-xl p-5">
+                        <h3 className="font-medium text-text-primary mb-3">Insights</h3>
+                        <ul className="space-y-2">
+                          {funnelInsights.insights.map((insight, i) => (
+                            <li key={i} className="text-sm text-text-secondary flex gap-2">
+                              <span className="text-indigo-400 mt-0.5">-</span>
+                              <span>{insight}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="bg-space-800 border border-space-600 rounded-xl p-5">
+                        <h3 className="font-medium text-text-primary mb-3">Recommendations</h3>
+                        <ul className="space-y-2">
+                          {funnelInsights.recommendations.map((rec, i) => (
+                            <li key={i} className="text-sm text-text-secondary flex gap-2">
+                              <span className="text-green-400 mt-0.5">-</span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-text-secondary text-sm">Click &quot;Run Analysis&quot; to get AI-powered insights on your funnel data.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         )}
 
         {/* ==== SETTINGS TAB ==== */}
