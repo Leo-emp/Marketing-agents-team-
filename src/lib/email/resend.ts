@@ -6,7 +6,6 @@
    ============================================================ */
 
 import { Resend } from "resend";
-import { createHmac, timingSafeEqual } from "crypto";
 
 // # Lazy-init so missing env var doesn't crash on import
 let _resend: Resend | null = null;
@@ -47,23 +46,4 @@ export async function sendEmail(
   }
 }
 
-// # Verify Resend webhook signature using the signing secret
-export function verifyWebhookSignature(body: string, signature: string): boolean {
-  const secret = process.env.RESEND_WEBHOOK_SECRET;
-  if (!secret) {
-    console.error("RESEND_WEBHOOK_SECRET not configured — rejecting webhook");
-    return false;
-  }
-  // # Resend uses svix for webhook signing — for now, basic HMAC check
-  // # In production, use the svix package for full verification
-  // # Timing-safe comparison to prevent timing attacks
-  try {
-    const expectedSig = createHmac("sha256", secret).update(body).digest("hex");
-    const a = Buffer.from(signature, "hex");
-    const b = Buffer.from(expectedSig, "hex");
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
-}
+// # Webhook verification is handled by Svix in /api/email/webhook/route.ts

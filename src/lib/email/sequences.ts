@@ -64,11 +64,12 @@ export async function canSendToUser(
     }
   }
 
-  // # Cold user detection — skip if last 2 emails were not opened
+  // # Cold user detection — skip if last 2 delivered emails were not opened
+  // # Include all post-send statuses so opened emails aren't excluded from the check
   const recentSends = await prisma.emailSend.findMany({
     where: {
       recipientUserId: userId,
-      status: { in: ["sent", "delivered"] },
+      status: { in: ["sent", "delivered", "opened", "clicked"] },
     },
     orderBy: { sentAt: "desc" },
     take: 2,
@@ -98,8 +99,11 @@ export async function evaluateAndSendEmails(): Promise<{
 
   if (sequences.length === 0) return { sent, skipped, errors };
 
-  // # Get all users who have triggered events (from FunnelEvent table)
-  const funnelEvents = await prisma.funnelEvent.findMany();
+  // # Get recent funnel events — limit to last 90 days to prevent OOM on large datasets
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  const funnelEvents = await prisma.funnelEvent.findMany({
+    where: { eventDate: { gte: ninetyDaysAgo } },
+  });
 
   // # Group events by userId
   const eventsByUser = new Map<string, typeof funnelEvents>();
