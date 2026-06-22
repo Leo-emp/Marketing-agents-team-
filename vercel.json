@@ -3,7 +3,8 @@
      # - Scheduler: Daily at 9 AM UTC (analytics, maintenance)
      # - Email Send: Every 30 minutes (outbound email queue processing)
      # - Funnel Sync: Hourly (sync funnel/cohort data from connected services)
-     # - Blog Generate: Mon/Wed/Fri at 8 AM UTC (SEO article pipeline) */
+     # - Blog Generate: Mon/Wed/Fri at 8 AM UTC (SEO article pipeline)
+     # - Ambassador Generate: Tue/Thu at 7 AM UTC (AI brand ambassador video pipeline) */
   "crons": [
     {
       "path": "/api/scheduler",
@@ -20,6 +21,10 @@
     {
       "path": "/api/blog/generate",
       "schedule": "0 8 * * 1,3,5"
+    },
+    {
+      "path": "/api/ambassador/generate",
+      "schedule": "0 7 * * 2,4"
     }
   ]
 }
