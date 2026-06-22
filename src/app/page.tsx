@@ -1118,7 +1118,15 @@ export default function Dashboard() {
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-sm">{agent.name}</span>
-                                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>{item.platform}</span>
+                                {/* # Blog articles get a distinct "Blog Article" badge instead of a platform pill */}
+                                {item.platform === "blog" && item.contentType === "blog_article" ? (
+                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Blog Article</span>
+                                ) : (
+                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>
+                                    {/* # After a blog article is published, show "Published to blog" rather than the raw platform string */}
+                                    {item.status === "posted" && item.platform === "blog" ? "Published to blog" : item.platform}
+                                  </span>
+                                )}
                                 <span className="text-xs text-text-muted">{CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</span>
                                 {isNew && <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-medium">New</span>}
                                 {hasVisuals && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20 font-medium">Visual</span>}
@@ -1272,7 +1280,10 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2 pt-2 border-t border-card-border flex-wrap">
                           {item.status === "pending" && (
                             <>
-                              <button onClick={() => updateStatus(item.id, "approved")} className="px-3 py-1.5 bg-green-500/15 text-green-400 text-xs font-medium rounded-lg hover:bg-green-500/25 transition-colors">Approve</button>
+                              {/* # Blog articles say "Approve & Publish" because the PATCH handler auto-publishes on approval */}
+                              <button onClick={() => updateStatus(item.id, "approved")} className="px-3 py-1.5 bg-green-500/15 text-green-400 text-xs font-medium rounded-lg hover:bg-green-500/25 transition-colors">
+                                {item.platform === "blog" && item.contentType === "blog_article" ? "Approve & Publish" : "Approve"}
+                              </button>
                               <button onClick={() => updateStatus(item.id, "rejected")} className="px-3 py-1.5 bg-red-500/15 text-red-400 text-xs font-medium rounded-lg hover:bg-red-500/25 transition-colors">Reject</button>
                             </>
                           )}

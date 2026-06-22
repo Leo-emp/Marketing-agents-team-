@@ -31,6 +31,30 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     data,
   });
 
+  // # Auto-publish blog articles when an admin approves them.
+  // # We call the publish endpoint internally, forwarding the admin session
+  // # cookie so the publish route can verify the caller is an admin.
+  // # Errors are logged but do NOT fail the approval response — the admin
+  // # can always retry the publish manually from the dashboard.
+  if (data.status === "approved" && updated.contentType === "blog_article") {
+    try {
+      // # Build the absolute publish URL using the incoming request's origin
+      const publishUrl = `${req.nextUrl.origin}/api/blog/publish`;
+      await fetch(publishUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // # Forward the admin session cookie so the publish route can auth
+          cookie: req.headers.get("cookie") || "",
+        },
+        body: JSON.stringify({ contentId: id }),
+      });
+    } catch (err) {
+      // # Non-fatal — approval still succeeds even if auto-publish fails
+      console.error("Auto-publish blog failed:", err);
+    }
+  }
+
   return NextResponse.json(updated);
 }
 
