@@ -2,11 +2,11 @@
    VISUAL API — /api/visual
    ============================================================
    POST: Generate branded PNG images from content.
-   Two rendering paths per slide:
-   - aiImagePrompt → OpenAI gpt-image-1 (premium AI-generated)
-   - Canvas 2D → @napi-rs/canvas (bold colors + photos)
-   Falls back to Canvas 2D if OpenAI fails or key missing.
-   Returns base64-encoded PNG data URLs and saves Visual records.
+   Three-tier rendering with smart fallback:
+   1. fal.ai Flux (premium photorealistic — default)
+   2. OpenAI gpt-image-1 (fallback)
+   3. Canvas 2D @napi-rs/canvas (always works, free)
+   Uploads to Vercel Blob for HTTPS URLs.
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -16,34 +16,63 @@ import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData, type VisualRequest } from "@/lib/visual/types";
 import { designVisual } from "@/lib/visual/designer-agent";
 import { generateImage } from "@/lib/visual/openai-image";
+import { generateFalImage, type FalImageModel } from "@/lib/visual/fal-image";
+import { uploadImage } from "@/lib/blob-storage";
 
-/* # Render a single slide — OpenAI for aiImagePrompt slides, Canvas 2D for the rest */
+/* # Render a single slide with three-tier fallback:
+   # 1. fal.ai Flux (if slide has aiImagePrompt)
+   # 2. OpenAI gpt-image-1 (if fal.ai fails)
+   # 3. Canvas 2D (always works, free — text-heavy slides go here directly) */
 async function renderSlide(
   slide: SlideData,
   width: number,
   height: number,
-  platform: string
+  platform: string,
+  model?: string
 ): Promise<Buffer> {
-  // # Try OpenAI if this slide has an AI image prompt
+  // # Slides with aiImagePrompt get AI image generation
   if (slide.aiImagePrompt) {
+    // # If admin explicitly chose "canvas" model, skip AI generation entirely
+    if (model === "canvas") {
+      return renderSlideCanvas(slide, width, height);
+    }
+
+    // # If admin explicitly chose "openai", skip fal.ai
+    if (model === "openai") {
+      const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
+      if (aiBuffer) return aiBuffer;
+      console.log("[Visual API] OpenAI failed — falling back to Canvas 2D");
+      return renderSlideCanvas(slide, width, height);
+    }
+
+    // # Default path: try fal.ai first
+    const falModel: FalImageModel = model === "flux-schnell" ? "flux-schnell" : "flux-pro";
+    const falBuffer = await generateFalImage(slide.aiImagePrompt, width, height, { model: falModel });
+    if (falBuffer) return falBuffer;
+
+    // # fal.ai failed — try OpenAI as fallback
+    console.log("[Visual API] fal.ai failed — trying OpenAI fallback");
     const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
     if (aiBuffer) return aiBuffer;
-    // # Fallback to Canvas 2D if OpenAI fails
-    console.log("[Visual API] OpenAI fallback — rendering with Canvas 2D");
+
+    // # Both AI providers failed — Canvas 2D as final fallback
+    console.log("[Visual API] OpenAI also failed — rendering with Canvas 2D");
   }
 
+  // # Non-AI slides (text-heavy, colored backgrounds) always use Canvas 2D
   return renderSlideCanvas(slide, width, height);
 }
 
-/* # Render slides to PNGs and save to DB */
+/* # Render slides to PNGs, upload to Vercel Blob, and save Visual records */
 async function renderAndSave(
   slides: SlideData[],
   platform: string,
   type: string,
   contentId: string | null,
+  model?: string,
 ) {
   const { width, height } = getDimensions(platform, type);
-  const results: { index: number; visualId: string; dataUrl: string; width: number; height: number }[] = [];
+  const results: { index: number; visualId: string; imageUrl: string; width: number; height: number }[] = [];
 
   for (let i = 0; i < slides.length; i++) {
     const slide: SlideData = {
@@ -52,11 +81,21 @@ async function renderAndSave(
       totalSlides: slides[i].totalSlides ?? slides.length,
     };
 
-    // # Render via OpenAI or Canvas 2D
-    const pngBuffer = await renderSlide(slide, width, height, platform);
-    const base64 = pngBuffer.toString("base64");
-    const dataUrl = `data:image/png;base64,${base64}`;
+    // # Render via fal.ai / OpenAI / Canvas 2D
+    const pngBuffer = await renderSlide(slide, width, height, platform, model);
 
+    // # Upload to Vercel Blob for a proper HTTPS URL
+    // # Falls back to base64 data URL if Blob upload fails (env var missing, etc.)
+    let imageUrl: string;
+    try {
+      const filename = `visual-${platform}-${contentId || "direct"}-slide-${i}.png`;
+      imageUrl = await uploadImage(pngBuffer, filename);
+    } catch (err) {
+      console.warn("[Visual API] Blob upload failed, using base64 fallback:", err);
+      imageUrl = `data:image/png;base64,${pngBuffer.toString("base64")}`;
+    }
+
+    // # Save a Visual record for tracking which template/layout was used
     const visual = await prisma.visual.create({
       data: {
         contentId: contentId || null,
@@ -69,7 +108,7 @@ async function renderAndSave(
       },
     });
 
-    results.push({ index: i, visualId: visual.id, dataUrl, width, height });
+    results.push({ index: i, visualId: visual.id, imageUrl, width, height });
   }
 
   return results;
@@ -118,16 +157,17 @@ export async function POST(req: NextRequest) {
         caption = design.caption || null;
       }
 
-      // # Render the slides to PNG (OpenAI + Canvas 2D)
+      // # Render the slides to PNG (fal.ai / OpenAI / Canvas 2D)
       const results = await renderAndSave(
         slides,
         content.platform,
         visualType,
         content.id,
+        body.model,
       );
 
-      // # Update Content record with visual data and caption
-      const imageUrls = results.map((r) => r.visualId).join(",");
+      // # Store Blob URLs (HTTPS) instead of visual IDs
+      const imageUrls = results.map((r) => r.imageUrl).join(",");
       await prisma.content.update({
         where: { id: content.id },
         data: {
@@ -151,11 +191,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No slides provided" }, { status: 400 });
     }
 
-    const results = await renderAndSave(slides, platform, type, contentId || null);
+    const results = await renderAndSave(slides, platform, type, contentId || null, body.model);
 
     // # Update the Content record if we have a contentId
     if (contentId) {
-      const imageUrls = results.map((r) => r.visualId).join(",");
+      const imageUrls = results.map((r) => r.imageUrl).join(",");
       await prisma.content.update({
         where: { id: contentId },
         data: {

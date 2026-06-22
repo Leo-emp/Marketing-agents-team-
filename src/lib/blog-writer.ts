@@ -18,6 +18,8 @@ import { reviewContent } from "./editorial";
 import { designVisual } from "./visual/designer-agent";
 import { renderSlideCanvas } from "./visual/canvas-renderer";
 import { prisma } from "./prisma";
+import { generateFalImage } from "./visual/fal-image";
+import { uploadImage } from "./blob-storage";
 
 // # Fixed categories matching the jobpilotai.co blog taxonomy
 const CATEGORIES = [
@@ -179,33 +181,48 @@ Return ONLY valid JSON.`;
     // # Score below 7 — loop again with the revised content as input
   }
 
-  // # Step 5: Generate cover image via Visual Designer + Canvas Renderer
-  // # This step is wrapped in try-catch — cover image failure must NOT block queuing
-  let coverImageDataUrl: string | null = null;
+  // # Step 5: Generate cover image via fal.ai Flux Pro + Vercel Blob
+  // # Three-tier fallback: fal.ai → Canvas 2D → skip
+  // # Cover image failure must NOT block queuing
+  let coverImageUrl: string | null = null;
 
   try {
-    // # designVisual returns { slides: SlideData[], caption: string }
-    // # We use "single_image" contentType so Gemini generates exactly 1 slide
-    const { slides } = await designVisual(
-      article.title,      // # Content: article title drives the visual composition
-      "blog",             // # Platform: blog cover images use OG dimensions
-      "single_image",     // # ContentType: one hero image, not a carousel
-      article.mediaPrompt, // # mediaPrompt: detailed description from article gen step
-      topic               // # topic: extra context for the visual
+    // # Try fal.ai Flux Pro first — best photorealistic quality for blog covers
+    const falBuffer = await generateFalImage(
+      article.mediaPrompt,
+      1200,
+      630,
+      { model: "flux-pro" }
     );
 
-    if (slides.length > 0) {
-      // # renderSlideCanvas is the actual export (not renderSlide from the brief)
-      // # It accepts (SlideData, width, height) and returns Promise<Buffer>
-      // # We force 1200x630 OG image dimensions regardless of the slide's default size
-      const imageBuffer = await renderSlideCanvas(slides[0], 1200, 630);
+    if (falBuffer) {
+      // # Upload to Vercel Blob for a proper HTTPS URL (no more base64 data URLs)
+      const filename = `blog-cover-${article.slug}.png`;
+      coverImageUrl = await uploadImage(falBuffer, filename);
+    } else {
+      // # fal.ai failed — fall back to Canvas 2D via Visual Designer
+      console.log("[BlogWriter] fal.ai failed, falling back to Canvas 2D cover");
+      const { slides } = await designVisual(
+        article.title,
+        "blog",
+        "single_image",
+        article.mediaPrompt,
+        topic
+      );
 
-      // # Convert Buffer to base64 data URL for storage in imageUrl field
-      // # This allows the image to be served inline without a CDN upload step
-      coverImageDataUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
+      if (slides.length > 0) {
+        const imageBuffer = await renderSlideCanvas(slides[0], 1200, 630);
+        // # Try uploading Canvas 2D result to Blob too
+        try {
+          const filename = `blog-cover-${article.slug}.png`;
+          coverImageUrl = await uploadImage(imageBuffer, filename);
+        } catch {
+          // # Blob upload failed — use base64 as last resort
+          coverImageUrl = `data:image/png;base64,${imageBuffer.toString("base64")}`;
+        }
+      }
     }
   } catch (err) {
-    // # Log the failure but continue — article queuing should not be blocked
     console.error("[BlogWriter] Cover image generation failed:", err);
   }
 
@@ -225,7 +242,7 @@ Return ONLY valid JSON.`;
       captionText: article.excerpt, // # 30-word excerpt for listing card
       hook: article.metaDescription, // # Meta description stored in hook field
       mediaPrompt: article.mediaPrompt, // # Prompt used to generate cover image
-      imageUrl: coverImageDataUrl, // # Base64 data URL of cover image (null if generation failed)
+      imageUrl: coverImageUrl, // # HTTPS Blob URL of cover image (null if generation failed)
       hashtags: article.tags,      // # Comma-separated SEO tags
 
       // # Workflow fields
