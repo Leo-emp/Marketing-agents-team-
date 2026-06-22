@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     try {
       // # Build the absolute publish URL using the incoming request's origin
       const publishUrl = `${req.nextUrl.origin}/api/blog/publish`;
-      await fetch(publishUrl, {
+      const publishRes = await fetch(publishUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,6 +49,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         },
         body: JSON.stringify({ contentId: id }),
       });
+      // # Log publish result for observability — admin sees no error but we can debug
+      if (!publishRes.ok) {
+        console.error("Auto-publish blog failed:", await publishRes.text());
+      }
     } catch (err) {
       // # Non-fatal — approval still succeeds even if auto-publish fails
       console.error("Auto-publish blog failed:", err);
