@@ -92,6 +92,8 @@ const AGENT_META: Record<string, { name: string; role: string; avatar: string; c
   research:   { name: "Research Agent", role: "Trend Analyst", avatar: "RA", color: "#10b981", contentTypes: [], description: "Conducts real-time web research before every content generation. Finds trending topics, industry news, data points, and competitor angles." },
   visual:     { name: "Visual Designer", role: "Brand Designer", avatar: "VD", color: "#a855f7", contentTypes: [], description: "Transforms text content into branded visual slides. Dark premium theme, indigo-purple gradients, clean typography." },
   kpi:        { name: "KPI Analyst", role: "Performance Tracker", avatar: "KA", color: "#f59e0b", contentTypes: [], description: "Tracks engagement, reach, and traffic across platforms. AI-powered insights and goal progress monitoring." },
+  // # Ambassador AI — generates talking-head career tip videos using HeyGen lip-sync
+  ambassador: { name: "Ambassador AI", role: "Brand Spokesperson", avatar: "AM", color: "#06b6d4", contentTypes: ["ambassador_video"], description: "AI brand ambassador that creates talking-head career tip videos. Professional lip sync, natural gestures, consistent brand identity." },
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -117,6 +119,8 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   single_image: "Single Image",
   plain_text: "Plain Text",
   story: "Story",
+  // # Ambassador videos are HeyGen-generated talking-head videos
+  ambassador_video: "Ambassador Video",
 };
 
 const TONE_OPTIONS = [
@@ -188,6 +192,13 @@ export default function Dashboard() {
   /* ---- Visual generation ---- */
   const [generatingVisual, setGeneratingVisual] = useState<string | null>(null);
   const [visualPreviews, setVisualPreviews] = useState<Record<string, VisualSlide[]>>({});
+
+  /* ---- Creative Studio ---- */
+  // # Image model selection for visual generation (flux-pro, flux-schnell, openai, canvas)
+  const [imageModel, setImageModel] = useState("flux-pro");
+  // # Ambassador video generation loading state + topic input
+  const [generatingAmbassador, setGeneratingAmbassador] = useState(false);
+  const [ambassadorTopic, setAmbassadorTopic] = useState("");
 
   /* ---- Video generation ---- */
   const [generatingVideo, setGeneratingVideo] = useState<string | null>(null);
@@ -528,7 +539,7 @@ export default function Dashboard() {
       const res = await fetch("/api/visual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentId: item.id, redesign }),
+        body: JSON.stringify({ contentId: item.id, redesign, model: imageModel }),
       });
 
       if (res.ok) {
@@ -592,6 +603,37 @@ export default function Dashboard() {
       showToast("Video generation error", "error");
     } finally {
       if (generatingVideo === item.id) setGeneratingVideo(null);
+    }
+  };
+
+  // # Generate an ambassador video — full pipeline from topic to queued content
+  const handleGenerateAmbassador = async () => {
+    setGeneratingAmbassador(true);
+    try {
+      const res = await fetch("/api/creative/generate-ambassador", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: ambassadorTopic.trim() || undefined,
+          platform: "tiktok",
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAmbassadorTopic("");
+        setNewContentId(data.contentId);
+        setTimeout(() => setNewContentId(null), 5000);
+        showToast(`Ambassador video generated (${data.duration}s)`, "success");
+        fetchContent();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || "Ambassador generation failed", "error");
+      }
+    } catch {
+      showToast("Network error", "error");
+    } finally {
+      setGeneratingAmbassador(false);
     }
   };
 
@@ -1052,6 +1094,34 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Ambassador Video Generation */}
+            <div className="bg-card-bg border border-card-border rounded-xl p-5 mb-6">
+              <h2 className="font-semibold mb-3 flex items-center gap-2">
+                {/* # Cyan dot matches ambassador agent color */}
+                <span className="w-2 h-2 rounded-full bg-cyan-500" />
+                Ambassador Video
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                <input
+                  type="text"
+                  value={ambassadorTopic}
+                  onChange={(e) => setAmbassadorTopic(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleGenerateAmbassador()}
+                  placeholder="Leave empty for auto-trending, or enter a career tip topic"
+                  className="flex-1 min-w-[300px] px-4 py-2 bg-space-700 border border-card-border rounded-lg text-sm text-text-primary focus:outline-none focus:border-cyan-500"
+                />
+                <button
+                  onClick={handleGenerateAmbassador}
+                  disabled={generatingAmbassador}
+                  className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition-opacity whitespace-nowrap"
+                >
+                  {generatingAmbassador ? "Generating Video..." : "Generate Ambassador Video"}
+                </button>
+              </div>
+              {/* # HeyGen renders typically take ~60s; inform the user upfront */}
+              <p className="text-text-muted text-xs mt-2">AI spokesperson presents career tips in a professional talking-head video. Uses HeyGen API (~60s to generate).</p>
+            </div>
+
             {/* Filters + actions bar */}
             <div className="flex items-center gap-3 mb-4 flex-wrap">
               <span className="text-text-muted text-sm">Filter:</span>
@@ -1118,8 +1188,10 @@ export default function Dashboard() {
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-sm">{agent.name}</span>
-                                {/* # Blog articles get a distinct "Blog Article" badge instead of a platform pill */}
-                                {item.platform === "blog" && item.contentType === "blog_article" ? (
+                                {/* # Ambassador videos get a distinct cyan badge; blog articles get emerald; all others get a platform-colored pill */}
+                                {item.contentType === "ambassador_video" ? (
+                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">Ambassador Video</span>
+                                ) : item.platform === "blog" && item.contentType === "blog_article" ? (
                                   <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Blog Article</span>
                                 ) : (
                                   <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>
@@ -1326,15 +1398,28 @@ export default function Dashboard() {
                               <button onClick={() => setSchedulingId(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">Cancel</button>
                             </div>
                           )}
-                          {/* Visual generation / rendering button */}
-                          {item.contentType !== "plain_text" && item.contentType !== "thread" && item.contentType !== "reel_script" && (
-                            <button
-                              onClick={() => handleGenerateVisual(item, hasVisuals)}
-                              disabled={generatingVisual === item.id}
-                              className="px-3 py-1.5 bg-purple-500/15 text-purple-400 text-xs font-medium rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
-                            >
-                              {generatingVisual === item.id ? "Creating Visual..." : hasDesignData ? "Render Visual" : hasVisuals ? "Redesign Visual" : "Generate Visual"}
-                            </button>
+                          {/* Model selector + visual generation button */}
+                          {item.contentType !== "plain_text" && item.contentType !== "thread" && item.contentType !== "reel_script" && item.contentType !== "ambassador_video" && (
+                            <>
+                              {/* # Model dropdown — shared across all visual content items in the queue */}
+                              <select
+                                value={imageModel}
+                                onChange={(e) => setImageModel(e.target.value)}
+                                className="px-2 py-1.5 bg-space-700 border border-card-border rounded-lg text-xs text-text-secondary"
+                              >
+                                <option value="flux-pro">Flux Pro (best)</option>
+                                <option value="flux-schnell">Flux Schnell (fast)</option>
+                                <option value="openai">OpenAI</option>
+                                <option value="canvas">Canvas 2D (free)</option>
+                              </select>
+                              <button
+                                onClick={() => handleGenerateVisual(item, hasVisuals)}
+                                disabled={generatingVisual === item.id}
+                                className="px-3 py-1.5 bg-purple-500/15 text-purple-400 text-xs font-medium rounded-lg hover:bg-purple-500/25 transition-colors disabled:opacity-50"
+                              >
+                                {generatingVisual === item.id ? "Creating Visual..." : hasDesignData ? "Render Visual" : hasVisuals ? "Redesign Visual" : "Generate Visual"}
+                              </button>
+                            </>
                           )}
                           {/* PDF download for LinkedIn carousels */}
                           {item.contentType === "carousel" && item.visualData && (
