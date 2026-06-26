@@ -2,8 +2,8 @@
    CAPTION BURNER — Auto-Subtitles for Ambassador Videos
    ============================================================
    Burns styled captions into video files using FFmpeg.
-   Modern TikTok/Reels style: 3 words at a time, bold white
-   text with black outline, positioned above platform UI.
+   Word-by-word karaoke style with speech-aligned timing.
+   Bold white text, black outline, positioned above platform UI.
 
    Takes a video URL + script + duration → generates timed ASS
    subtitles → burns into video → uploads to Vercel Blob.
@@ -24,13 +24,74 @@ import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 import { uploadVideo } from "@/lib/blob-storage";
 
-// # One word at a time — karaoke-style captions
-// # Each word pops on screen individually for maximum impact
-const WORDS_PER_SEGMENT = 1;
-
 // # Small delay before first caption appears
 // # HeyGen videos have a brief avatar intro before speaking starts
 const START_OFFSET_SECONDS = 0.3;
+
+// # Sentence-ending punctuation — used to detect sentence boundaries
+const SENTENCE_ENDERS = /[.!?]/;
+
+// # Apply natural capitalization to the script words
+// # Only the first letter of each sentence is capitalized, rest lowercase
+// # This looks clean and professional — not shouty like ALL CAPS
+function naturalCase(words: string[]): string[] {
+  let sentenceStart = true;
+  return words.map((word) => {
+    // # Lowercase the entire word first
+    const lower = word.toLowerCase();
+    let result: string;
+
+    if (sentenceStart) {
+      // # Capitalize the first letter of the sentence
+      result = lower.charAt(0).toUpperCase() + lower.slice(1);
+    } else {
+      result = lower;
+    }
+
+    // # Check if this word ends a sentence (period, !, ?)
+    // # The next word will start a new sentence
+    sentenceStart = SENTENCE_ENDERS.test(word);
+    return result;
+  });
+}
+
+// # Calculate speech-aligned timing for each word
+// # Longer words take longer to say — use character count as a proxy
+// # for speaking duration instead of distributing time evenly
+function calculateWordTimings(
+  words: string[],
+  durationSeconds: number
+): { start: number; end: number }[] {
+  // # Strip punctuation to get pure letter counts for timing
+  const letterCounts = words.map(
+    (w) => Math.max(w.replace(/[^a-zA-Z]/g, "").length, 1)
+  );
+  const totalLetters = letterCounts.reduce((sum, c) => sum + c, 0);
+
+  // # Each word gets time proportional to its letter count
+  // # A 7-letter word gets ~3.5x the time of a 2-letter word
+  const effectiveDuration = durationSeconds - START_OFFSET_SECONDS;
+  const timings: { start: number; end: number }[] = [];
+  let cursor = START_OFFSET_SECONDS;
+
+  for (let i = 0; i < words.length; i++) {
+    const wordDuration = (letterCounts[i] / totalLetters) * effectiveDuration;
+    timings.push({ start: cursor, end: cursor + wordDuration });
+    cursor += wordDuration;
+  }
+
+  // # Add a small natural pause after sentence-ending punctuation
+  // # This makes the captions feel more aligned with speech rhythm
+  for (let i = 0; i < words.length - 1; i++) {
+    if (SENTENCE_ENDERS.test(words[i])) {
+      // # Steal 0.15s from the next word and add it as dead time
+      const pause = Math.min(0.15, timings[i + 1].end - timings[i + 1].start);
+      timings[i + 1].start += pause;
+    }
+  }
+
+  return timings;
+}
 
 // # Generate the ASS (Advanced SubStation Alpha) subtitle file content
 // # ASS embeds all styling directly — no FFmpeg force_style escaping needed
@@ -39,32 +100,26 @@ function generateAssContent(
   durationSeconds: number
 ): string {
   // # Split script into individual words, filter empties
-  const words = script.split(/\s+/).filter((w) => w.length > 0);
+  const rawWords = script.split(/\s+/).filter((w) => w.length > 0);
 
-  // # Each word becomes its own caption frame (word-by-word karaoke style)
-  // # Filter out punctuation-only tokens that have no readable text
-  const chunks = words
-    .map((w) => w.toUpperCase())
-    .filter((w) => /[a-zA-Z0-9]/.test(w));
+  // # Filter out punctuation-only tokens (lone dashes, etc.)
+  const words = rawWords.filter((w) => /[a-zA-Z0-9]/.test(w));
+  if (words.length === 0) return "";
 
-  if (chunks.length === 0) return "";
+  // # Apply natural capitalization — only first letter of each sentence
+  const displayWords = naturalCase(words);
 
-  // # Distribute timing evenly — each word gets an equal time slot
-  // # Subtract the start offset to account for HeyGen's intro pause
-  const effectiveDuration = durationSeconds - START_OFFSET_SECONDS;
-  const timePerWord = effectiveDuration / chunks.length;
+  // # Calculate speech-aligned timing based on word length
+  const timings = calculateWordTimings(words, durationSeconds);
 
   // # Build ASS dialogue lines with calculated timestamps
-  // # ASS time format: H:MM:SS.cc (centiseconds, 2 decimal places)
-  const dialogueLines = chunks.map((text, i) => {
-    const start = START_OFFSET_SECONDS + i * timePerWord;
-    const end = START_OFFSET_SECONDS + (i + 1) * timePerWord;
-    return `Dialogue: 0,${formatAssTime(start)},${formatAssTime(end)},Default,,0,0,0,,${text}`;
+  const dialogueLines = displayWords.map((text, i) => {
+    return `Dialogue: 0,${formatAssTime(timings[i].start)},${formatAssTime(timings[i].end)},Default,,0,0,0,,${text}`;
   });
 
   // # Complete ASS file with embedded styling
   // # PlayRes matches 1080x1920 (9:16 vertical video)
-  // # FontSize=64 — extra large for word-by-word readability on mobile
+  // # FontSize=52 — balanced size: readable on mobile without overwhelming
   // # PrimaryColour &H00FFFFFF = white text
   // # OutlineColour &H00000000 = black outline
   // # BackColour &H80000000 = semi-transparent black shadow
@@ -80,7 +135,7 @@ WrapStyle: 0
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,64,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,2,0,1,3,1,2,40,40,200,1
+Style: Default,Arial,52,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,3,1,2,40,40,200,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -151,10 +206,9 @@ export async function burnCaptions(
     }
     writeFileSync(join(workDir, "captions.ass"), assContent, "utf-8");
 
-    const wordCount = script.split(/\s+/).length;
-    const segmentCount = Math.ceil(wordCount / WORDS_PER_SEGMENT);
+    const wordCount = script.split(/\s+/).filter((w) => w.length > 0).length;
     console.log(
-      `[CaptionBurner] Generated ${segmentCount} caption segments (${wordCount} words)`
+      `[CaptionBurner] Generated ${wordCount} word-by-word caption segments`
     );
 
     // # Step 3: Burn subtitles into the video with FFmpeg
