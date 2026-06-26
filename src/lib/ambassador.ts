@@ -15,6 +15,7 @@
 import { callGemini } from "./gemini";
 import { discoverTopic } from "./research";
 import { generateAvatarVideo } from "./visual/heygen-avatar";
+import { burnCaptions } from "./visual/caption-burner";
 import { prisma } from "./prisma";
 
 // # Generate a complete ambassador video from topic to queued content
@@ -93,6 +94,16 @@ Return ONLY the script text. No stage directions, no formatting, no labels. Just
     return null;
   }
 
+  // # Step 3.5: Burn auto-captions into the video
+  // # Modern social style: 3 words at a time, bold white text, black outline
+  // # If captioning fails, the original video is used (graceful degradation)
+  console.log("[Ambassador] Burning captions into video...");
+  const captionedVideoUrl = await burnCaptions(
+    avatarResult.videoUrl,
+    trimmedScript,
+    avatarResult.duration
+  );
+
   // # Step 4: Generate a caption for social posting
   const captionPrompt = `Write a short social media caption for a ${targetPlatform} video. The video is an AI career advisor giving tips about: ${videoTopic}.
 
@@ -117,12 +128,13 @@ Return ONLY the caption text.`;
       captionText: caption.trim(),
       mediaPrompt: videoTopic,
       imageUrl: null,
-      videoUrl: avatarResult.videoUrl,
+      videoUrl: captionedVideoUrl,
       status: "pending",
       notes: JSON.stringify({
         duration: avatarResult.duration,
         wordCount,
         topic: videoTopic,
+        captioned: captionedVideoUrl !== avatarResult.videoUrl,
       }),
     },
   });
@@ -131,7 +143,7 @@ Return ONLY the caption text.`;
 
   return {
     contentId: content.id,
-    videoUrl: avatarResult.videoUrl,
+    videoUrl: captionedVideoUrl,
     script: trimmedScript,
     duration: avatarResult.duration,
   };
