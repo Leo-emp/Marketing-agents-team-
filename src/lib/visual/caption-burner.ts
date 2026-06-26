@@ -24,9 +24,9 @@ import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 import { uploadVideo } from "@/lib/blob-storage";
 
-// # How many words per caption frame — 3 is the modern social standard
-// # Keeps text scannable at a glance while scrolling
-const WORDS_PER_SEGMENT = 3;
+// # One word at a time — karaoke-style captions
+// # Each word pops on screen individually for maximum impact
+const WORDS_PER_SEGMENT = 1;
 
 // # Small delay before first caption appears
 // # HeyGen videos have a brief avatar intro before speaking starts
@@ -41,31 +41,30 @@ function generateAssContent(
   // # Split script into individual words, filter empties
   const words = script.split(/\s+/).filter((w) => w.length > 0);
 
-  // # Group into chunks of 3 words each
-  const chunks: string[] = [];
-  for (let i = 0; i < words.length; i += WORDS_PER_SEGMENT) {
-    const chunk = words.slice(i, i + WORDS_PER_SEGMENT).join(" ");
-    if (chunk.trim()) chunks.push(chunk.toUpperCase());
-  }
+  // # Each word becomes its own caption frame (word-by-word karaoke style)
+  // # Filter out punctuation-only tokens that have no readable text
+  const chunks = words
+    .map((w) => w.toUpperCase())
+    .filter((w) => /[a-zA-Z0-9]/.test(w));
 
   if (chunks.length === 0) return "";
 
-  // # Calculate timing — distribute chunks evenly across the video duration
+  // # Distribute timing evenly — each word gets an equal time slot
   // # Subtract the start offset to account for HeyGen's intro pause
   const effectiveDuration = durationSeconds - START_OFFSET_SECONDS;
-  const timePerChunk = effectiveDuration / chunks.length;
+  const timePerWord = effectiveDuration / chunks.length;
 
   // # Build ASS dialogue lines with calculated timestamps
   // # ASS time format: H:MM:SS.cc (centiseconds, 2 decimal places)
   const dialogueLines = chunks.map((text, i) => {
-    const start = START_OFFSET_SECONDS + i * timePerChunk;
-    const end = START_OFFSET_SECONDS + (i + 1) * timePerChunk;
+    const start = START_OFFSET_SECONDS + i * timePerWord;
+    const end = START_OFFSET_SECONDS + (i + 1) * timePerWord;
     return `Dialogue: 0,${formatAssTime(start)},${formatAssTime(end)},Default,,0,0,0,,${text}`;
   });
 
   // # Complete ASS file with embedded styling
   // # PlayRes matches 1080x1920 (9:16 vertical video)
-  // # FontSize=48 is large enough to read on mobile
+  // # FontSize=64 — extra large for word-by-word readability on mobile
   // # PrimaryColour &H00FFFFFF = white text
   // # OutlineColour &H00000000 = black outline
   // # BackColour &H80000000 = semi-transparent black shadow
@@ -81,7 +80,7 @@ WrapStyle: 0
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,48,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,2,0,1,3,1,2,40,40,200,1
+Style: Default,Arial,64,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,2,0,1,3,1,2,40,40,200,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
