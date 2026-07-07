@@ -171,7 +171,16 @@ Update `src/remotion/ReelComposition.tsx`:
 
 ## 3. Scheduling & Auto-Pipeline
 
-### 3.1 Sunday Night Auto-Generation Pipeline
+### 3.1 Content Strategy: Staggered Cross-Posting
+
+Each original piece of content is adapted and posted across multiple platforms with platform-specific formatting and captions. The pipeline generates N original ideas per week, then auto-adapts each into platform variants (different dimensions, caption tone, hashtags, format).
+
+The specific content calendar — how many originals per week, which platforms each posts to, what days and times — is **configurable from the dashboard**, not hardcoded. The system supports any combination of:
+- Content types: single image, carousel (4-6 slides), reel, thread, plain text
+- Platforms: LinkedIn, X/Twitter, Instagram, TikTok
+- Scheduling: any day/time per post
+
+### 3.2 Sunday Night Auto-Generation Pipeline
 
 New route: `src/app/api/pipeline/weekly/route.ts`
 
@@ -179,44 +188,28 @@ Cron: `0 22 * * 0` (Sunday 10 PM UTC)
 
 Pipeline steps (sequential):
 1. **Pull performance digest** — top/bottom 3 posts from last week, platform engagement averages, best content pillars
-2. **Generate weekly plan** — strategist agent creates 11-piece content plan informed by performance data
-3. **Generate all content** — platform agents produce text/captions for each piece, editorial agent scores and refines
-4. **Render all visuals** — OpenAI generates images for singles + carousel slides, pdf-lib assembles carousel PDFs
-5. **Render all videos** — Remotion/fal.ai renders reels, ElevenLabs generates voiceovers, captions burned in
-6. **Queue everything** — all 11 pieces saved as Content records with status `pending`
+2. **Read content calendar config** — how many originals, which platforms, what types
+3. **Generate weekly plan** — strategist agent creates content plan informed by performance data and calendar config
+4. **Generate original content** — platform agents produce text/captions, editorial agent scores and refines
+5. **Generate platform variants** — adapt each original to target platforms (reformat dimensions, adjust caption tone, add platform-specific hashtags)
+6. **Render all visuals** — OpenAI generates images for singles + carousel slides, pdf-lib assembles carousel PDFs
+7. **Render all videos** — Remotion/fal.ai renders reels, ElevenLabs generates voiceovers, captions burned in
+8. **Queue everything** — all pieces saved as Content records with status `pending`, linked by `variationGroup`
 
-All 11 pieces are ready for review by Monday morning.
+All content is ready for review by Monday morning.
 
-### 3.2 One Approval Gate
+### 3.3 One Approval Gate
 
-User opens dashboard → sees 11 pending pieces → approves/rejects each individually.
+User opens dashboard → sees all pending pieces → approves/rejects each individually.
 
 On approval:
 - Status changes to `scheduled`
-- `scheduledFor` is auto-set to the optimal time slot for that day/platform (see schedule below)
+- `scheduledFor` is auto-set based on the calendar config (day + optimal time slot for that platform)
 - No further manual action needed
 
 On rejection:
 - Status changes to `rejected`
 - Optional: user can add a note explaining why (feeds back into learning)
-
-### 3.3 Optimal Posting Schedule
-
-Posts auto-schedule to these time slots on approval:
-
-| Day | Time (UTC) | Platform | Type |
-|---|---|---|---|
-| Monday | 09:00 | LinkedIn | Carousel (4-6 slides) |
-| Monday | 14:00 | X/Twitter | Single image post |
-| Tuesday | 11:00 | Instagram | Reel (30-45s) |
-| Tuesday | 15:00 | TikTok | Carousel (4-6 slides) |
-| Wednesday | 09:00 | LinkedIn | Single image post |
-| Wednesday | 14:00 | X/Twitter | Thread or plain text |
-| Thursday | 11:00 | Instagram | Carousel (4-6 slides) |
-| Thursday | 15:00 | TikTok | Reel (30-45s) |
-| Friday | 09:00 | LinkedIn | Single image post |
-| Saturday | 10:00 | LinkedIn | Carousel (4-6 slides) |
-| Sunday | 11:00 | Instagram | Single image post |
 
 ### 3.4 Scheduler Cron Upgrade
 
@@ -322,27 +315,31 @@ Upgrade the editorial scoring pass:
 
 ---
 
-## 5. Content Calendar Summary
+## 5. Content Strategy Summary
 
-### 5.1 Weekly Volume: 11 posts/week
+### 5.1 Staggered Cross-Posting Model
 
-| # | Day | Platform | Type | Engine |
-|---|---|---|---|---|
-| 1 | Monday | LinkedIn | Carousel (4-6 slides) | OpenAI images → pdf-lib PDF |
-| 2 | Monday | X/Twitter | Single image | OpenAI image |
-| 3 | Tuesday | Instagram | Reel (30-45s) | Remotion/fal.ai + ElevenLabs |
-| 4 | Tuesday | TikTok | Carousel (4-6 slides) | OpenAI images |
-| 5 | Wednesday | LinkedIn | Single image | OpenAI image |
-| 6 | Wednesday | X/Twitter | Thread or plain text | Text only |
-| 7 | Thursday | Instagram | Carousel (4-6 slides) | OpenAI images |
-| 8 | Thursday | TikTok | Reel (30-45s) | Remotion/fal.ai + ElevenLabs |
-| 9 | Friday | LinkedIn | Single image | OpenAI image |
-| 10 | Saturday | LinkedIn | Carousel (4-6 slides) | OpenAI images → pdf-lib PDF |
-| 11 | Sunday | Instagram | Single image | OpenAI image |
+Each original piece is adapted across platforms with staggered timing for maximum reach:
+- **Original** posts first on its primary platform
+- **Variants** post to other platforms 1-2 days later with platform-native formatting
+- Staggering gives daily presence across all platforms and allows performance-informed tweaks before cross-posting
+
+The specific calendar (which days, platforms, content types, volume) is **dashboard-configurable** — not hardcoded. The system supports any mix of content types (single image, carousel, reel, thread, text) across any platforms (LinkedIn, X/Twitter, Instagram, TikTok).
 
 Plus 2 ambassador videos/week (Tue/Thu, existing pipeline).
 
-### 5.2 Monthly Cost Estimate
+### 5.2 Content Type → Rendering Engine
+
+| Content type | Engine | Format |
+|---|---|---|
+| Single image | OpenAI gpt-image-1 | PNG (platform-specific dimensions) |
+| Carousel | OpenAI gpt-image-1 → pdf-lib | PDF for LinkedIn, PNG set for others |
+| Educational reel | Remotion + ElevenLabs VO | MP4 1080×1920 |
+| Cinematic reel | fal.ai + ElevenLabs VO | MP4 1080×1920 |
+| Ambassador video | HeyGen + caption burner | MP4 1080×1920 |
+| Thread / plain text | Gemini text generation | Text only |
+
+### 5.3 Monthly Cost Estimate (scales with volume)
 
 | Category | Cost |
 |---|---|
@@ -367,7 +364,7 @@ Plus 2 ambassador videos/week (Tue/Thu, existing pipeline).
 | `src/lib/visual/elevenlabs-vo.ts` | ElevenLabs voiceover generation |
 | `src/lib/dynamic-voice.ts` | Dynamic voice samples from top performers |
 | `src/lib/performance-digest.ts` | Weekly performance digest for strategist |
-| `src/app/api/pipeline/weekly/route.ts` | Sunday night auto-generation pipeline |
+| `src/app/api/pipeline/weekly/route.ts` | Sunday night auto-generation pipeline (reads calendar config) |
 | `src/app/api/engagement/pull/route.ts` | Daily engagement metric pull from platforms |
 | `src/app/api/video/render/route.ts` | Remotion serverless video rendering |
 
