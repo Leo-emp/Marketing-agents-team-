@@ -2,12 +2,13 @@
    OPENAI IMAGE GENERATION — gpt-image-1 Integration
    ============================================================
    Generates premium AI marketing images using OpenAI's
-   gpt-image-1 model. Returns raw PNG buffer or null on failure,
-   allowing Canvas 2D fallback.
+   gpt-image-1 model. Injects full brand brief for consistent,
+   designer-grade output. Returns raw PNG buffer or null on
+   failure, allowing Canvas 2D fallback.
    ============================================================ */
 
 import OpenAI from "openai";
-import { BRAND_NAME, BRAND_URL } from "./brand";
+import { buildBrandImagePrompt } from "./openai-brand-prompt";
 
 // # Supported output sizes for gpt-image-1
 type ImageSize = "1024x1024" | "1024x1792" | "1792x1024";
@@ -21,23 +22,6 @@ export function mapToOpenAISize(width: number, height: number): ImageSize {
   if (ratio < 0.83) return "1024x1792";
   // # Square-ish
   return "1024x1024";
-}
-
-// # Brand prompt prefix — ensures consistent brand identity across all generated images
-function buildPrompt(userPrompt: string, platform: string): string {
-  return `Create a professional social media marketing graphic for ${BRAND_NAME}, a career tech platform.
-
-BRAND REQUIREMENTS:
-- Color scheme: indigo (#6366f1) and violet (#8b5cf6) as primary brand colors
-- Style: premium, modern, clean, bold, high-contrast
-- Typography: large, readable text prominently displayed
-- Include brand URL "${BRAND_URL}" subtly in the corner
-- Ready to publish on ${platform}
-- No stock photo watermarks, no placeholder text
-- Photorealistic quality with clean vector-style text overlays
-
-CONTENT DIRECTION:
-${userPrompt}`;
 }
 
 // # Generate a marketing image using OpenAI gpt-image-1
@@ -57,7 +41,8 @@ export async function generateImage(
   try {
     const client = new OpenAI({ apiKey });
     const size = mapToOpenAISize(width, height);
-    const fullPrompt = buildPrompt(prompt, platform);
+    // # Build the full brand-aware prompt with product context and quality rules
+    const fullPrompt = buildBrandImagePrompt(prompt, platform);
 
     console.log(`[OpenAI Image] Generating ${size} image for ${platform}...`);
 
