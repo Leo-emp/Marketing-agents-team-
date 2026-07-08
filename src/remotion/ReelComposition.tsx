@@ -86,7 +86,7 @@ export function ReelComposition({ scenes, voiceoverUrl, musicUrl }: ReelComposit
             width: 32,
             height: 32,
             borderRadius: 9,
-            background: "linear-gradient(135deg, #6366f1, #a855f7)",
+            background: "linear-gradient(135deg, #3b82f6, #60a5fa)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -137,7 +137,7 @@ export function ReelComposition({ scenes, voiceoverUrl, musicUrl }: ReelComposit
           width: 60,
           height: 3,
           borderRadius: 2,
-          background: "linear-gradient(90deg, #6366f1, #a855f7)",
+          background: "linear-gradient(90deg, #3b82f6, #60a5fa)",
         }} />
       </div>
     </div>
