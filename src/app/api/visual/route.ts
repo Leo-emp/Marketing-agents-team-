@@ -2,10 +2,9 @@
    VISUAL API — /api/visual
    ============================================================
    POST: Generate branded PNG images from content.
-   Three-tier rendering with smart fallback:
-   1. fal.ai Flux (premium photorealistic — default)
-   2. OpenAI gpt-image-1 (fallback)
-   3. Canvas 2D @napi-rs/canvas (always works, free)
+   Two-tier rendering with smart fallback:
+   1. OpenAI gpt-image-1 (primary — all slides have aiImagePrompt)
+   2. Canvas 2D @napi-rs/canvas (fallback if OpenAI fails)
    Uploads to Vercel Blob for HTTPS URLs.
    ============================================================ */
 
@@ -16,13 +15,11 @@ import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData, type VisualRequest } from "@/lib/visual/types";
 import { designVisual } from "@/lib/visual/designer-agent";
 import { generateImage } from "@/lib/visual/openai-image";
-import { generateFalImage, type FalImageModel } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
 
-/* # Render a single slide with three-tier fallback:
-   # 1. fal.ai Flux (if slide has aiImagePrompt)
-   # 2. OpenAI gpt-image-1 (if fal.ai fails)
-   # 3. Canvas 2D (always works, free — text-heavy slides go here directly) */
+/* # Render a single slide with two-tier fallback:
+   # 1. OpenAI gpt-image-1 (primary — all slides have aiImagePrompt now)
+   # 2. Canvas 2D (fallback if OpenAI fails or no API key) */
 async function renderSlide(
   slide: SlideData,
   width: number,
@@ -30,36 +27,19 @@ async function renderSlide(
   platform: string,
   model?: string
 ): Promise<Buffer> {
-  // # Slides with aiImagePrompt get AI image generation
-  if (slide.aiImagePrompt) {
-    // # If admin explicitly chose "canvas" model, skip AI generation entirely
-    if (model === "canvas") {
-      return renderSlideCanvas(slide, width, height);
-    }
-
-    // # If admin explicitly chose "openai", skip fal.ai
-    if (model === "openai") {
-      const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
-      if (aiBuffer) return aiBuffer;
-      console.log("[Visual API] OpenAI failed — falling back to Canvas 2D");
-      return renderSlideCanvas(slide, width, height);
-    }
-
-    // # Default path: try fal.ai first
-    const falModel: FalImageModel = model === "flux-schnell" ? "flux-schnell" : "flux-pro";
-    const falBuffer = await generateFalImage(slide.aiImagePrompt, width, height, { model: falModel });
-    if (falBuffer) return falBuffer;
-
-    // # fal.ai failed — try OpenAI as fallback
-    console.log("[Visual API] fal.ai failed — trying OpenAI fallback");
-    const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
-    if (aiBuffer) return aiBuffer;
-
-    // # Both AI providers failed — Canvas 2D as final fallback
-    console.log("[Visual API] OpenAI also failed — rendering with Canvas 2D");
+  // # If admin explicitly chose "canvas" model, skip AI generation
+  if (model === "canvas") {
+    return renderSlideCanvas(slide, width, height);
   }
 
-  // # Non-AI slides (text-heavy, colored backgrounds) always use Canvas 2D
+  // # All slides have aiImagePrompt — try OpenAI first
+  if (slide.aiImagePrompt) {
+    const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
+    if (aiBuffer) return aiBuffer;
+    console.log("[Visual API] OpenAI failed — falling back to Canvas 2D");
+  }
+
+  // # Canvas 2D fallback — text-heavy rendering
   return renderSlideCanvas(slide, width, height);
 }
 
