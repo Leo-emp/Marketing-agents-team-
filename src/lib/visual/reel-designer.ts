@@ -20,7 +20,7 @@ export async function designReel(
 
 BRAND VISUAL IDENTITY:
 - Dark background, clean white text
-- Indigo-to-purple gradient accents
+- Blue gradient accents (#3b82f6 to #60a5fa)
 - Minimalist, premium aesthetic
 - No emojis, no busy layouts
 - Professional and trustworthy

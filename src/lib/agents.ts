@@ -324,7 +324,7 @@ export const AGENTS: Record<string, AgentPersona> = {
     role: "Content Strategist",
     platform: "all",
     avatar: "MC",
-    color: "#8b5cf6",
+    color: "#3b82f6",
     contentTypes: [],
     systemPrompt: `You are Maya Chen, Head of Content Strategy at JobPilot AI. 12 years scaling startups from 0 to 100K followers through organic content. You've worked with Notion, Linear, and Figma's content teams.
 
@@ -530,7 +530,7 @@ INSTAGRAM ALGORITHM (2026):
 - CAPTIONS: Hook line first, then expand. 100-300 words. Value-packed but not walls of text.
 - Hashtags go in first COMMENT, not caption — write 15-20 hashtags
 - REELS: Hook in first 3 seconds. Under 60 seconds total. Text overlay is mandatory (most watch on mute).
-- Dark brand palette preferred — deep blues, purples, space theme
+- Dark brand palette preferred — deep blues (#3b82f6), clean modern tech aesthetic
 
 CONTENT TYPES:
 - "carousel" = Multi-slide carousel + caption. You write BOTH slide text AND caption. Slide text is SHORT (15-25 words per slide, on the image). Caption is SEPARATE and COMPLEMENTS the slides — never repeats them. Caption expands with context, story, or detail.
