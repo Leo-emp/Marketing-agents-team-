@@ -7,6 +7,8 @@
 
 import { callGemini } from "../gemini";
 import { fetchBRollForTopic } from "../pexels";
+import { generateReelVoiceover } from "../elevenlabs";
+import { uploadMedia } from "../blob-storage";
 import type { ReelSceneData, ReelConfig, SceneEntrance, SceneType, MusicMood } from "./types";
 
 // # Design a video reel from content text
@@ -177,6 +179,20 @@ Return ONLY valid JSON.`;
   };
   const detectedMood: MusicMood = moodMap[platform] || "energetic";
 
+  /* # Generate voiceover from scene text via ElevenLabs */
+  let voiceoverUrl: string | undefined;
+  try {
+    const voBase64 = await generateReelVoiceover(scenes, platform);
+    if (voBase64) {
+      // # Upload the base64 audio to Vercel Blob for a proper URL
+      const audioBuffer = Buffer.from(voBase64.replace("data:audio/mpeg;base64,", ""), "base64");
+      voiceoverUrl = await uploadMedia(audioBuffer, `reel-vo-${Date.now()}.mp3`, "audio/mpeg");
+      console.log(`[reel-designer] Voiceover uploaded → ${voiceoverUrl}`);
+    }
+  } catch (e) {
+    console.warn("[reel-designer] Voiceover generation failed, continuing without:", e);
+  }
+
   return {
     scenes,
     fps: 30,
@@ -185,5 +201,6 @@ Return ONLY valid JSON.`;
     totalDurationInFrames,
     musicMood: detectedMood,
     bRollClips,
+    voiceoverUrl,
   };
 }

@@ -257,3 +257,27 @@ export async function burnCaptions(
     cleanupDir(workDir);
   }
 }
+
+// # Burn captions into any reel video (not just ambassador)
+// # Convenience wrapper that extracts spoken text from a ReelConfig
+export async function burnReelCaptions(
+  videoUrl: string,
+  scenes: { headline: string; body?: string; sceneType: string }[],
+  durationSeconds: number
+): Promise<string> {
+  // # Build a script from scene headlines and body text
+  const parts: string[] = [];
+  for (const scene of scenes) {
+    if (scene.sceneType === "brand_intro") continue;
+    if (scene.headline) parts.push(scene.headline);
+    if (scene.body) parts.push(scene.body);
+  }
+  const script = parts.join(". ").replace(/\.\./g, ".");
+
+  if (!script || script.length < 10) {
+    console.warn("[CaptionBurner] Script too short for captions — returning original video");
+    return videoUrl;
+  }
+
+  return burnCaptions(videoUrl, script, durationSeconds);
+}
