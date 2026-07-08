@@ -1,10 +1,10 @@
 /* ============================================================
    SCHEDULER API — /api/scheduler
    ============================================================
-   GET: Called by Vercel Cron every 5 minutes. Finds content
+   GET: Called by Vercel Cron every 30 minutes. Finds content
    with status "scheduled" whose scheduledFor time has passed,
-   then auto-posts each to its platform. Protected by
-   CRON_SECRET to prevent unauthorized triggers.
+   plus failed posts due for retry, then auto-posts each to
+   its platform. Protected by CRON_SECRET.
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -41,13 +41,26 @@ export async function GET(req: NextRequest) {
     orderBy: { scheduledFor: "asc" },
   });
 
-  if (due.length === 0) {
-    return NextResponse.json({ posted: 0, message: "No scheduled posts due" });
+  // # Find failed posts that are due for retry (max 1 retry)
+  const retryable = await prisma.content.findMany({
+    where: {
+      status: "failed",
+      retryAt: { lte: now },
+      retryCount: { lt: 2 },
+    },
+    orderBy: { retryAt: "asc" },
+  });
+
+  // # Combine scheduled + retryable posts
+  const allDue = [...due, ...retryable];
+
+  if (allDue.length === 0) {
+    return NextResponse.json({ posted: 0, message: "No scheduled or retryable posts due" });
   }
 
   const results: { id: string; platform: string; success: boolean; error?: string }[] = [];
 
-  for (const item of due) {
+  for (const item of allDue) {
     // # Build the post text — use caption for visual posts, fall back to body
     let postText = item.captionText || item.body;
     // # Auto-tag jobpilotai.co links with UTM params for attribution tracking
@@ -70,11 +83,15 @@ export async function GET(req: NextRequest) {
       });
       results.push({ id: item.id, platform: item.platform, success: true });
     } else {
-      // # Mark failed posts with a note so admin can see what happened
+      // # Set retry for 30 minutes later if first attempt, mark permanently failed if second
+      const retryCount = (item.retryCount || 0) + 1;
       await prisma.content.update({
         where: { id: item.id },
         data: {
-          notes: `Auto-post failed at ${now.toISOString()}: ${result.error}`,
+          status: "failed",
+          retryAt: retryCount < 2 ? new Date(now.getTime() + 30 * 60 * 1000) : null,
+          retryCount,
+          notes: `Auto-post attempt ${retryCount} failed at ${now.toISOString()}: ${result.error}`,
         },
       });
       results.push({ id: item.id, platform: item.platform, success: false, error: result.error });

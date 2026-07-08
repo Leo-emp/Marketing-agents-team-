@@ -39,9 +39,17 @@ model Content {
   videoUrl       String?                           // S3 URL of rendered video (reels)
   videoRenderId  String?                           // Remotion Lambda render ID for progress polling
   pdfUrl         String?                           // URL of generated carousel PDF (LinkedIn)
+  retryAt        DateTime?                         // When to retry a failed post
+  retryCount     Int       @default(0)             // Number of post retry attempts
+  rejectionNote  String?                           // Why admin rejected this content
   // # Editorial review fields — second-pass AI quality check
   editorialScore    Float?                         // 1-10 score from editorial review agent
   editorialFeedback String?                        // Specific feedback: what was fixed, what passed
+  // # Multi-dimensional editorial scores (upgrade from single editorialScore)
+  editorialHookScore     Float?                    // Hook strength 1-10
+  editorialSpecScore     Float?                    // Specificity 1-10
+  editorialBrandScore    Float?                    // Brand alignment 1-10
+  editorialPlatformScore Float?                    // Platform fit 1-10
   // # A/B variation tracking — groups variations for performance comparison
   variationGroup String?                           // Shared ID linking A/B variations together
   // # Engagement metrics — populated after posting for feedback loop
