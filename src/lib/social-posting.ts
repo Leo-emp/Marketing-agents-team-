@@ -315,30 +315,104 @@ export async function postToInstagram(content: string, imageUrl?: string): Promi
 }
 
 /* ---- TikTok ---- */
-/* Uses the TikTok Content Posting API */
-/* Requires: TIKTOK_ACCESS_TOKEN */
-export async function postToTikTok(content: string): Promise<PostResult> {
-  const token = process.env.TIKTOK_ACCESS_TOKEN;
+/* Uses the TikTok Content Posting API v2 */
+/* Supports: video posts and photo/carousel posts */
+export async function postToTikTok(content: string, mediaUrl?: string, mediaType?: "video" | "photo"): Promise<PostResult> {
+  const token = await getToken("tiktok", "TIKTOK_ACCESS_TOKEN");
 
   if (!token) {
-    return { success: false, error: "TikTok not configured — set TIKTOK_ACCESS_TOKEN. TikTok requires video upload via their Creator API." };
+    return { success: false, error: "TikTok not connected — go to Settings tab to connect your account" };
   }
 
-  /* TikTok's Content Posting API requires video upload — text-only posts aren't supported. */
-  /* This returns a placeholder since video creation needs to happen outside this system. */
-  return {
-    success: false,
-    error: "TikTok requires video upload — use the script to create a video first, then upload via TikTok Creator Tools or their API.",
-  };
+  try {
+    // # Photo/carousel posts — upload individual images
+    if (mediaType === "photo" && mediaUrl) {
+      const imageUrls = mediaUrl.split(",").map((u) => u.trim()).filter(Boolean);
+      if (imageUrls.length === 0) {
+        return { success: false, error: "No images provided for TikTok carousel" };
+      }
+
+      // # Initialize photo post with image URLs
+      const initRes = await fetch("https://open.tiktokapis.com/v2/post/publish/content/init/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          post_info: {
+            title: content.slice(0, 150),
+            privacy_level: "PUBLIC_TO_EVERYONE",
+          },
+          source_info: {
+            source: "PULL_FROM_URL",
+            photo_cover_index: 0,
+            photo_images: imageUrls,
+          },
+          post_mode: "DIRECT_POST",
+          media_type: "PHOTO",
+        }),
+      });
+
+      if (!initRes.ok) {
+        const err = await initRes.text();
+        return { success: false, error: `TikTok photo init failed: ${err}` };
+      }
+
+      const initData = await initRes.json();
+      return { success: true, platformPostId: initData.data?.publish_id };
+    }
+
+    // # Video posts — upload video from URL
+    if (mediaUrl && (!mediaType || mediaType === "video")) {
+      // # Initialize video upload by URL
+      const initRes = await fetch("https://open.tiktokapis.com/v2/post/publish/video/init/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          post_info: {
+            title: content.slice(0, 150),
+            privacy_level: "PUBLIC_TO_EVERYONE",
+          },
+          source_info: {
+            source: "PULL_FROM_URL",
+            video_url: mediaUrl,
+          },
+          post_mode: "DIRECT_POST",
+          media_type: "VIDEO",
+        }),
+      });
+
+      if (!initRes.ok) {
+        const err = await initRes.text();
+        return { success: false, error: `TikTok video init failed: ${err}` };
+      }
+
+      const initData = await initRes.json();
+      return { success: true, platformPostId: initData.data?.publish_id };
+    }
+
+    return { success: false, error: "TikTok requires a media URL (video or photo carousel)" };
+  } catch (e: any) {
+    return { success: false, error: e.message };
+  }
 }
 
 /* ---- Unified Poster ---- */
-export async function postToPlatform(platform: string, content: string, imageUrl?: string): Promise<PostResult> {
+export async function postToPlatform(
+  platform: string,
+  content: string,
+  imageUrl?: string,
+  mediaType?: "video" | "photo"
+): Promise<PostResult> {
   switch (platform) {
     case "linkedin": return postToLinkedIn(content, imageUrl);
     case "twitter": return postToTwitter(content, imageUrl);
     case "instagram": return postToInstagram(content, imageUrl);
-    case "tiktok": return postToTikTok(content);
+    case "tiktok": return postToTikTok(content, imageUrl, mediaType);
     default: return { success: false, error: `Unknown platform: ${platform}` };
   }
 }
