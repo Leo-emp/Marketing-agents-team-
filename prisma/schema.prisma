@@ -38,6 +38,7 @@ model Content {
   imageUrl       String?                           // URL/path to generated image(s)
   videoUrl       String?                           // S3 URL of rendered video (reels)
   videoRenderId  String?                           // Remotion Lambda render ID for progress polling
+  pdfUrl         String?                           // URL of generated carousel PDF (LinkedIn)
   // # Editorial review fields — second-pass AI quality check
   editorialScore    Float?                         // 1-10 score from editorial review agent
   editorialFeedback String?                        // Specific feedback: what was fixed, what passed
