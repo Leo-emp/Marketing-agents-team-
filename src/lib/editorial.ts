@@ -5,19 +5,24 @@
    call acting as a human editor. Catches AI-detectable patterns,
    weak hooks, generic advice, banned phrases, and brand
    misalignment that the single-pass generation missed.
-   Returns a score, specific feedback, and revised content.
+   Returns multi-dimensional scores, feedback, and revised content.
    ============================================================ */
 
 import { callGemini } from "./gemini";
 
 /* ---- Types ---- */
 export interface EditorialReview {
-  score: number;            // # 1-10 quality score
-  passed: boolean;          // # true if score >= 7
+  score: number;            // # 1-10 overall quality score
+  passed: boolean;          // # true if all dimension scores >= 7
   feedback: string;         // # Specific feedback on what was fixed or flagged
   revisedContent: string;   // # The improved version (or original if score >= 9)
   revisedHook: string;      // # Improved first line
   issues: string[];         // # List of specific issues found
+  // # Multi-dimensional scores
+  hookScore: number;        // # Hook strength 1-10
+  specScore: number;        // # Specificity 1-10
+  brandScore: number;       // # Brand alignment 1-10
+  platformScore: number;    // # Platform fit 1-10
 }
 
 /* # Main editorial review function — called after content generation */
@@ -25,7 +30,8 @@ export async function reviewContent(
   content: string,
   platform: string,
   contentType: string,
-  hook: string
+  hook: string,
+  topPerformerContext?: string
 ): Promise<EditorialReview> {
   const prompt = `You are a senior content editor at a top-tier marketing agency. Your job is to review AI-generated social media content and make it indistinguishable from expert human writing.
 
@@ -34,7 +40,7 @@ REVIEW THIS ${platform.toUpperCase()} ${contentType.toUpperCase()}:
 ${content}
 ---
 HOOK: "${hook}"
-
+${topPerformerContext ? `\nTOP-PERFORMING CONTENT FOR REFERENCE:\n${topPerformerContext}\n\nCompare the content under review against these high performers. Does it match their quality, specificity, and voice?\n` : ""}
 EVALUATE AGAINST THESE CRITERIA (score each 1-10):
 
 1. AI DETECTION TEST
@@ -42,12 +48,12 @@ EVALUATE AGAINST THESE CRITERIA (score each 1-10):
    - Real humans are messier — they emphasize unevenly, skip transitions, use colloquial phrases mixed with technical ones
    - Flag: "Certainly", "Let me break this down", "Here's the thing", "It goes without saying"
 
-2. HOOK STRENGTH
+2. HOOK STRENGTH (hookScore)
    - Would a real person stop scrolling for this first line?
    - Is it specific (has a number, name, or scenario) or generic?
    - Does it create curiosity or tension?
 
-3. SPECIFICITY CHECK
+3. SPECIFICITY CHECK (specScore)
    - Count concrete numbers, percentages, timeframes, named examples
    - Minimum 2 per piece. If fewer, flag it.
    - "Many companies" = fail. "73% of Fortune 500 companies" = pass.
@@ -58,12 +64,12 @@ EVALUATE AGAINST THESE CRITERIA (score each 1-10):
    - Structures: 3+ consecutive sentences starting with same word, passive voice in opener, generic numbered lists without data
    - ZERO EMOJIS allowed
 
-5. BRAND ALIGNMENT
+5. BRAND ALIGNMENT (brandScore)
    - Does it sound like a senior career advisor sharing real expertise?
    - Is the tone confident and credible without being arrogant?
    - If JobPilot is mentioned, is it natural (not salesy)?
 
-6. PLATFORM FIT
+6. PLATFORM FIT (platformScore)
    - ${platform === "linkedin" ? "LinkedIn: 800-1300 chars, short paragraphs, ends with question, 3-5 hashtags" : ""}
    - ${platform === "twitter" ? "X/Twitter: under 280 chars for single tweets, punchy, no hashtags, contrarian edge" : ""}
    - ${platform === "instagram" ? "Instagram: visual-first, save-worthy, caption 100-300 words, 15-20 hashtags in first comment" : ""}
@@ -74,14 +80,18 @@ EVALUATE AGAINST THESE CRITERIA (score each 1-10):
    - Caption should add context, story, or insight the image alone cannot convey.
 
 TASK:
-1. Score the content 1-10 overall
+1. Score the content 1-10 overall AND on each dimension (hookScore, specScore, brandScore, platformScore)
 2. List every specific issue found
-3. If score < 9, rewrite the content fixing ALL issues while preserving the core message
+3. If overall score < 9, rewrite the content fixing ALL issues while preserving the core message
 4. If score >= 9, return the original unchanged
 
 Return a JSON object:
 {
   "score": 8,
+  "hookScore": 7,
+  "specScore": 8,
+  "brandScore": 9,
+  "platformScore": 8,
   "issues": ["Hook is generic — no specific number or scenario", "Third paragraph sounds AI-generated — too balanced"],
   "feedback": "Strengthened the hook with a specific stat, rewrote paragraph 3 with a more natural voice",
   "revisedContent": "the full revised content here",
@@ -103,11 +113,16 @@ Return ONLY a valid JSON object. No explanation outside the JSON.`;
 
     return {
       score: Math.min(10, Math.max(1, Number(parsed.score) || 5)),
-      passed: (Number(parsed.score) || 5) >= 7,
+      passed: [parsed.hookScore, parsed.specScore, parsed.brandScore, parsed.platformScore]
+        .every((s) => (Number(s) || 5) >= 7),
       feedback: String(parsed.feedback || ""),
       revisedContent: String(parsed.revisedContent || content),
       revisedHook: String(parsed.revisedHook || hook),
       issues: Array.isArray(parsed.issues) ? parsed.issues.map(String) : [],
+      hookScore: Math.min(10, Math.max(1, Number(parsed.hookScore) || 5)),
+      specScore: Math.min(10, Math.max(1, Number(parsed.specScore) || 5)),
+      brandScore: Math.min(10, Math.max(1, Number(parsed.brandScore) || 5)),
+      platformScore: Math.min(10, Math.max(1, Number(parsed.platformScore) || 5)),
     };
   } catch (e) {
     // # If editorial review fails, pass through the original content
@@ -125,5 +140,9 @@ function buildPassthrough(content: string, hook: string): EditorialReview {
     revisedContent: content,
     revisedHook: hook,
     issues: [],
+    hookScore: 0,
+    specScore: 0,
+    brandScore: 0,
+    platformScore: 0,
   };
 }

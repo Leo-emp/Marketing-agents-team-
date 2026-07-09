@@ -69,7 +69,8 @@ async function pullTwitter(postId: string, token: string): Promise<{ likes: numb
 async function pullInstagram(postId: string, token: string): Promise<{ likes: number; comments: number; saves: number; impressions: number } | null> {
   try {
     const res = await fetch(
-      `https://graph.facebook.com/v19.0/${postId}?fields=like_count,comments_count,insights.metric(saved,impressions)&access_token=${token}`
+      `https://graph.facebook.com/v19.0/${encodeURIComponent(postId)}?fields=like_count,comments_count,insights.metric(saved,impressions)`,
+      { headers: { Authorization: `Bearer ${token}` } }
     );
     if (!res.ok) return null;
     const data = await res.json();
