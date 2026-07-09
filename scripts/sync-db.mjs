@@ -9,6 +9,7 @@
 import { createClient } from "@libsql/client";
 
 /* -- Schema mirrors prisma/schema.prisma -- */
+/* -- Every column in Prisma must appear here so Turso gets it on deploy -- */
 const SCHEMA = {
   Content: {
     id: "TEXT PRIMARY KEY",
@@ -31,6 +32,27 @@ const SCHEMA = {
     imageUrl: "TEXT",
     videoUrl: "TEXT",
     videoRenderId: "TEXT",
+    // # Carousel PDF + retry logic
+    pdfUrl: "TEXT",
+    retryAt: "DATETIME",
+    retryCount: "INTEGER DEFAULT 0",
+    rejectionNote: "TEXT",
+    // # Editorial review scores
+    editorialScore: "REAL",
+    editorialFeedback: "TEXT",
+    editorialHookScore: "REAL",
+    editorialSpecScore: "REAL",
+    editorialBrandScore: "REAL",
+    editorialPlatformScore: "REAL",
+    // # A/B variation tracking
+    variationGroup: "TEXT",
+    // # Engagement metrics — populated after posting
+    engagementLikes: "INTEGER",
+    engagementComments: "INTEGER",
+    engagementShares: "INTEGER",
+    engagementSaves: "INTEGER",
+    engagementImpressions: "INTEGER",
+    engagementScore: "REAL",
     createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
     updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   },
@@ -87,6 +109,61 @@ const SCHEMA = {
     createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
     updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   },
+  // # Email nurture system — automated lifecycle campaigns
+  EmailSequence: {
+    id: "TEXT PRIMARY KEY",
+    name: "TEXT",
+    description: "TEXT",
+    trigger: "TEXT",
+    priority: "INTEGER DEFAULT 5",
+    status: "TEXT DEFAULT 'draft'",
+    steps: "TEXT",
+    createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+    updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  },
+  // # Email send log — every email sent with delivery tracking
+  EmailSend: {
+    id: "TEXT PRIMARY KEY",
+    sequenceId: "TEXT",
+    stepIndex: "INTEGER",
+    recipientEmail: "TEXT",
+    recipientUserId: "TEXT",
+    subject: "TEXT",
+    status: "TEXT DEFAULT 'queued'",
+    resendMessageId: "TEXT",
+    utmSource: "TEXT",
+    utmMedium: "TEXT",
+    utmCampaign: "TEXT",
+    sentAt: "DATETIME",
+    openedAt: "DATETIME",
+    clickedAt: "DATETIME",
+    createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  },
+  // # Email preferences — unsubscribe tracking per user
+  EmailPreference: {
+    id: "TEXT PRIMARY KEY",
+    userId: "TEXT UNIQUE",
+    email: "TEXT",
+    unsubscribedAt: "DATETIME",
+    reason: "TEXT",
+    createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+    updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  },
+  // # Funnel events — user lifecycle events for attribution
+  FunnelEvent: {
+    id: "TEXT PRIMARY KEY",
+    userId: "TEXT",
+    email: "TEXT",
+    eventType: "TEXT",
+    utmSource: "TEXT",
+    utmMedium: "TEXT",
+    utmCampaign: "TEXT",
+    utmTerm: "TEXT",
+    utmContent: "TEXT",
+    metadata: "TEXT",
+    eventDate: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+    createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  },
 };
 
 async function syncDatabase() {
@@ -126,13 +203,31 @@ async function syncDatabase() {
 
   /* -- Create indexes for common queries -- */
   const indexes = [
+    // # Content indexes
     "CREATE INDEX IF NOT EXISTS idx_content_status ON Content(status)",
     "CREATE INDEX IF NOT EXISTS idx_content_platform ON Content(platform)",
     "CREATE INDEX IF NOT EXISTS idx_content_scheduled ON Content(scheduledFor)",
+    "CREATE INDEX IF NOT EXISTS idx_content_variation ON Content(variationGroup)",
+    "CREATE INDEX IF NOT EXISTS idx_content_engagement ON Content(engagementScore)",
+    // # Visual indexes
     "CREATE INDEX IF NOT EXISTS idx_visual_contentId ON Visual(contentId)",
+    // # KPI indexes
     "CREATE INDEX IF NOT EXISTS idx_kpi_platform ON KpiMetric(platform)",
     "CREATE INDEX IF NOT EXISTS idx_kpi_date ON KpiMetric(date)",
     "CREATE INDEX IF NOT EXISTS idx_kpi_contentId ON KpiMetric(contentId)",
+    // # Email indexes
+    "CREATE INDEX IF NOT EXISTS idx_emailseq_trigger ON EmailSequence(trigger)",
+    "CREATE INDEX IF NOT EXISTS idx_emailseq_status ON EmailSequence(status)",
+    "CREATE INDEX IF NOT EXISTS idx_emailsend_recipient ON EmailSend(recipientEmail)",
+    "CREATE INDEX IF NOT EXISTS idx_emailsend_userId ON EmailSend(recipientUserId)",
+    "CREATE INDEX IF NOT EXISTS idx_emailsend_seqId ON EmailSend(sequenceId)",
+    "CREATE INDEX IF NOT EXISTS idx_emailsend_status ON EmailSend(status)",
+    "CREATE INDEX IF NOT EXISTS idx_emailsend_sentAt ON EmailSend(sentAt)",
+    "CREATE INDEX IF NOT EXISTS idx_emailpref_email ON EmailPreference(email)",
+    // # Funnel indexes
+    "CREATE INDEX IF NOT EXISTS idx_funnel_eventType ON FunnelEvent(eventType)",
+    "CREATE INDEX IF NOT EXISTS idx_funnel_utmSource ON FunnelEvent(utmSource)",
+    "CREATE INDEX IF NOT EXISTS idx_funnel_eventDate ON FunnelEvent(eventDate)",
   ];
   for (const sql of indexes) {
     await client.execute(sql);
