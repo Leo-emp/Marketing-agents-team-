@@ -1,0 +1,30 @@
+# GitHub Actions scheduler — triggers /api/scheduler every 30 minutes
+# Workaround for Vercel Hobby plan's once-daily cron limit.
+# The daily Vercel cron (9 AM) remains as a fallback.
+#
+# Required GitHub repo secrets:
+#   CRON_SECRET — must match the CRON_SECRET env var on Vercel
+#   APP_URL     — the deployed Vercel URL (e.g. https://marketing.jobpilotai.co)
+
+name: Post Scheduler
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  trigger-scheduler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call scheduler endpoint
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/scheduler")
+          echo "Status: $response"
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
