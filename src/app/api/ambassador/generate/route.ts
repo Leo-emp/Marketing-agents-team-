@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { generateAmbassadorVideo } from "@/lib/ambassador";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 export async function GET(req: NextRequest) {
   // # Fail closed — CRON_SECRET must be configured in Vercel env vars
@@ -55,6 +56,8 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error("[AmbassadorGenerate] Pipeline threw an exception:", err);
+    // # Alert admin when ambassador video generation fails
+    await notifyAdmin("Ambassador Generate", err);
     return NextResponse.json(
       {
         generated: 0,

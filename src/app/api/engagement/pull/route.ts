@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 // # Composite score weights (same as /api/content/[id]/engagement)
 const WEIGHTS = { likes: 1, comments: 3, shares: 4, saves: 5, impressions: 0.01 };

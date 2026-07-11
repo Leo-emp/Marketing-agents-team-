@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { evaluateAndSendEmails } from "@/lib/email/sequences";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 export async function GET(req: NextRequest) {
   // # Fail closed — CRON_SECRET must be configured
@@ -34,6 +35,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("Email send cron failed:", err);
+    // # Alert admin when email nurture cron fails
+    await notifyAdmin("Email Send", err);
     return NextResponse.json({ error: "Email send failed" }, { status: 500 });
   }
 }

@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { generateBlogArticle } from "@/lib/blog-writer";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 export async function GET(req: NextRequest) {
   // # Fail closed — CRON_SECRET must be configured in Vercel env vars
@@ -60,6 +61,8 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     // # Unexpected exception — log it and return 500 so Vercel Cron logs the failure
     console.error("[BlogGenerate] Pipeline threw an exception:", err);
+    // # Alert admin when blog generation pipeline crashes
+    await notifyAdmin("Blog Generate", err);
     return NextResponse.json(
       {
         drafted: 0,

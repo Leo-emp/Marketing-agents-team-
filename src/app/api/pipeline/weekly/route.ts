@@ -19,6 +19,7 @@ import { generateImage } from "@/lib/visual/openai-image";
 import { uploadImage, uploadMedia } from "@/lib/blob-storage";
 import { getDimensions } from "@/lib/visual/types";
 import { reviewContent } from "@/lib/editorial";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 // # Default calendar config — generates a balanced mix of content types
 // # This can be overridden by a ContentPlan or dashboard settings
@@ -219,6 +220,8 @@ Return ONLY valid JSON.`;
     return NextResponse.json({ queued, errored, results });
   } catch (e) {
     console.error("[Pipeline] Fatal error:", e);
+    // # Alert admin about fatal pipeline failure via email
+    await notifyAdmin("Weekly Pipeline", e, { resultsBeforeFailure: results });
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Pipeline failed" },
       { status: 500 }

@@ -12,6 +12,7 @@ import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { postToPlatform } from "@/lib/social-posting";
 import { tagContentLinks } from "@/lib/funnel/utm";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 export async function GET(req: NextRequest) {
   // # Fail closed — CRON_SECRET must be configured
@@ -95,6 +96,17 @@ export async function GET(req: NextRequest) {
         },
       });
       results.push({ id: item.id, platform: item.platform, success: false, error: result.error });
+
+      // # Alert admin when a post permanently fails (all retries exhausted)
+      // # retryCount was just incremented above, so >= 2 means no more retries
+      if (retryCount >= 2) {
+        await notifyAdmin("Scheduler — Permanent Post Failure", new Error(result.error || "Post failed after all retries"), {
+          contentId: item.id,
+          platform: item.platform,
+          retryCount,
+          title: item.title,
+        });
+      }
     }
   }
 

@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { syncFunnelEvents } from "@/lib/funnel/sync";
+import { notifyAdmin } from "@/lib/notify-admin";
 
 export async function GET(req: NextRequest) {
   // # Fail closed — CRON_SECRET must be configured
@@ -33,6 +34,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("Funnel sync cron failed:", err);
+    // # Alert admin when funnel sync cron fails
+    await notifyAdmin("Funnel Sync", err);
     return NextResponse.json({ error: "Sync failed" }, { status: 500 });
   }
 }

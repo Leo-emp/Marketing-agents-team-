@@ -38,79 +38,114 @@ async function getInstagramAccountId(): Promise<string | null> {
 }
 
 /* ---- LinkedIn ---- */
-/* Uses the LinkedIn Share API v2 */
+/* # Uses the LinkedIn Posts API (rest/posts) and Images API (rest/images)
+   # Migrated from deprecated v2/ugcPosts and v2/assets endpoints
+   # API version: 202401 — passed via LinkedIn-Version header
+   # Docs: https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api */
 export async function postToLinkedIn(content: string, imageUrl?: string): Promise<PostResult> {
   const token = await getToken("linkedin", "LINKEDIN_ACCESS_TOKEN");
   if (!token) return { success: false, error: "LinkedIn not connected — go to Settings tab to connect your account" };
 
   try {
+    // # Get the authenticated user's ID via OpenID userinfo (this endpoint is still valid)
     const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!meRes.ok) return { success: false, error: `LinkedIn auth failed: ${meRes.status}` };
     const me = await meRes.json();
+    // # me.sub contains the member ID from the OpenID Connect userinfo response
     const authorUrn = `urn:li:person:${me.sub}`;
 
-    let shareMedia: any[] = [];
-    let shareMediaCategory = "NONE";
+    // # Track the image URN if we upload one — used in the post body later
+    let imageUrn: string | undefined;
 
-    /* # Upload image if provided */
+    /* # Upload image if provided — uses the new Images API (rest/images) */
     if (imageUrl) {
-      /* Step 1: Register upload */
-      const registerRes = await fetch("https://api.linkedin.com/v2/assets?action=registerUpload", {
+      // # Step 1: Initialize the upload — tells LinkedIn we want to upload an image
+      // # Returns an uploadUrl (where to PUT bytes) and an image URN (to reference in the post)
+      const initRes = await fetch("https://api.linkedin.com/rest/images?action=initializeUpload", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          "LinkedIn-Version": "202401",
         },
         body: JSON.stringify({
-          registerUploadRequest: {
-            recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+          initializeUploadRequest: {
             owner: authorUrn,
-            serviceRelationships: [{ relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" }],
           },
         }),
       });
 
-      if (registerRes.ok) {
-        const registerData = await registerRes.json();
-        const uploadUrl = registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
-        const asset = registerData.value.asset;
+      if (!initRes.ok) {
+        // # Non-fatal: if image upload init fails, we still post text-only
+        const initErr = await initRes.text();
+        console.error(`LinkedIn image init failed (posting text-only): ${initErr}`);
+      } else {
+        const initData = await initRes.json();
+        // # Extract the upload URL and the image URN from the response
+        const uploadUrl = initData.value.uploadUrl;
+        imageUrn = initData.value.image; // # e.g. "urn:li:image:abc123"
 
-        /* Step 2: Upload the image bytes */
+        // # Step 2: Fetch the image from our URL and upload raw bytes to LinkedIn
         const imgResponse = await fetch(imageUrl);
         const imgBuffer = await imgResponse.arrayBuffer();
 
-        await fetch(uploadUrl, {
+        const uploadRes = await fetch(uploadUrl, {
           method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-          body: imgBuffer,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/octet-stream",
+          },
+          body: Buffer.from(imgBuffer),
         });
 
-        shareMedia = [{ status: "READY", media: asset, description: { text: "Generated visual" } }];
-        shareMediaCategory = "IMAGE";
+        // # If the binary upload fails, clear the URN so we fall back to text-only
+        if (!uploadRes.ok) {
+          console.error(`LinkedIn image upload failed (posting text-only): ${uploadRes.status}`);
+          imageUrn = undefined;
+        }
       }
     }
 
-    const postRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+    // # Build the post body — structure differs for text-only vs image posts
+    // # Both use the same endpoint: POST /rest/posts
+    const postBody: any = {
+      author: authorUrn,
+      // # commentary = the text content of the post (replaces shareCommentary)
+      commentary: content,
+      // # visibility is now a simple string, not a nested object
+      visibility: "PUBLIC",
+      // # distribution controls who sees it — MAIN_FEED = normal LinkedIn feed
+      distribution: {
+        feedDistribution: "MAIN_FEED",
+        targetEntities: [],
+        thirdPartyDistributionChannels: [],
+      },
+      lifecycleState: "PUBLISHED",
+    };
+
+    // # If we successfully uploaded an image, attach it to the post via content.media
+    if (imageUrn) {
+      postBody.content = {
+        media: {
+          title: "Image",
+          // # id references the image URN we got from initializeUpload
+          id: imageUrn,
+        },
+      };
+    }
+
+    // # Create the post using the new Posts API endpoint
+    const postRes = await fetch("https://api.linkedin.com/rest/posts", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
-        "X-Restli-Protocol-Version": "2.0.0",
+        // # LinkedIn-Version header is required for all /rest/ endpoints
+        "LinkedIn-Version": "202401",
       },
-      body: JSON.stringify({
-        author: authorUrn,
-        lifecycleState: "PUBLISHED",
-        specificContent: {
-          "com.linkedin.ugc.ShareContent": {
-            shareCommentary: { text: content },
-            shareMediaCategory,
-            ...(shareMedia.length > 0 ? { media: shareMedia } : {}),
-          },
-        },
-        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
-      }),
+      body: JSON.stringify(postBody),
     });
 
     if (!postRes.ok) {
@@ -118,8 +153,10 @@ export async function postToLinkedIn(content: string, imageUrl?: string): Promis
       return { success: false, error: `LinkedIn post failed: ${err}` };
     }
 
-    const data = await postRes.json();
-    return { success: true, platformPostId: data.id };
+    // # The Posts API returns the post URN in the x-restli-id header
+    // # Response body may be empty on 201 Created, so we read the header
+    const postId = postRes.headers.get("x-restli-id") || (await postRes.text());
+    return { success: true, platformPostId: postId };
   } catch (e: any) {
     return { success: false, error: e.message };
   }
