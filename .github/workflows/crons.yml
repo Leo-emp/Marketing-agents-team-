@@ -1,0 +1,277 @@
+# =============================================================================
+# GitHub Actions Cron Orchestrator
+# =============================================================================
+#
+# WORKAROUND: Vercel's Hobby plan only allows ONE cron job per day.
+# This workflow uses GitHub Actions' free cron scheduling to trigger
+# all 7 of our Vercel API endpoints on their intended schedules.
+#
+# HOW IT WORKS:
+#   GitHub Actions fires on a cron schedule, then uses curl to hit
+#   the Vercel-hosted endpoint with a Bearer token for authentication.
+#   Each endpoint is its own job so failures are isolated — if one
+#   endpoint errors, the others still run independently.
+#
+# Required GitHub repo secrets (same ones used by scheduler.yml):
+#   CRON_SECRET — must match the CRON_SECRET env var on Vercel
+#   APP_URL     — the deployed Vercel URL (e.g. https://marketing.jobpilotai.co)
+#
+# MANUAL TRIGGER:
+#   You can also run this from the GitHub Actions tab using "Run workflow".
+#   When triggered manually, ALL jobs run regardless of schedule.
+#
+# =============================================================================
+
+name: Cron Orchestrator
+
+# ---- TRIGGERS ----
+# Each cron expression maps to a specific endpoint's schedule.
+# GitHub Actions evaluates ALL cron expressions — any match triggers
+# the entire workflow, but each job has an `if` condition that checks
+# which schedule actually fired (or if it was a manual dispatch).
+on:
+  schedule:
+    # 1. Weekly content generation — Sunday 10PM UTC
+    - cron: "0 22 * * 0"
+    # 2. Pull platform metrics — Daily 8AM UTC
+    - cron: "0 8 * * *"
+    # 3. HeyGen video generation — Tuesday and Thursday 7AM UTC
+    - cron: "0 7 * * 2,4"
+    # 4. Nurture email drip — Daily 10AM UTC
+    - cron: "0 10 * * *"
+    # 5. Sync funnel events from main app — Daily 12PM UTC
+    - cron: "0 12 * * *"
+    # 6. SEO blog articles — Monday, Wednesday, Friday 8AM UTC
+    - cron: "0 8 * * 1,3,5"
+    # 7. Refresh Instagram tokens — Daily 3AM UTC
+    - cron: "0 3 * * *"
+
+  # Allow manual triggering from the GitHub Actions UI.
+  # When triggered manually, ALL jobs run (useful for testing).
+  workflow_dispatch:
+
+# =============================================================================
+# JOBS — one per endpoint, isolated so failures don't cascade
+# =============================================================================
+
+jobs:
+
+  # ---------------------------------------------------------------------------
+  # 1. WEEKLY CONTENT PIPELINE
+  # ---------------------------------------------------------------------------
+  # Generates a full week of content (social posts, images, captions).
+  # Runs Sunday 10PM UTC so content is ready for Monday morning.
+  # Uses a 300s (5 min) timeout because this is a heavy AI generation task.
+  # ---------------------------------------------------------------------------
+  pipeline-weekly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Run on manual dispatch OR when the Sunday 10PM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 22 * * 0'
+    steps:
+      - name: Trigger weekly content pipeline
+        run: |
+          # Hit the Vercel endpoint with Bearer auth (same pattern as scheduler.yml)
+          # -s = silent, -o /dev/null = discard body, -w = print HTTP status code
+          # --max-time 300 = 5 minute timeout (heavy AI generation)
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 300 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/pipeline/weekly")
+
+          echo "Status: $response"
+
+          # Fail the job if the server returns a 5xx error
+          # 4xx errors (like 404) are logged but don't fail — they indicate
+          # a config issue, not a server crash
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 2. ENGAGEMENT METRICS PULL
+  # ---------------------------------------------------------------------------
+  # Pulls engagement metrics (likes, shares, comments) from connected
+  # social platforms (LinkedIn, Instagram, etc.) and stores them in the DB.
+  # Runs daily at 8AM UTC to capture overnight activity.
+  # ---------------------------------------------------------------------------
+  engagement-pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Run on manual dispatch OR when the daily 8AM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 8 * * *'
+    steps:
+      - name: Pull engagement metrics
+        run: |
+          # Standard curl pattern — 60s timeout for a quick API pull
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/engagement/pull")
+
+          echo "Status: $response"
+
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 3. AMBASSADOR VIDEO GENERATION
+  # ---------------------------------------------------------------------------
+  # Triggers HeyGen AI avatar video generation for ambassador content.
+  # Runs Tuesday and Thursday at 7AM UTC — two videos per week keeps
+  # the content calendar full without burning through HeyGen credits.
+  # Uses 60s timeout — the endpoint just queues the job, HeyGen
+  # processes it async.
+  # ---------------------------------------------------------------------------
+  ambassador-generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Run on manual dispatch OR when the Tue/Thu 7AM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 7 * * 2,4'
+    steps:
+      - name: Generate ambassador video
+        run: |
+          # Queue a HeyGen video generation job
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/ambassador/generate")
+
+          echo "Status: $response"
+
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 4. NURTURE EMAIL DRIP
+  # ---------------------------------------------------------------------------
+  # Sends scheduled nurture/drip emails to users based on their signup
+  # date and position in the email sequence. Runs daily at 10AM UTC
+  # which is a good open-rate window across US/EU/APAC timezones.
+  # ---------------------------------------------------------------------------
+  email-send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Run on manual dispatch OR when the daily 10AM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 10 * * *'
+    steps:
+      - name: Send nurture emails
+        run: |
+          # Trigger the email drip processor
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/email/send")
+
+          echo "Status: $response"
+
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 5. FUNNEL EVENT SYNC
+  # ---------------------------------------------------------------------------
+  # Syncs funnel/conversion events from the main JobPilot app into
+  # the marketing database. This powers analytics dashboards and
+  # helps the content pipeline understand what's converting.
+  # Runs daily at 12PM UTC (after the morning's user activity).
+  # ---------------------------------------------------------------------------
+  funnel-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Run on manual dispatch OR when the daily 12PM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 12 * * *'
+    steps:
+      - name: Sync funnel events
+        run: |
+          # Pull conversion events from the main app
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/funnel/sync")
+
+          echo "Status: $response"
+
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 6. SEO BLOG GENERATION
+  # ---------------------------------------------------------------------------
+  # Generates AI-written SEO blog articles using the content pipeline.
+  # Runs Monday/Wednesday/Friday at 8AM UTC — three articles per week
+  # builds organic search presence steadily.
+  # Uses 300s (5 min) timeout because AI article generation is slow.
+  # ---------------------------------------------------------------------------
+  blog-generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Run on manual dispatch OR when the Mon/Wed/Fri 8AM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 8 * * 1,3,5'
+    steps:
+      - name: Generate SEO blog article
+        run: |
+          # Trigger AI blog article generation — long timeout for AI processing
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 300 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/blog/generate")
+
+          echo "Status: $response"
+
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # 7. INSTAGRAM TOKEN REFRESH
+  # ---------------------------------------------------------------------------
+  # Instagram access tokens expire after 60 days. This job refreshes
+  # them daily at 3AM UTC (quiet hours) so they never lapse.
+  # If this stops running, Instagram posting will break silently
+  # after ~60 days — so this is a critical maintenance job.
+  # ---------------------------------------------------------------------------
+  refresh-tokens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    # Run on manual dispatch OR when the daily 3AM cron fires
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.schedule == '0 3 * * *'
+    steps:
+      - name: Refresh Instagram tokens
+        run: |
+          # Refresh OAuth tokens before they expire
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/refresh-tokens")
+
+          echo "Status: $response"
+
+          if [ "$response" -ge 500 ]; then
+            echo "Server error — failing workflow"
+            exit 1
+          fi
