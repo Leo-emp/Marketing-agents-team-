@@ -33,11 +33,6 @@ function signState(state: string): string {
 export async function GET() {
   if (!(await isAdmin())) return unauthorized();
 
-  // DEBUG: log what redirect_uri is being built (remove after fixing)
-  console.log("[LINKEDIN-DEBUG] NEXT_PUBLIC_APP_URL:", process.env.NEXT_PUBLIC_APP_URL);
-  console.log("[LINKEDIN-DEBUG] VERCEL_URL:", process.env.VERCEL_URL);
-  console.log("[LINKEDIN-DEBUG] redirect_uri:", getRedirectUri());
-
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   if (!clientId) {
     return NextResponse.json({ error: "LINKEDIN_CLIENT_ID not configured" }, { status: 500 });
