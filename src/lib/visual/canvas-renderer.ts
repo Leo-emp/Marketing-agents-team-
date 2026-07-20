@@ -179,15 +179,11 @@ function drawAccentLine(ctx: SKRSContext2D, x: number, y: number, lineW: number,
 /* ---- Brand Footer Bar — consistent bottom band ---- */
 
 function drawBrandBar(ctx: SKRSContext2D, w: number, h: number, s: (v: number) => number, isSolid: boolean) {
-  const barH = s(60);
+  const barH = s(100);
   const barY = h - barH;
 
-  // # Dark band background
-  if (isSolid) {
-    ctx.fillStyle = "rgba(0,0,0,0.30)";
-  } else {
-    ctx.fillStyle = "rgba(0,0,0,0.40)";
-  }
+  // # Dark band background — semi-transparent
+  ctx.fillStyle = isSolid ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.40)";
   ctx.fillRect(0, barY, w, barH);
 
   // # Thin accent line at top of bar
@@ -198,13 +194,33 @@ function drawBrandBar(ctx: SKRSContext2D, w: number, h: number, s: (v: number) =
   ctx.fillStyle = accentGrad;
   ctx.fillRect(0, barY, w, s(2));
 
-  // # Brand text centered: "JobPilot AI — Your AI Career Co-Pilot"
-  const brandText = `${BRAND_NAME}  —  ${BRAND_TAGLINE}`;
-  ctx.font = `${s(16)}px GeistSemiBold`;
-  ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : TEXT_SECONDARY;
+  const pad = s(40);
+  const cy = barY + barH / 2;
+
+  // # Logo square — gradient blue "J" icon (left side)
+  const logoSize = s(38);
+  const logoX = pad;
+  const logoY = cy - logoSize / 2;
+  const lg = dGrad(ctx, logoX, logoY, logoSize, logoSize, [ACCENT_1, ACCENT_2]);
+  fillRR(ctx, logoX, logoY, logoSize, logoSize, s(8), lg);
+  ctx.font = `${s(20)}px GeistBold`;
+  ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(brandText, w / 2, barY + barH / 2 + s(1));
+  ctx.fillText("J", logoX + logoSize / 2, cy + s(1));
+
+  // # Brand name + URL — large and readable
+  const textX = logoX + logoSize + s(14);
+  ctx.font = `${s(24)}px GeistBold`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT : TEXT_PRIMARY;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(BRAND_NAME, textX, cy - s(14));
+
+  ctx.font = `${s(20)}px Geist`;
+  ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : TEXT_SECONDARY;
+  ctx.fillText(BRAND_URL, textX, cy + s(14));
+
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
 }
@@ -302,19 +318,9 @@ async function drawBackground(ctx: SKRSContext2D, data: SlideData, w: number, h:
     drawDiagonalTexture(ctx, w, h, true);
 
   } else if (bgColor) {
-    // # MODE 2: Bold solid — gradient wash + diagonal texture
+    // # MODE 2: Bold solid — clean flat color (Teal-style, no texture/gradient)
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, w, h);
-
-    // # Subtle gradient wash for depth
-    const wash = ctx.createLinearGradient(0, 0, w, h);
-    wash.addColorStop(0, "rgba(255,255,255,0.04)");
-    wash.addColorStop(0.5, "rgba(0,0,0,0)");
-    wash.addColorStop(1, "rgba(0,0,0,0.12)");
-    ctx.fillStyle = wash;
-    ctx.fillRect(0, 0, w, h);
-
-    drawDiagonalTexture(ctx, w, h, true);
 
   } else {
     // # MODE 3: Dark gradient — fallback with ambient glows
@@ -365,18 +371,12 @@ async function drawBackground(ctx: SKRSContext2D, data: SlideData, w: number, h:
 // # Solid background: minimal header (slide counter only)
 function drawHeaderSolid(ctx: SKRSContext2D, w: number, pad: number, s: (v: number) => number, slideNum?: number, totalSlides?: number) {
   if (slideNum !== undefined && totalSlides !== undefined) {
-    const lbl = `${slideNum} / ${totalSlides}`;
-    ctx.font = `${s(13)}px GeistMedium`;
-    const tw = ctx.measureText(lbl).width;
-    const pw = tw + s(20);
-    const ph = s(26);
-    const px = w - pad - pw;
-    const py = pad;
-    fillRR(ctx, px, py, pw, ph, ph / 2, "rgba(255,255,255,0.10)");
+    const lbl = `${slideNum}/${totalSlides}`;
+    ctx.font = `${s(22)}px GeistBold`;
     ctx.fillStyle = SOLID_TEXT_DIM;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(lbl, px + pw / 2, py + ph / 2);
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillText(lbl, w - pad, pad);
     ctx.textAlign = "left";
     ctx.textBaseline = "alphabetic";
   }
@@ -439,8 +439,8 @@ function drawChrome(
 
 function contentArea(pad: number, s: (v: number) => number, h: number, isSolid: boolean) {
   const top = isSolid ? pad + s(36) : pad + s(54);
-  // # Leave room for the brand bar at bottom (60px scaled)
-  const bot = h - s(68);
+  // # Leave room for the brand bar at bottom (100px scaled)
+  const bot = h - s(108);
   return { top, bot, h: bot - top, cy: top + (bot - top) / 2 };
 }
 
@@ -457,80 +457,77 @@ function textColors(isSolid: boolean) {
    TEMPLATE FUNCTIONS — 15 Premium Layouts
    ============================================================ */
 
-// # HERO — Bold headline, large and commanding
+// # HERO — Teal-style: eyebrow top, huge headline, body in lower half
 async function drawHero(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
   const isSolid = !!data.backgroundColor;
-  const pad = isSolid ? s(40) : s(56);
+  const pad = s(48);
   const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
   drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h, isSolid);
-
   const maxW = w - pad * 2;
-  const fs = s(76);
-  const lh = Math.round(fs * 1.18);
+  let curY = s(80);
 
-  // # Estimate total content height to vertically center
-  ctx.font = `${fs}px GeistBold`;
-  const headLines = wrapText(ctx, data.headline, maxW);
-  let totalH = Math.min(headLines.length, 5) * lh;
-  if (data.subheadline) totalH += s(58) + s(42) * 2;
-  if (data.body) totalH += s(32) + s(36) * 3;
-  totalH += s(30); // accent line + spacing
-
-  const startY = Math.max(area.top + s(10), area.cy - totalH / 2);
-
-  // # Accent separator line — strong structural divider
-  drawAccentLine(ctx, pad, startY, w * 0.85, s, isSolid);
-
-  // # Large headline
-  ctx.font = `${fs}px GeistBold`;
-  ctx.fillStyle = tc.primary;
-  ctx.textBaseline = "top";
-  const headY = startY + s(22);
-  const nextY = drawText(ctx, data.headline, pad, headY, maxW, lh, 5, true);
-
-  // # Subheadline in accent color
+  // # Eyebrow / category label near the top with breathing room
   if (data.subheadline) {
-    ctx.font = `${s(32)}px GeistSemiBold`;
+    ctx.font = `${s(22)}px GeistBold`;
     ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : ACCENT_3;
-    drawText(ctx, data.subheadline, pad, nextY + s(24), maxW, s(42), 3, true);
+    ctx.textBaseline = "top";
+    ctx.letterSpacing = `${s(2)}px`;
+    ctx.fillText(data.subheadline.toUpperCase(), pad, curY);
+    ctx.letterSpacing = "0px";
+    curY += s(60);
+  } else {
+    curY += s(40);
   }
 
-  // # Body text — separated with clear gap
+  // # Huge headline — GeistBlack for maximum weight
+  const fs = s(88);
+  const lh = Math.round(fs * 1.10);
+  ctx.font = `${fs}px GeistBlack`;
+  ctx.fillStyle = tc.primary;
+  ctx.textBaseline = "top";
+  const headEndY = drawText(ctx, data.headline, pad, curY, maxW, lh, 5);
+
+  // # Body text — large and readable, natural flow below headline
   if (data.body) {
-    ctx.font = `${s(24)}px Geist`;
-    ctx.fillStyle = tc.secondary;
-    const bodyY = data.subheadline ? nextY + s(100) : nextY + s(32);
-    drawText(ctx, data.body, pad, bodyY, maxW * 0.90, s(34), 5, true);
+    const bodyFs = s(56);
+    const bodyLh = Math.round(bodyFs * 1.38);
+    const bodyY = headEndY + s(60);
+    ctx.font = `${bodyFs}px GeistMedium`;
+    ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : tc.secondary;
+    drawText(ctx, data.body, pad, bodyY, maxW * 0.88, bodyLh, 5);
   }
 
   ctx.textBaseline = "alphabetic";
 }
 
-// # STAT CARD — Large centered statistic
+// # STAT CARD — Headline at top, giant centered stat, label below
 async function drawStatCard(ctx: SKRSContext2D, data: SlideData, w: number, h: number) {
   const s = createScale(w);
   const isSolid = !!data.backgroundColor;
-  const pad = isSolid ? s(40) : s(56);
+  const pad = s(48);
   const tc = textColors(isSolid);
   await drawBackground(ctx, data, w, h);
   drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h, isSolid);
   const cx = w / 2;
+  const maxW = w - pad * 2;
 
-  if (!isSolid) {
-    const cardW = Math.min(w * 0.74, s(720));
-    const cardH = Math.min(area.h * 0.58, s(420));
-    drawCard(ctx, cx - cardW / 2, area.cy - cardH / 2, cardW, cardH, s(24));
+  // # Headline at the top — gives context to the stat
+  let statCenterY = h * 0.45;
+  if (data.headline) {
+    ctx.font = `${s(52)}px GeistBlack`;
+    ctx.fillStyle = tc.primary;
+    ctx.textBaseline = "top";
+    const headEndY = drawText(ctx, data.headline, pad, s(80), maxW, s(62), 3);
+    statCenterY = Math.max(headEndY + s(120), h * 0.45);
   }
 
-  // # Decorative ring
+  // # Decorative ring behind the stat
   ctx.beginPath();
-  ctx.arc(cx, area.cy - s(10), s(115), 0, Math.PI * 2);
+  ctx.arc(cx, statCenterY, s(115), 0, Math.PI * 2);
   ctx.strokeStyle = isSolid ? "rgba(255,255,255,0.10)" : rgba(ACCENT_1, 0.12);
   ctx.lineWidth = 1.5;
   ctx.stroke();
@@ -541,29 +538,15 @@ async function drawStatCard(ctx: SKRSContext2D, data: SlideData, w: number, h: n
     ctx.font = `${statFs}px GeistBlack`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.fillStyle = isSolid ? SOLID_TEXT : ACCENT_1;
+    ctx.fillText(data.stat.value, cx, statCenterY);
 
-    if (isSolid) {
-      ctx.fillStyle = SOLID_TEXT;
-    } else {
-      const sg = dGrad(ctx, cx - s(150), area.cy - s(70), s(300), s(130), [ACCENT_1, ACCENT_3, ACCENT_2]);
-      ctx.fillStyle = sg;
-    }
-    ctx.fillText(data.stat.value, cx, area.cy - s(14));
-
-    ctx.font = `${s(26)}px GeistSemiBold`;
+    // # Label below stat — large and readable
+    ctx.font = `${s(36)}px GeistMedium`;
     ctx.fillStyle = tc.secondary;
-    const labels = wrapText(ctx, data.stat.label, w * 0.65);
+    const labels = wrapText(ctx, data.stat.label, w * 0.75);
     labels.slice(0, 3).forEach((line, i) => {
-      ctx.fillText(line, cx, area.cy + s(70) + i * s(36));
-    });
-  } else if (data.headline) {
-    ctx.font = `${s(56)}px GeistBold`;
-    ctx.fillStyle = tc.primary;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const lines = wrapText(ctx, data.headline, w * 0.75);
-    lines.slice(0, 4).forEach((line, i) => {
-      ctx.fillText(line, cx, area.cy - ((lines.length - 1) * s(30)) + i * s(60));
+      ctx.fillText(line, cx, statCenterY + s(100) + i * s(48));
     });
   }
 
@@ -621,17 +604,17 @@ async function drawTip(ctx: SKRSContext2D, data: SlideData, w: number, h: number
 
   // # Headline
   const headY = cardY + inner + (data.slideNumber ? s(72) : 0);
-  const headFs = s(56);
-  ctx.font = `${headFs}px GeistBold`;
+  const headFs = s(64);
+  ctx.font = `${headFs}px GeistBlack`;
   ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
-  const afterHead = drawText(ctx, data.headline, textX, headY, textMaxW, Math.round(headFs * 1.2), 5, true);
+  const afterHead = drawText(ctx, data.headline, textX, headY, textMaxW, Math.round(headFs * 1.15), 4, true);
 
   // # Body text
   if (data.body) {
-    ctx.font = `${s(28)}px GeistMedium`;
+    ctx.font = `${s(40)}px GeistMedium`;
     ctx.fillStyle = tc.secondary;
-    drawText(ctx, data.body, textX, afterHead + s(18), textMaxW, s(38), 7, true);
+    drawText(ctx, data.body, textX, afterHead + s(24), textMaxW, s(54), 6, true);
   }
 
   ctx.textBaseline = "alphabetic";
@@ -702,28 +685,27 @@ async function drawList(ctx: SKRSContext2D, data: SlideData, w: number, h: numbe
   await drawBackground(ctx, data, w, h);
   drawChrome(ctx, w, h, pad, s, isSolid, data.slideNumber, data.totalSlides);
 
-  const area = contentArea(pad, s, h, isSolid);
   const maxW = w - pad * 2;
-  let y = area.top + s(8);
+  let y = h * 0.12;
 
   // # Headline
-  const headFs = s(56);
-  ctx.font = `${headFs}px GeistBold`;
+  const headFs = s(68);
+  ctx.font = `${headFs}px GeistBlack`;
   ctx.fillStyle = tc.primary;
   ctx.textBaseline = "top";
-  y = drawText(ctx, data.headline, pad, y, maxW, Math.round(headFs * 1.2), 3, true);
+  y = drawText(ctx, data.headline, pad, y, maxW, Math.round(headFs * 1.15), 3, true);
 
   // # Gradient underline
   const ulColor1 = isSolid ? "rgba(255,255,255,0.5)" : ACCENT_1;
   const ulColor2 = isSolid ? "rgba(255,255,255,0.1)" : ACCENT_2;
   const ulGrad = hGrad(ctx, pad, pad + s(120), 0, [ulColor1, ulColor2]);
-  fillRR(ctx, pad, y + s(10), s(120), s(4), s(2), ulGrad);
-  y += s(32);
+  fillRR(ctx, pad, y + s(16), s(120), s(4), s(2), ulGrad);
+  y += s(56);
 
   // # Bullet items
   if (data.bullets) {
     const maxBullets = Math.min(data.bullets.length, 7);
-    const bulletH = maxBullets * s(58) + s(32);
+    const bulletH = maxBullets * s(76) + s(32);
 
     if (!isSolid) {
       const cardX = pad - s(12);
@@ -733,7 +715,7 @@ async function drawList(ctx: SKRSContext2D, data: SlideData, w: number, h: numbe
 
     const bulletMaxW = maxW - s(48);
     for (let i = 0; i < maxBullets; i++) {
-      const dotY = y + s(12) + i * s(58);
+      const dotY = y + s(12) + i * s(76);
 
       // # Bullet dot
       if (isSolid) {
@@ -749,9 +731,9 @@ async function drawList(ctx: SKRSContext2D, data: SlideData, w: number, h: numbe
         ctx.fill();
       }
 
-      ctx.font = `${s(26)}px GeistMedium`;
+      ctx.font = `${s(36)}px GeistMedium`;
       ctx.fillStyle = tc.primary;
-      drawText(ctx, data.bullets[i], pad + s(36), dotY - s(6), bulletMaxW, s(34), 2, true);
+      drawText(ctx, data.bullets[i], pad + s(36), dotY - s(6), bulletMaxW, s(46), 2, true);
     }
   }
 
@@ -851,18 +833,18 @@ async function drawBeforeAfter(ctx: SKRSContext2D, data: SlideData, w: number, h
   const area = contentArea(pad, s, h, isSolid);
 
   if (data.headline) {
-    ctx.font = `${s(44)}px GeistBold`;
+    ctx.font = `${s(60)}px GeistBlack`;
     ctx.fillStyle = tc.primary;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(54), 2, true);
+    drawText(ctx, data.headline, w / 2, area.top, w - pad * 2, s(70), 2, true);
     ctx.textAlign = "left";
   }
 
   const gap = s(20);
   const cardW = (w - pad * 2 - gap) / 2;
-  const cardH = Math.min(area.h * 0.65, s(580));
-  const cardY = area.cy - cardH / 2 + s(24);
+  const cardH = Math.min(area.h * 0.60, s(540));
+  const cardY = area.cy - cardH / 2 + s(40);
 
   // # BEFORE card
   const beforeFill = isSolid ? "rgba(0,0,0,0.20)" : "rgba(239,68,68,0.06)";
@@ -876,15 +858,15 @@ async function drawBeforeAfter(ctx: SKRSContext2D, data: SlideData, w: number, h
   ctx.fillStyle = beforeAccent;
   ctx.fillRect(pad, cardY, cardW, s(4));
   ctx.restore();
-  ctx.font = `${s(14)}px GeistBold`;
+  ctx.font = `${s(22)}px GeistBold`;
   ctx.fillStyle = beforeAccent;
   ctx.textBaseline = "top";
   ctx.letterSpacing = `${s(3)}px`;
   ctx.fillText("BEFORE", pad + s(24), cardY + s(24));
   ctx.letterSpacing = "0px";
-  ctx.font = `${s(24)}px GeistMedium`;
+  ctx.font = `${s(34)}px GeistMedium`;
   ctx.fillStyle = isSolid ? SOLID_TEXT_DIM : TEXT_SECONDARY;
-  drawText(ctx, data.beforeText || "", pad + s(24), cardY + s(56), cardW - s(48), s(34), 7, true);
+  drawText(ctx, data.beforeText || "", pad + s(24), cardY + s(64), cardW - s(48), s(46), 6, true);
 
   // # AFTER card
   const afterX = pad + cardW + gap;
@@ -899,14 +881,14 @@ async function drawBeforeAfter(ctx: SKRSContext2D, data: SlideData, w: number, h
   ctx.fillStyle = afterAccent;
   ctx.fillRect(afterX, cardY, cardW, s(4));
   ctx.restore();
-  ctx.font = `${s(14)}px GeistBold`;
+  ctx.font = `${s(22)}px GeistBold`;
   ctx.fillStyle = afterAccent;
   ctx.letterSpacing = `${s(3)}px`;
   ctx.fillText("AFTER", afterX + s(24), cardY + s(24));
   ctx.letterSpacing = "0px";
-  ctx.font = `${s(24)}px GeistSemiBold`;
+  ctx.font = `${s(34)}px GeistSemiBold`;
   ctx.fillStyle = tc.primary;
-  drawText(ctx, data.afterText || "", afterX + s(24), cardY + s(56), cardW - s(48), s(34), 7, true);
+  drawText(ctx, data.afterText || "", afterX + s(24), cardY + s(64), cardW - s(48), s(46), 6, true);
 
   // # VS divider
   const vsX = pad + cardW + gap / 2;
