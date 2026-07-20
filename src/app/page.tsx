@@ -2025,6 +2025,7 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {[
                   { id: "linkedin", name: "LinkedIn", color: "#0a66c2", icon: "in", envHint: "LINKEDIN_CLIENT_ID + LINKEDIN_CLIENT_SECRET" },
+                  { id: "tiktok", name: "TikTok", color: "#000000", icon: "TT", envHint: "TIKTOK_CLIENT_KEY + TIKTOK_CLIENT_SECRET" },
                   { id: "twitter", name: "X / Twitter", color: "#1d9bf0", icon: "X", envHint: "TWITTER_CLIENT_ID (+ TWITTER_CLIENT_SECRET for confidential apps)" },
                   { id: "instagram", name: "Instagram", color: "#e1306c", icon: "IG", envHint: "FACEBOOK_APP_ID + FACEBOOK_APP_SECRET" },
                 ].map((p) => {
