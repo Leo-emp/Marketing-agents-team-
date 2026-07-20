@@ -47,14 +47,22 @@ export async function postToLinkedIn(content: string, imageUrl?: string): Promis
   if (!token) return { success: false, error: "LinkedIn not connected — go to Settings tab to connect your account" };
 
   try {
-    // # Get the authenticated user's ID via OpenID userinfo (this endpoint is still valid)
-    const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!meRes.ok) return { success: false, error: `LinkedIn auth failed: ${meRes.status}` };
-    const me = await meRes.json();
-    // # me.sub contains the member ID from the OpenID Connect userinfo response
-    const authorUrn = `urn:li:person:${me.sub}`;
+    // # Post as the company page (LINKEDIN_ORG_ID) if set, otherwise fall back to personal profile
+    const orgId = process.env.LINKEDIN_ORG_ID;
+    let authorUrn: string;
+
+    if (orgId) {
+      // # Post as the JobPilot AI company page
+      authorUrn = `urn:li:organization:${orgId}`;
+    } else {
+      // # Fallback: post as personal profile via OpenID userinfo
+      const meRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!meRes.ok) return { success: false, error: `LinkedIn auth failed: ${meRes.status}` };
+      const me = await meRes.json();
+      authorUrn = `urn:li:person:${me.sub}`;
+    }
 
     // # Track the image URN if we upload one — used in the post body later
     let imageUrn: string | undefined;
