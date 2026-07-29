@@ -31,7 +31,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
+# *.env catches strays with any name (e.g. accidental CLI-created files)
 .env*
+*.env
 
 # vercel
 .vercel
@@ -42,7 +44,3 @@ next-env.d.ts
 
 /src/generated/prisma
 dev.db
-.env
-
-.vercel
-.env*
