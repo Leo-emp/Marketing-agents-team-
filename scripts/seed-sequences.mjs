@@ -1,39 +1,41 @@
 /* ============================================================
    SEED SEQUENCES - Create default email nurture sequences
    ============================================================
-   Run once: node scripts/seed-sequences.mjs
+   Runs during Vercel builds (after sync-db.mjs) and can also be
+   run manually: node scripts/seed-sequences.mjs
    Creates the Welcome Series and Free-to-Pro Drip sequences
    in draft status (must be manually activated in the dashboard).
+
+   Uses @libsql/client with raw SQL (same pattern as sync-db.mjs)
+   because the Prisma 7 generated client is TypeScript-only and
+   cannot be imported from a plain .mjs script.
+
+   Idempotent — INSERT OR IGNORE on fixed primary keys means
+   existing sequences (including their status) are never touched.
    ============================================================ */
 
-import { PrismaClient } from "../src/generated/prisma/client.js";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
-const adapter = new PrismaLibSql({
+// # Connect to production Turso during builds, local SQLite in dev
+const db = createClient({
   url: process.env.DATABASE_URL || "file:./dev.db",
   authToken: process.env.DATABASE_AUTH_TOKEN,
 });
-const prisma = new PrismaClient({ adapter });
 
 const BASE_URL = "https://jobpilotai.co";
 
-async function seed() {
-  // # Welcome Series
-  // # Check if already exists to avoid duplicates
-  const existingWelcome = await prisma.emailSequence.findUnique({
-    where: { id: "welcome-series" },
-  });
-
-  if (!existingWelcome) {
-    await prisma.emailSequence.create({
-      data: {
-        id: "welcome-series",
-        name: "Welcome Series",
-        description: "Onboarding sequence for new signups — introduces key features over 12 days",
-        trigger: "signup",
-        priority: 10,
-        status: "draft", // # Activate manually after reviewing templates
-        steps: JSON.stringify([
+// # ── Sequence definitions ─────────────────────────────────────
+// # Each entry becomes one EmailSequence row; steps are stored as
+// # a JSON string exactly as the dashboard and send cron expect.
+const SEQUENCES = [
+  {
+    id: "welcome-series",
+    name: "Welcome Series",
+    description: "Onboarding sequence for new signups — introduces key features over 12 days",
+    trigger: "signup",
+    priority: 10,
+    status: "draft", // # Activate manually in the dashboard after reviewing templates
+    steps: JSON.stringify([
           {
             delayDays: 0,
             subject: "Welcome to JobPilot — here's your quick start",
@@ -70,27 +72,16 @@ async function seed() {
             ctaUrl: `${BASE_URL}/dashboard`,
             ctaText: "Try Interview Prep",
           },
-        ]),
-      },
-    });
-  }
-
-  // # Free-to-Pro Drip
-  // # Check if already exists to avoid duplicates
-  const existingFreeToPro = await prisma.emailSequence.findUnique({
-    where: { id: "free-to-pro" },
-  });
-
-  if (!existingFreeToPro) {
-    await prisma.emailSequence.create({
-      data: {
-        id: "free-to-pro",
-        name: "Free to Pro Drip",
-        description: "Conversion sequence for active free users with 5+ AI uses",
-        trigger: "high_usage_free",
-        priority: 5,
-        status: "draft",
-        steps: JSON.stringify([
+    ]),
+  },
+  {
+    id: "free-to-pro",
+    name: "Free to Pro Drip",
+    description: "Conversion sequence for active free users with 5+ AI uses",
+    trigger: "high_usage_free",
+    priority: 5,
+    status: "draft",
+    steps: JSON.stringify([
           {
             delayDays: 0,
             subject: "You're getting serious about your job search",
@@ -126,15 +117,31 @@ async function seed() {
             ctaUrl: `${BASE_URL}/pricing`,
             ctaText: "Start Pro Now",
           },
-        ]),
-      },
-    });
-  }
+    ]),
+  },
+];
 
-  console.log("Seeded 2 email sequences (Welcome Series + Free-to-Pro Drip) in draft status.");
-  console.log("Activate them in the Marketing HQ dashboard Emails tab when ready.");
+// # ── Seed ─────────────────────────────────────────────────────
+async function seed() {
+  for (const seq of SEQUENCES) {
+    // # INSERT OR IGNORE — if the row already exists (by primary key)
+    // # nothing happens, so re-running on every build never overwrites
+    // # a sequence the admin has since activated or edited.
+    const result = await db.execute({
+      sql: `INSERT OR IGNORE INTO EmailSequence
+              (id, name, description, trigger, priority, status, steps)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [seq.id, seq.name, seq.description, seq.trigger, seq.priority, seq.status, seq.steps],
+    });
+    console.log(
+      result.rowsAffected > 0
+        ? `  Created "${seq.name}" (${seq.status})`
+        : `  Skipping "${seq.name}" — already exists`
+    );
+  }
+  console.log("Seed complete. Activate sequences in the dashboard Emails tab when ready.");
 }
 
 seed()
   .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .finally(() => db.close());

@@ -911,6 +911,27 @@ export default function Dashboard() {
     setEmailsLoading(false);
   }, []);
 
+  /* # Toggle a sequence between active and draft/paused states.
+     # Sequences seed in "draft" and never send until activated here —
+     # this is the switch that turns the email nurture engine on/off. */
+  const toggleSequence = async (id: string, status: "active" | "paused") => {
+    try {
+      const res = await fetch("/api/email/sequences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        showToast(status === "active" ? "Sequence activated" : "Sequence paused", "success");
+        fetchEmails();
+      } else {
+        showToast("Failed to update sequence", "error");
+      }
+    } catch {
+      showToast("Failed to update sequence", "error");
+    }
+  };
+
   /* # Fetch funnel data and attribution */
   const fetchFunnel = useCallback(async () => {
     setFunnelLoading(true);
@@ -1806,12 +1827,32 @@ export default function Dashboard() {
                             <h3 className="font-semibold text-text-primary">{seq.name}</h3>
                             <p className="text-sm text-text-secondary mt-1">{seq.description}</p>
                           </div>
-                          {/* # Status badge — color-coded by state */}
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                            seq.status === "active" ? "bg-green-500/15 text-green-400 border-green-500/30" :
-                            seq.status === "paused" ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" :
-                            "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"
-                          }`}>{seq.status}</span>
+                          <div className="flex items-center gap-2">
+                            {/* # Status badge — color-coded by state */}
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                              seq.status === "active" ? "bg-green-500/15 text-green-400 border-green-500/30" :
+                              seq.status === "paused" ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" :
+                              "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"
+                            }`}>{seq.status}</span>
+                            {/* # Activate / Pause toggle — flips the sequence between
+                                # sending (active) and silent (paused). Draft sequences
+                                # activate here for the first time. */}
+                            {seq.status === "active" ? (
+                              <button
+                                onClick={() => toggleSequence(seq.id, "paused")}
+                                className="px-3 py-1 rounded-full text-xs font-medium border bg-yellow-500/10 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/20 transition-colors"
+                              >
+                                Pause
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => toggleSequence(seq.id, "active")}
+                                className="px-3 py-1 rounded-full text-xs font-medium border bg-green-500/10 text-green-400 border-green-500/30 hover:bg-green-500/20 transition-colors"
+                              >
+                                Activate
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="flex gap-4 text-xs text-text-secondary mb-3">
                           <span>Trigger: <strong className="text-text-primary">{seq.trigger}</strong></span>

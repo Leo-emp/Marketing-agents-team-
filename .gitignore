@@ -45,3 +45,4 @@ dev.db
 .env
 
 .vercel
+.env*
