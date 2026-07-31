@@ -9,6 +9,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import PlatformPreview from "@/components/PlatformPreview";
 
 /* ---- Types ---- */
 interface ContentItem {
@@ -239,6 +240,9 @@ export default function Dashboard() {
   /* ---- Toast ---- */
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const toastTimeout = useRef<NodeJS.Timeout>(undefined);
+
+  /* ---- View mode: dashboard (raw) vs platform preview ---- */
+  const [viewMode, setViewMode] = useState<"dashboard" | "preview">("dashboard");
 
   /* ---- New content highlight ---- */
   const [newContentId, setNewContentId] = useState<string | null>(null);
@@ -1169,6 +1173,29 @@ export default function Dashboard() {
               )}
 
               <span className="text-text-muted text-sm ml-auto">{total} items</span>
+
+              {/* # View mode toggle: Dashboard (raw data) vs Preview (platform-faithful) */}
+              <div className="flex items-center bg-space-700 rounded-lg border border-card-border p-0.5">
+                <button
+                  onClick={() => setViewMode("dashboard")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "dashboard" ? "bg-indigo-500/20 text-indigo-400" : "text-text-muted hover:text-text-secondary"}`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                  </span>
+                </button>
+                <button
+                  onClick={() => setViewMode("preview")}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "preview" ? "bg-indigo-500/20 text-indigo-400" : "text-text-muted hover:text-text-secondary"}`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Preview
+                  </span>
+                </button>
+              </div>
+
               <button onClick={() => fetchContent()} className="text-text-secondary text-sm hover:text-text-primary transition-colors">Refresh</button>
             </div>
 
@@ -1200,8 +1227,93 @@ export default function Dashboard() {
                     const hasVisuals = !!item.imageUrl || !!previews;
                     const hasDesignData = !!item.visualData && !item.imageUrl && !previews;
 
+                    // # Platform preview mode — show the post as it appears on the actual platform
+                    const isPlatformPreviewable = viewMode === "preview" && ["linkedin", "twitter", "instagram", "tiktok"].includes(item.platform);
+
                     return (
                       <div key={item.id} className={`bg-card-bg border rounded-xl p-5 transition-all ${isNew ? "border-indigo-500/40 ring-1 ring-indigo-500/20" : "border-card-border hover:border-indigo-500/20"}`}>
+
+                        {isPlatformPreviewable ? (
+                          <>
+                            {/* ==== PLATFORM PREVIEW MODE ==== */}
+                            {/* # Compact header with status + badges */}
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>
+                                  {item.platform === "twitter" ? "X / Twitter" : item.platform.charAt(0).toUpperCase() + item.platform.slice(1)}
+                                </span>
+                                <span className="text-xs text-text-muted">{CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</span>
+                                {isNew && <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-medium">New</span>}
+                                {item.editorialScore != null && item.editorialScore > 0 && (
+                                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-help ${item.editorialScore >= 8 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : item.editorialScore >= 6 ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`} title={item.editorialFeedback || "Editorial review score"}>
+                                    {item.editorialScore}/10
+                                  </span>
+                                )}
+                                {item.variationGroup && (
+                                  <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium" title={`Variation group: ${item.variationGroup}`}>A/B</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_STYLES[item.status] || ""}`}>{item.status}</span>
+                                <span className="text-text-muted text-xs">{new Date(item.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+
+                            {/* # The actual platform-faithful preview */}
+                            <div className={`flex ${item.platform === "tiktok" ? "justify-center" : "justify-center"} mb-4`}>
+                              <PlatformPreview
+                                item={item}
+                                slides={previews || []}
+                                agent={agent}
+                              />
+                            </div>
+
+                            {/* # Notes visible below preview */}
+                            {item.notes && (
+                              <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2 mb-3">
+                                <p className="text-yellow-400/70 text-xs">{item.notes}</p>
+                              </div>
+                            )}
+
+                            {/* # Engagement metrics in preview mode */}
+                            {item.engagementScore != null && item.engagementScore > 0 && (
+                              <div className="bg-space-700/50 rounded-lg px-3 py-2 mb-3">
+                                <div className="flex items-center gap-4 text-xs">
+                                  <span className="text-text-muted">Performance:</span>
+                                  {item.engagementImpressions != null && <span className="text-text-secondary">{item.engagementImpressions.toLocaleString()} views</span>}
+                                  {item.engagementLikes != null && <span className="text-text-secondary">{item.engagementLikes} likes</span>}
+                                  {item.engagementComments != null && <span className="text-text-secondary">{item.engagementComments} comments</span>}
+                                  {item.engagementShares != null && <span className="text-text-secondary">{item.engagementShares} shares</span>}
+                                  {item.engagementSaves != null && <span className="text-text-secondary">{item.engagementSaves} saves</span>}
+                                  <span className="text-indigo-400 font-medium ml-auto">Score: {item.engagementScore.toFixed(0)}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* # Engagement input form in preview mode */}
+                            {engagementOpen === item.id && (
+                              <div className="bg-indigo-500/5 border border-indigo-500/15 rounded-lg px-3 py-3 mb-3">
+                                <p className="text-text-muted text-xs mb-2">Enter engagement metrics from the platform:</p>
+                                <div className="grid grid-cols-5 gap-2 mb-2">
+                                  {(["impressions", "likes", "comments", "shares", "saves"] as const).map((metric) => (
+                                    <div key={metric}>
+                                      <label className="block text-text-muted text-xs mb-0.5 capitalize">{metric}</label>
+                                      <input type="number" min="0" value={engagementValues[`${item.id}_${metric}`] || "0"} onChange={(e) => setEngagementValues((prev) => ({ ...prev, [`${item.id}_${metric}`]: e.target.value }))} className="w-full px-2 py-1 bg-space-700 border border-card-border rounded text-xs text-text-primary focus:outline-none focus:border-indigo-500" />
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleSaveEngagement(item.id)} disabled={savingEngagement} className="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs font-medium rounded hover:bg-indigo-500/30 transition-colors disabled:opacity-50">
+                                    {savingEngagement ? "Saving..." : "Save Metrics"}
+                                  </button>
+                                  <button onClick={() => setEngagementOpen(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">Cancel</button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                        {/* ==== DASHBOARD MODE (original view) ==== */}
                         {/* Card header */}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -1367,6 +1479,8 @@ export default function Dashboard() {
                               <button onClick={() => setEngagementOpen(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">Cancel</button>
                             </div>
                           </div>
+                        )}
+                          </>
                         )}
 
                         {/* Actions */}
