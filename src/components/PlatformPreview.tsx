@@ -217,11 +217,17 @@ function VerifiedBadge() {
   );
 }
 
-/* ---- Helper: get image from slides or imageUrl ---- */
+/* ---- Helper: parse imageUrl (may be comma-separated) into array ---- */
+function getImageUrls(item: PreviewItem, slides: VisualSlide[]): string[] {
+  if (slides.length > 0) return slides.map(s => s.dataUrl);
+  if (item.imageUrl) return item.imageUrl.split(",").map(u => u.trim()).filter(Boolean);
+  return [];
+}
+
+/* ---- Helper: get first image from slides or imageUrl ---- */
 function getFirstImage(item: PreviewItem, slides: VisualSlide[]): string | null {
-  if (slides.length > 0) return slides[0].dataUrl;
-  if (item.imageUrl) return item.imageUrl;
-  return null;
+  const urls = getImageUrls(item, slides);
+  return urls.length > 0 ? urls[0] : null;
 }
 
 /* ---- Helper: format body text with truncation ---- */
@@ -246,8 +252,9 @@ function formatHashtags(hashtags: string | null): string {
    LINKEDIN PREVIEW
    ================================================================ */
 function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
-  const image = getFirstImage(item, slides);
-  const hasCarousel = slides.length > 1;
+  const allImages = getImageUrls(item, slides);
+  const image = allImages.length > 0 ? allImages[0] : null;
+  const hasCarousel = allImages.length > 1;
   const { text, truncated } = formatBody(item.body, 5);
   const hashtags = formatHashtags(item.hashtags);
   const [expanded, setExpanded] = useState(false);
@@ -291,11 +298,11 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
       {/* # Image / Carousel */}
       {hasCarousel ? (
         <div style={{ display: "flex", gap: "2px", overflowX: "auto", scrollSnapType: "x mandatory" }}>
-          {slides.map((slide) => (
+          {allImages.map((url, i) => (
             <img
-              key={slide.index}
-              src={slide.dataUrl}
-              alt={`Slide ${slide.index + 1}`}
+              key={i}
+              src={url}
+              alt={`Slide ${i + 1}`}
               style={{ height: "300px", width: "auto", objectFit: "cover", scrollSnapAlign: "start", flexShrink: 0 }}
             />
           ))}
@@ -347,8 +354,9 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
    X / TWITTER PREVIEW
    ================================================================ */
 function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
-  const image = getFirstImage(item, slides);
-  const hasMultipleImages = slides.length > 1;
+  const allImages = getImageUrls(item, slides);
+  const image = allImages.length > 0 ? allImages[0] : null;
+  const hasMultipleImages = allImages.length > 1;
   const hashtags = formatHashtags(item.hashtags);
   const fullText = item.body + (hashtags ? `\n\n${hashtags}` : "");
   const { text: truncatedText, truncated } = formatBody(fullText, 6);
@@ -380,12 +388,12 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
 
           {/* # Image(s) */}
           {hasMultipleImages ? (
-            <div style={{ display: "grid", gridTemplateColumns: slides.length === 2 ? "1fr 1fr" : "1fr 1fr", gap: "2px", borderRadius: "16px", overflow: "hidden", marginBottom: "12px", border: "1px solid #2f3336" }}>
-              {slides.slice(0, 4).map((slide) => (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px", borderRadius: "16px", overflow: "hidden", marginBottom: "12px", border: "1px solid #2f3336" }}>
+              {allImages.slice(0, 4).map((url, i) => (
                 <img
-                  key={slide.index}
-                  src={slide.dataUrl}
-                  alt={`Image ${slide.index + 1}`}
+                  key={i}
+                  src={url}
+                  alt={`Image ${i + 1}`}
                   style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }}
                 />
               ))}
@@ -427,8 +435,9 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
    INSTAGRAM PREVIEW
    ================================================================ */
 function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
-  const image = getFirstImage(item, slides);
-  const hasCarousel = slides.length > 1;
+  const allImages = getImageUrls(item, slides);
+  const image = allImages.length > 0 ? allImages[0] : null;
+  const hasCarousel = allImages.length > 1;
   const caption = item.captionText || item.body;
   const hashtags = formatHashtags(item.hashtags);
   const truncatedCaption = caption.length > 125 ? caption.slice(0, 125) : caption;
@@ -461,18 +470,18 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
       {hasCarousel ? (
         <div style={{ position: "relative" }}>
           <div style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory" }}>
-            {slides.map((slide) => (
+            {allImages.map((url, i) => (
               <img
-                key={slide.index}
-                src={slide.dataUrl}
-                alt={`Slide ${slide.index + 1}`}
+                key={i}
+                src={url}
+                alt={`Slide ${i + 1}`}
                 style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", scrollSnapAlign: "start", flexShrink: 0 }}
               />
             ))}
           </div>
           {/* # Carousel indicator dots */}
           <div style={{ position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "4px" }}>
-            {slides.map((_, i) => (
+            {allImages.map((_, i) => (
               <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === 0 ? "#3897f0" : "rgba(255,255,255,0.4)" }} />
             ))}
           </div>

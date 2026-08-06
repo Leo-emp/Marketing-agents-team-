@@ -14,11 +14,47 @@ import { generateContent, generateVariations, generateBatch, AGENTS } from "@/li
 import type { PlanItem } from "@/lib/agents";
 import { isAdmin, unauthorized } from "@/lib/auth-check";
 import { designVisual } from "@/lib/visual/designer-agent";
+import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
+import { getDimensions, type SlideData } from "@/lib/visual/types";
+import { generateImage } from "@/lib/visual/openai-image";
+import { uploadImage } from "@/lib/blob-storage";
 
 // # Content types that get auto-visual generation
 const VISUAL_CONTENT_TYPES = ["post", "carousel", "single_image", "reel_script"];
 
-// # Auto-generate visual for a content record
+// # Render a single slide: try OpenAI/fal first, fall back to Canvas 2D
+async function renderSlide(slide: SlideData, width: number, height: number, platform: string): Promise<Buffer> {
+  if (slide.aiImagePrompt) {
+    const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
+    if (aiBuffer) return aiBuffer;
+    console.log("[Visual] AI image failed — falling back to Canvas 2D");
+  }
+  return renderSlideCanvas(slide, width, height);
+}
+
+// # Render designed slides to PNGs, upload to Blob, return comma-separated URLs
+async function renderAndUploadSlides(slides: SlideData[], platform: string, contentType: string, contentId: string): Promise<string> {
+  const visualType = contentType === "carousel" ? "carousel" : contentType === "reel_script" ? "storyboard" : "single_image";
+  const { width, height } = getDimensions(platform, visualType);
+  const urls: string[] = [];
+
+  for (let i = 0; i < slides.length; i++) {
+    const slide: SlideData = { ...slides[i], slideNumber: slides[i].slideNumber ?? i + 1, totalSlides: slides[i].totalSlides ?? slides.length };
+    const pngBuffer = await renderSlide(slide, width, height, platform);
+
+    try {
+      const filename = `visual-${platform}-${contentId}-slide-${i}.png`;
+      urls.push(await uploadImage(pngBuffer, filename));
+    } catch (err) {
+      console.warn("[Visual] Blob upload failed, using base64 fallback:", err);
+      urls.push(`data:image/png;base64,${pngBuffer.toString("base64")}`);
+    }
+  }
+
+  return urls.join(",");
+}
+
+// # Auto-generate visual for a content record: design + render + upload
 // # Retries once on failure, falls back to basic hero slide if both attempts fail
 async function autoGenerateVisual(contentId: string) {
   const content = await prisma.content.findUnique({ where: { id: contentId } });
@@ -34,15 +70,19 @@ async function autoGenerateVisual(contentId: string) {
         content.title
       );
 
+      // # Render slides to PNGs and upload to Blob for HTTPS URLs
+      const imageUrl = await renderAndUploadSlides(design.slides, content.platform, content.contentType, contentId);
+
       await prisma.content.update({
         where: { id: contentId },
         data: {
           visualData: JSON.stringify(design.slides),
           captionText: design.caption || null,
+          imageUrl,
         },
       });
 
-      console.log(`[Visual] Auto-design succeeded for ${contentId} (attempt ${attempt})`);
+      console.log(`[Visual] Auto-design + render succeeded for ${contentId} (attempt ${attempt})`);
       return;
     } catch (e) {
       console.error(`[Visual] Auto-design attempt ${attempt} failed for ${contentId}:`, e);
@@ -52,9 +92,9 @@ async function autoGenerateVisual(contentId: string) {
     }
   }
 
-  // # Both attempts failed — create a fallback hero slide so the post still has a visual
+  // # Both attempts failed — create a fallback hero slide, render it, and save
   try {
-    const fallbackSlide = [{
+    const fallbackSlides: SlideData[] = [{
       headline: content.hook || content.title,
       subheadline: content.hook && content.title !== content.hook ? content.title : undefined,
       layout: "hero" as const,
@@ -63,15 +103,18 @@ async function autoGenerateVisual(contentId: string) {
       photoKeywords: "professional career modern office",
     }];
 
+    const imageUrl = await renderAndUploadSlides(fallbackSlides, content.platform, content.contentType, contentId);
+
     await prisma.content.update({
       where: { id: contentId },
       data: {
-        visualData: JSON.stringify(fallbackSlide),
+        visualData: JSON.stringify(fallbackSlides),
+        imageUrl,
         notes: `${content.notes ? content.notes + " | " : ""}Visual design failed — using fallback hero slide`,
       },
     });
 
-    console.warn(`[Visual] Using fallback hero slide for ${contentId}`);
+    console.warn(`[Visual] Using fallback hero slide (rendered) for ${contentId}`);
   } catch (fallbackErr) {
     console.error(`[Visual] Even fallback failed for ${contentId}:`, fallbackErr);
   }
