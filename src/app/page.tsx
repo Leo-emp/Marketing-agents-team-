@@ -242,7 +242,7 @@ export default function Dashboard() {
   const toastTimeout = useRef<NodeJS.Timeout>(undefined);
 
   /* ---- View mode: dashboard (raw) vs platform preview ---- */
-  const [viewMode, setViewMode] = useState<"dashboard" | "preview">("dashboard");
+  const [viewMode, setViewMode] = useState<"dashboard" | "preview">("preview");
 
   /* ---- New content highlight ---- */
   const [newContentId, setNewContentId] = useState<string | null>(null);
@@ -1227,8 +1227,8 @@ export default function Dashboard() {
                     const hasVisuals = !!item.imageUrl || !!previews;
                     const hasDesignData = !!item.visualData && !item.imageUrl && !previews;
 
-                    // # Platform preview mode — show the post as it appears on the actual platform
-                    const isPlatformPreviewable = viewMode === "preview" && ["linkedin", "twitter", "instagram", "tiktok"].includes(item.platform);
+                    // # Platform preview mode — social posts ALWAYS render as platform-faithful previews
+                    const isPlatformPreviewable = ["linkedin", "twitter", "instagram", "tiktok"].includes(item.platform);
 
                     return (
                       <div key={item.id} className={`bg-card-bg border rounded-xl p-5 transition-all ${isNew ? "border-indigo-500/40 ring-1 ring-indigo-500/20" : "border-card-border hover:border-indigo-500/20"}`}>

@@ -5,7 +5,7 @@
 
 "use client";
 
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 /* ---- Shared types ---- */
 interface PreviewItem {
@@ -250,6 +250,7 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
   const hasCarousel = slides.length > 1;
   const { text, truncated } = formatBody(item.body, 5);
   const hashtags = formatHashtags(item.hashtags);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div style={{ background: "#ffffff", borderRadius: "8px", border: "1px solid #e0e0e0", overflow: "hidden", maxWidth: "555px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -278,8 +279,9 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
       {/* # Post body */}
       <div style={{ padding: "12px 16px 8px" }}>
         <p style={{ fontSize: "14px", color: "#000000e6", lineHeight: "20px", whiteSpace: "pre-wrap", margin: 0, wordBreak: "break-word" }}>
-          {text}
-          {truncated && <span style={{ color: "#0a66c2", cursor: "pointer", fontWeight: 500 }}>{" "}...see more</span>}
+          {expanded ? item.body : text}
+          {truncated && !expanded && <span onClick={() => setExpanded(true)} style={{ color: "#0a66c2", cursor: "pointer", fontWeight: 500 }}>{" "}...see more</span>}
+          {expanded && truncated && <span onClick={() => setExpanded(false)} style={{ color: "#0a66c2", cursor: "pointer", fontWeight: 500, display: "block", marginTop: "4px" }}>show less</span>}
         </p>
         {hashtags && (
           <p style={{ fontSize: "14px", color: "#0a66c2", margin: "6px 0 0", fontWeight: 500 }}>{hashtags}</p>
@@ -348,7 +350,9 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
   const image = getFirstImage(item, slides);
   const hasMultipleImages = slides.length > 1;
   const hashtags = formatHashtags(item.hashtags);
-  const bodyText = item.body + (hashtags ? `\n\n${hashtags}` : "");
+  const fullText = item.body + (hashtags ? `\n\n${hashtags}` : "");
+  const { text: truncatedText, truncated } = formatBody(fullText, 6);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div style={{ background: "#000000", borderRadius: "16px", border: "1px solid #2f3336", overflow: "hidden", maxWidth: "600px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', padding: "12px 16px" }}>
@@ -369,7 +373,9 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
 
           {/* # Tweet body */}
           <p style={{ fontSize: "15px", color: "#e7e9ea", lineHeight: "20px", whiteSpace: "pre-wrap", margin: "0 0 12px", wordBreak: "break-word" }}>
-            {bodyText}
+            {expanded ? fullText : truncatedText}
+            {truncated && !expanded && <span onClick={() => setExpanded(true)} style={{ color: "#1d9bf0", cursor: "pointer", fontWeight: 500 }}>{" "}...show more</span>}
+            {expanded && truncated && <span onClick={() => setExpanded(false)} style={{ color: "#1d9bf0", cursor: "pointer", fontWeight: 500, display: "block", marginTop: "4px" }}>show less</span>}
           </p>
 
           {/* # Image(s) */}
@@ -427,6 +433,7 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
   const hashtags = formatHashtags(item.hashtags);
   const truncatedCaption = caption.length > 125 ? caption.slice(0, 125) : caption;
   const isTruncated = caption.length > 125;
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div style={{ background: "#000000", borderRadius: "8px", border: "1px solid #262626", overflow: "hidden", maxWidth: "470px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -497,8 +504,8 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
       <div style={{ padding: "0 12px 10px" }}>
         <p style={{ fontSize: "13px", color: "#f5f5f5", margin: 0, lineHeight: "18px", wordBreak: "break-word" }}>
           <span style={{ fontWeight: 600 }}>jobpilotai</span>{" "}
-          {isTruncated ? (
-            <>{truncatedCaption}<span style={{ color: "#a8a8a8", cursor: "pointer" }}>... more</span></>
+          {isTruncated && !expanded ? (
+            <>{truncatedCaption}<span onClick={() => setExpanded(true)} style={{ color: "#a8a8a8", cursor: "pointer" }}>... more</span></>
           ) : (
             caption
           )}
@@ -523,8 +530,10 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
 function TikTokPreview({ item, slides, agent }: PlatformPreviewProps) {
   const image = getFirstImage(item, slides);
   const caption = item.captionText || item.body;
-  const truncatedCaption = caption.length > 100 ? caption.slice(0, 100) + "..." : caption;
+  const isTruncated = caption.length > 100;
+  const truncatedCaption = isTruncated ? caption.slice(0, 100) + "..." : caption;
   const hashtags = formatHashtags(item.hashtags);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div style={{ width: "320px", aspectRatio: "9/16", borderRadius: "12px", overflow: "hidden", position: "relative", background: "#000", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -588,7 +597,8 @@ function TikTokPreview({ item, slides, agent }: PlatformPreviewProps) {
       <div style={{ position: "absolute", bottom: "16px", left: "12px", right: "60px", zIndex: 2 }}>
         <p style={{ color: "#fff", fontWeight: 700, fontSize: "14px", margin: "0 0 6px" }}>@jobpilotai</p>
         <p style={{ color: "#fff", fontSize: "13px", margin: "0 0 6px", lineHeight: "18px", wordBreak: "break-word" }}>
-          {truncatedCaption}
+          {expanded ? caption : truncatedCaption}
+          {isTruncated && !expanded && <span onClick={() => setExpanded(true)} style={{ color: "rgba(255,255,255,0.6)", cursor: "pointer", marginLeft: "4px" }}>more</span>}
         </p>
         {hashtags && (
           <p style={{ color: "#fff", fontSize: "13px", margin: "0 0 8px", fontWeight: 600 }}>{hashtags}</p>
