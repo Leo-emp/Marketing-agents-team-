@@ -15,11 +15,13 @@ import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData, type VisualRequest } from "@/lib/visual/types";
 import { designVisual } from "@/lib/visual/designer-agent";
 import { generateImage } from "@/lib/visual/openai-image";
+import { generateFalImage } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
 
-/* # Render a single slide with two-tier fallback:
-   # 1. OpenAI gpt-image-1 (primary — all slides have aiImagePrompt now)
-   # 2. Canvas 2D (fallback if OpenAI fails or no API key) */
+/* # Render a single slide with three-tier fallback:
+   # 1. fal.ai Flux Pro (primary — best quality, $0.05/image)
+   # 2. OpenAI gpt-image-1 (secondary)
+   # 3. Canvas 2D (final fallback — text-only, free) */
 async function renderSlide(
   slide: SlideData,
   width: number,
@@ -27,19 +29,25 @@ async function renderSlide(
   platform: string,
   model?: string
 ): Promise<Buffer> {
-  // # If admin explicitly chose "canvas" model, skip AI generation
   if (model === "canvas") {
     return renderSlideCanvas(slide, width, height);
   }
 
-  // # All slides have aiImagePrompt — try OpenAI first
-  if (slide.aiImagePrompt) {
-    const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
+  const prompt = slide.aiImagePrompt;
+  if (prompt) {
+    // # fal.ai Flux — primary for flux-pro/flux-schnell or when no model specified
+    if (!model || model === "flux-pro" || model === "flux-schnell") {
+      const falBuffer = await generateFalImage(prompt, width, height, { model: (model as "flux-pro" | "flux-schnell") || "flux-pro" });
+      if (falBuffer) return falBuffer;
+      console.log("[Visual API] fal.ai failed — trying OpenAI...");
+    }
+
+    // # OpenAI — secondary for explicit "openai" model or fal.ai fallback
+    const aiBuffer = await generateImage(prompt, width, height, platform);
     if (aiBuffer) return aiBuffer;
     console.log("[Visual API] OpenAI failed — falling back to Canvas 2D");
   }
 
-  // # Canvas 2D fallback — text-heavy rendering
   return renderSlideCanvas(slide, width, height);
 }
 

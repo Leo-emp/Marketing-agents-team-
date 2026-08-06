@@ -17,17 +17,24 @@ import { designVisual } from "@/lib/visual/designer-agent";
 import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { getDimensions, type SlideData } from "@/lib/visual/types";
 import { generateImage } from "@/lib/visual/openai-image";
+import { generateFalImage } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
 
 // # Content types that get auto-visual generation
 const VISUAL_CONTENT_TYPES = ["post", "carousel", "single_image", "reel_script"];
 
-// # Render a single slide: try OpenAI/fal first, fall back to Canvas 2D
+// # Render a single slide: fal.ai Flux Pro → OpenAI → Canvas 2D
 async function renderSlide(slide: SlideData, width: number, height: number, platform: string): Promise<Buffer> {
   if (slide.aiImagePrompt) {
+    // # Try fal.ai Flux Pro first (best quality, supports exact dimensions)
+    const falBuffer = await generateFalImage(slide.aiImagePrompt, width, height, { model: "flux-pro" });
+    if (falBuffer) return falBuffer;
+    console.log("[Visual] fal.ai failed — trying OpenAI...");
+
+    // # Try OpenAI as secondary
     const aiBuffer = await generateImage(slide.aiImagePrompt, width, height, platform);
     if (aiBuffer) return aiBuffer;
-    console.log("[Visual] AI image failed — falling back to Canvas 2D");
+    console.log("[Visual] OpenAI failed — falling back to Canvas 2D");
   }
   return renderSlideCanvas(slide, width, height);
 }
