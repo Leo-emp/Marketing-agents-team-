@@ -29,13 +29,19 @@ CORE FEATURES (know these in detail — reference them naturally in content):
    - Career Pivot Mode: rewrites the resume reframing existing experience for a completely new industry
    - Smart Parsing: auto-extracts name, skills, experience, education from uploaded resumes
 
-2. AI COVER LETTER GENERATOR:
+2. RESUME TEMPLATES (20 premium templates):
+   - 5 categories: Classic (4), Sidebar (5), Visual (4), Modern (4), Special (3)
+   - Fill-in form or import from PDF — AI auto-populates fields from uploaded resume
+   - Live preview, PDF export, structurally unique designs — not just color swaps
+   - This is a SEPARATE feature from resume optimization — templates are for building from scratch with beautiful formatting
+
+3. AI COVER LETTER GENERATOR:
    - Generates professional cover letters matched to specific job + company
    - Uses the candidate's actual resume data — real achievements, real numbers
    - 4-paragraph structure: hook, key achievement, differentiator, close
-   - Never uses placeholders or generic phrases
+   - Saved letter history with in-app editing
 
-3. AI INTERVIEW PREP (full suite):
+4. AI INTERVIEW PREP (full suite):
    - Interview Question Predictor: generates role-specific questions based on the job description, organized by category (behavioral, technical, company-specific, culture fit)
    - AI Answer Coach: suggests STAR-method answers using the candidate's actual resume experience
    - Answer Feedback: scores user's practice answers and rewrites them stronger
@@ -43,43 +49,55 @@ CORE FEATURES (know these in detail — reference them naturally in content):
    - Company-specific interview profiles for major employers (Google, Amazon, McKinsey, etc.)
    - Post-interview summary with scores across communication, confidence, technical depth, and readiness level
 
-4. LINKEDIN TOOLS:
+5. LINKEDIN TOOLS:
    - LinkedIn Profile Audit: scores headline, about, experience, skills, recommendations — with specific rewrites
    - LinkedIn Profile Rewrite: generates optimized headline, about section, and experience bullets
    - LinkedIn Content Strategy: 30-day posting plan with content pillars, templates, posting schedule, hashtag strategy, and engagement playbook
    - Multimodal: can analyze screenshots of LinkedIn posts for content quality
 
-5. NETWORKING & OUTREACH:
+6. NETWORKING & OUTREACH:
    - AI Outreach Message Crafter: generates 3 versions (short/detailed/casual) for connection requests, cold outreach, recruiter pitches, follow-ups, thank-yous, referral requests, and informational interview asks
    - Platform-aware: adjusts length and tone for LinkedIn vs email
+   - Networking CRM: save contacts and target companies, track relationships
 
-6. JOB TRACKING DASHBOARD:
-   - Save jobs from any source with title, company, URL, status
-   - Track application status: saved, applied, interviewing, offered, rejected
-   - Application notes and follow-up reminders
-   - Skills gap analysis across saved jobs vs resume
+7. JOB SEARCH AGGREGATOR:
+   - Searches 5+ job boards simultaneously: Adzuna, Jooble, Remotive, RemoteOK, We Work Remotely
+   - Sponsorship filter for international job seekers
+   - AI match scoring against your resume — instantly see which jobs fit
+   - Save to tracker with one click
 
-7. AI PORTFOLIO BUILDER:
+8. APPLICATION TRACKER:
+   - Kanban pipeline: Saved → Applied → Interview → Offer → Rejected
+   - Add from job search or manually, notes, interview dates, salary tracking
+   - Follow-up reminders so nothing falls through the cracks
+
+9. AI PORTFOLIO BUILDER:
    - 9 premium templates: Minimal, Corporate, Academic, Modern, Developer, Creative, Photographer, Videographer, Architect
    - Each template has a unique design language — not cookie-cutter
-   - Supports 11 section types: about, experience, education, skills, projects, certifications, publications, awards, gallery (with video support), testimonials, contact
+   - 11 section types: about, experience, education, skills, projects, certifications, publications, awards, gallery (with video), testimonials, contact
    - Shareable public URL (portfolios are live web pages, not PDFs)
-   - Custom themes, social links, and section ordering
+   - Import from resume, drag-reorder sections, custom themes
 
-8. CHROME EXTENSION (coming):
-   - One-click job saving from any job board
-   - Instant match score against your resume
-   - Quick cover letter generation without leaving the job listing
+10. CHROME EXTENSION:
+    - One-click job saving from any job board directly to your tracker
+    - Instant match score against your resume without leaving the job listing
+    - Quick cover letter generation from any job page
+    - Passive browse tracking feeds Career Intelligence with skill demand data
 
-9. CAREER INTELLIGENCE:
-   - Analyzes saved jobs to identify skill gaps
-   - Tracks which skills are most requested across the user's target roles
-   - Injects skill gap data into resume optimization and interview prep for personalized output
+11. CAREER INTELLIGENCE:
+    - Analyzes saved jobs and browsing to identify skill gaps
+    - Tracks which skills are most requested across your target roles
+    - Injects skill gap data into resume optimization and interview prep for personalized output
+    - Surfaces success patterns and actionable recommendations on your dashboard
+
+12. WEEKLY CAREER DIGEST:
+    - Automated Monday email with your career stats: applications, interviews, AI usage
+    - Keeps users engaged and coming back without manual effort
 
 PRICING:
-- Free: 20 AI calls/month (enough to try every feature)
-- Pro: unlimited AI calls, all templates, priority features
-- The free tier is genuinely useful, not a crippled demo
+- Free: 20 AI calls/month, access to ALL tools (not a crippled demo)
+- Pro: 1,000 AI calls/month, all templates, priority features
+- Both tiers get every feature — Pro just removes the usage ceiling
 
 DESIGN & BRAND AESTHETIC:
 - Dark theme with blue/sky-blue accent palette (#3b82f6 primary blue, #38bdf8 sky-blue glow, #0ea5e9 secondary)
@@ -182,6 +200,22 @@ CONTENT PILLARS (rotate between these):
 4. INDUSTRY INSIGHTS — Job market trends, in-demand skills, salary data, remote work
 5. MOTIVATION — Job search encouragement, rejection handling, mindset shifts
 6. BEHIND THE SCENES — Building JobPilot, founder journey, startup lessons
+
+FEATURE SPOTLIGHT ROTATION — For "Product Showcases" pillar, rotate through these features across weeks. Each week's 2 showcase posts MUST feature different tools. Never showcase the same feature two weeks in a row:
+
+WEEK A: Resume Analyzer (ATS score demo) + Mock Interview (live AI interviewer demo)
+WEEK B: Job Search Aggregator (multi-board search) + Portfolio Builder (template showcase)
+WEEK C: Cover Letter Generator (before/after) + Chrome Extension (one-click save demo)
+WEEK D: Resume Templates (20 designs walkthrough) + LinkedIn Profile Audit (score breakdown)
+WEEK E: Career Pivot Mode (industry switch story) + Outreach Message Crafter (3 versions demo)
+WEEK F: Career Intelligence (skill gap insights) + Application Tracker (pipeline walkthrough)
+
+After Week F, restart from A. Each showcase must show a SPECIFIC use case with concrete results — not a feature list. Example angles:
+- Resume Analyzer: "My resume scored 34/100. Here's what I changed to hit 91."
+- Mock Interview: "I practiced with an AI interviewer for 20 minutes. It caught 3 things I never would have fixed."
+- Job Search: "I searched 5 job boards in 10 seconds. Found 3 roles I'd missed on LinkedIn."
+- Portfolio Builder: "I built a professional portfolio in 15 minutes. Here's the Developer template."
+- Chrome Extension: "I saved 12 jobs today without leaving a single job listing page."
 `;
 
 /* ---- Quality guardrails every agent must follow ---- */
@@ -344,11 +378,12 @@ PLANNING PRINCIPLES:
 - Content must sound like it was written by a real industry professional, not AI.
 - At least 2 items must directly reference or build on current research data provided.
 - Product showcases must never appear back-to-back. Space them at least 2 days apart.
+- Product showcase posts MUST follow the FEATURE SPOTLIGHT ROTATION schedule in the brand brief. Check which week letter (A-F) applies and use those two specific features.
 
 MANDATORY PILLAR DISTRIBUTION (of 14 total pieces):
 - Career Tips: 3-4 pieces
 - AI in Hiring: 2-3 pieces
-- Product Showcases: 2 pieces (never back-to-back, always paired with genuine value)
+- Product Showcases: 2 pieces (never back-to-back, always paired with genuine value — MUST use the designated features from the rotation schedule)
 - Industry Insights: 2-3 pieces
 - Motivation: 1-2 pieces
 - Behind the Scenes: 1 piece
@@ -709,11 +744,29 @@ export async function generatePlan(weekOf: string, context?: string): Promise<Pl
     console.warn("Research failed for plan generation, proceeding without:", e);
   }
 
+  // # Calculate which feature spotlight week (A-F) based on the plan date
+  const SPOTLIGHT_WEEKS = [
+    { letter: "A", features: "Resume Analyzer (ATS score demo) + Mock Interview (live AI interviewer demo)" },
+    { letter: "B", features: "Job Search Aggregator (multi-board search) + Portfolio Builder (template showcase)" },
+    { letter: "C", features: "Cover Letter Generator (before/after) + Chrome Extension (one-click save demo)" },
+    { letter: "D", features: "Resume Templates (20 designs walkthrough) + LinkedIn Profile Audit (score breakdown)" },
+    { letter: "E", features: "Career Pivot Mode (industry switch story) + Outreach Message Crafter (3 versions demo)" },
+    { letter: "F", features: "Career Intelligence (skill gap insights) + Application Tracker (pipeline walkthrough)" },
+  ];
+  const weekDate = new Date(weekOf);
+  const epoch = new Date("2026-01-05"); // # Monday baseline
+  const weekNumber = Math.floor((weekDate.getTime() - epoch.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const spotlightIndex = ((weekNumber % SPOTLIGHT_WEEKS.length) + SPOTLIGHT_WEEKS.length) % SPOTLIGHT_WEEKS.length;
+  const spotlight = SPOTLIGHT_WEEKS[spotlightIndex];
+
   const prompt = `${agent.systemPrompt}
 ${researchContext}
 
 TASK: Create a content plan for the week starting ${weekOf}.
 ${context ? `ADDITIONAL CONTEXT FROM THE FOUNDER: ${context}` : ""}
+
+FEATURE SPOTLIGHT THIS WEEK: Week ${spotlight.letter} — ${spotlight.features}
+The 2 "Product Showcases" posts this week MUST spotlight these specific features. Show concrete use cases with specific results, not generic feature descriptions.
 
 Requirements:
 - Generate exactly 14 pieces: 4 LinkedIn, 3 X/Twitter, 4 Instagram, 3 TikTok
@@ -721,6 +774,7 @@ Requirements:
 - Every hook must be the ACTUAL first line that would appear in the final post — no emojis
 - Vary emotional register: mix educational, provocative, storytelling, and data-driven across the week
 - Use current trends and data from the research above to inform topics
+- The 2 Product Showcase pieces MUST feature: ${spotlight.features}
 - LinkedIn content types: post, carousel
 - X/Twitter content types: post, thread, carousel, plain_text
 - Instagram content types: carousel, reel_script, single_image
