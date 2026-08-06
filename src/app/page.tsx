@@ -1227,8 +1227,8 @@ export default function Dashboard() {
                     const hasVisuals = !!item.imageUrl || !!previews;
                     const hasDesignData = !!item.visualData && !item.imageUrl && !previews;
 
-                    // # Platform preview mode — social posts ALWAYS render as platform-faithful previews
-                    const isPlatformPreviewable = ["linkedin", "twitter", "instagram", "tiktok"].includes(item.platform);
+                    // # Platform preview mode — all posts render as platform-faithful previews
+                    const isPlatformPreviewable = ["linkedin", "twitter", "instagram", "tiktok", "blog"].includes(item.platform);
 
                     return (
                       <div key={item.id} className={`bg-card-bg border rounded-xl p-5 transition-all ${isNew ? "border-indigo-500/40 ring-1 ring-indigo-500/20" : "border-card-border hover:border-indigo-500/20"}`}>

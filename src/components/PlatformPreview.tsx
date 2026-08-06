@@ -20,6 +20,9 @@ interface PreviewItem {
   hook: string | null;
   imageUrl: string | null;
   videoUrl: string | null;
+  notes: string | null;
+  editorialScore: number | null;
+  createdAt: string;
 }
 
 interface VisualSlide {
@@ -627,6 +630,130 @@ function TikTokPreview({ item, slides, agent }: PlatformPreviewProps) {
 }
 
 /* ================================================================
+   BLOG POST PREVIEW — Matches jobpilotai.co/blog design
+   ================================================================ */
+
+const BLOG_CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  "Resume Tips": { bg: "rgba(59,130,246,0.15)", text: "#60a5fa", border: "rgba(59,130,246,0.3)" },
+  "Interview Prep": { bg: "rgba(245,158,11,0.15)", text: "#fbbf24", border: "rgba(245,158,11,0.3)" },
+  "LinkedIn": { bg: "rgba(6,182,212,0.15)", text: "#22d3ee", border: "rgba(6,182,212,0.3)" },
+  "Cover Letters": { bg: "rgba(16,185,129,0.15)", text: "#34d399", border: "rgba(16,185,129,0.3)" },
+  "Career Change": { bg: "rgba(14,165,233,0.15)", text: "#38bdf8", border: "rgba(14,165,233,0.3)" },
+  "Job Search": { bg: "rgba(244,63,94,0.15)", text: "#fb7185", border: "rgba(244,63,94,0.3)" },
+  "Career Advice": { bg: "rgba(139,92,246,0.15)", text: "#a78bfa", border: "rgba(139,92,246,0.3)" },
+  "Networking": { bg: "rgba(20,184,166,0.15)", text: "#2dd4bf", border: "rgba(20,184,166,0.3)" },
+};
+const DEFAULT_CAT_COLOR = { bg: "rgba(99,102,241,0.15)", text: "#818cf8", border: "rgba(99,102,241,0.3)" };
+
+function BlogPreview({ item, slides }: PlatformPreviewProps) {
+  const [expanded, setExpanded] = useState(false);
+  const image = getFirstImage(item, slides);
+
+  let category = "Career Advice";
+  let readTime = "3 min read";
+  let slug = "";
+  try {
+    const meta = item.notes ? JSON.parse(item.notes) : {};
+    if (meta.category) category = meta.category;
+    if (meta.readTime) readTime = meta.readTime;
+    if (meta.slug) slug = meta.slug;
+  } catch { /* notes might not be JSON for blog posts */ }
+
+  const catColor = BLOG_CATEGORY_COLORS[category] || DEFAULT_CAT_COLOR;
+  const date = new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  const bodyLines = item.body.split("\n");
+  const truncatedBody = bodyLines.slice(0, 12).join("\n");
+  const isTruncated = bodyLines.length > 12;
+
+  const renderMarkdownLine = (line: string, i: number) => {
+    if (line.startsWith("## ")) return <h2 key={i} style={{ fontSize: "20px", fontWeight: 700, color: "#fff", margin: "24px 0 12px" }}>{line.slice(3)}</h2>;
+    if (line.startsWith("### ")) return <h3 key={i} style={{ fontSize: "17px", fontWeight: 700, color: "#fff", margin: "20px 0 8px" }}>{line.slice(4)}</h3>;
+    if (line.startsWith("- ")) return <li key={i} style={{ color: "#a1a1aa", lineHeight: "24px", marginLeft: "20px", listStyleType: "disc" }}>{renderInline(line.slice(2))}</li>;
+    if (line.trim() === "") return <div key={i} style={{ height: "8px" }} />;
+    return <p key={i} style={{ color: "#a1a1aa", lineHeight: "24px", margin: "0 0 12px" }}>{renderInline(line)}</p>;
+  };
+
+  const renderInline = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={i} style={{ color: "#fff", fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  return (
+    <div style={{ background: "#0c0e1a", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", maxWidth: "680px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      {/* # Cover image */}
+      {image && (
+        <div style={{ width: "100%", overflow: "hidden" }}>
+          <img src={image} alt="Cover" style={{ width: "100%", height: "220px", objectFit: "cover", display: "block" }} />
+        </div>
+      )}
+
+      {/* # Article content */}
+      <div style={{ padding: "28px 32px" }}>
+        {/* # Meta row: category badge + read time + date */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+          <span style={{ padding: "4px 12px", fontSize: "11px", fontWeight: 600, borderRadius: "999px", border: `1px solid ${catColor.border}`, background: catColor.bg, color: catColor.text }}>{category}</span>
+          <span style={{ fontSize: "12px", color: "#71717a" }}>{readTime}</span>
+          <span style={{ fontSize: "12px", color: "#71717a" }}>{date}</span>
+        </div>
+
+        {/* # Title */}
+        <h1 style={{ fontSize: "26px", fontWeight: 700, color: "#fff", lineHeight: "32px", margin: "0 0 8px", letterSpacing: "-0.02em" }}>{item.title}</h1>
+
+        {/* # Excerpt / meta description */}
+        {item.captionText && (
+          <p style={{ fontSize: "15px", color: "#71717a", lineHeight: "22px", margin: "0 0 20px", fontStyle: "italic" }}>{item.captionText}</p>
+        )}
+
+        {/* # Divider */}
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "0 0 20px" }} />
+
+        {/* # Article body (rendered markdown) */}
+        <div style={{ fontSize: "15px" }}>
+          {(expanded ? bodyLines : bodyLines.slice(0, 12)).map(renderMarkdownLine)}
+          {isTruncated && !expanded && (
+            <div style={{ position: "relative", paddingTop: "8px" }}>
+              <div style={{ position: "absolute", top: "-40px", left: 0, right: 0, height: "40px", background: "linear-gradient(transparent, #0c0e1a)" }} />
+              <button onClick={() => setExpanded(true)} style={{ border: "1px solid rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.1)", color: "#818cf8", padding: "8px 20px", borderRadius: "8px", fontSize: "13px", fontWeight: 500, cursor: "pointer", display: "block", margin: "0 auto" }}>
+                Continue reading
+              </button>
+            </div>
+          )}
+          {expanded && isTruncated && (
+            <button onClick={() => setExpanded(false)} style={{ border: "none", background: "none", color: "#71717a", fontSize: "12px", cursor: "pointer", marginTop: "12px", display: "block" }}>
+              Collapse
+            </button>
+          )}
+        </div>
+
+        {/* # Tags */}
+        {item.hashtags && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            {item.hashtags.split(",").map((tag, i) => (
+              <span key={i} style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: "rgba(99,102,241,0.1)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.2)" }}>
+                {tag.trim()}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* # URL preview */}
+        {slug && (
+          <div style={{ marginTop: "16px", fontSize: "12px", color: "#52525b" }}>
+            jobpilotai.co/blog/{slug}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================
    MAIN EXPORT — Routes to the correct platform preview
    ================================================================ */
 export default function PlatformPreview({ item, slides, agent }: PlatformPreviewProps) {
@@ -639,6 +766,8 @@ export default function PlatformPreview({ item, slides, agent }: PlatformPreview
       return <InstagramPreview item={item} slides={slides} agent={agent} />;
     case "tiktok":
       return <TikTokPreview item={item} slides={slides} agent={agent} />;
+    case "blog":
+      return <BlogPreview item={item} slides={slides} agent={agent} />;
     default:
       return <LinkedInPreview item={item} slides={slides} agent={agent} />;
   }
@@ -650,4 +779,5 @@ export const PLATFORM_LABELS: Record<string, string> = {
   twitter: "X / Twitter",
   instagram: "Instagram",
   tiktok: "TikTok",
+  blog: "Blog",
 };
