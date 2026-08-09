@@ -20,44 +20,60 @@ const VALID_LAYOUTS: SlideLayout[] = [
   "split_image", "progress_bar",
 ];
 
-// # Build a scene-descriptive prompt for AI image generation (fal.ai Flux)
-// # Flux models render photorealistic scenes — they cannot render text
-// # So the prompt describes a VISUAL SCENE that supports the content topic
+// # Build an image prompt for AI rendering (Flux Pro / GPT-image-1)
+// # Social platforms: branded slide with actual text content about JobPilot AI
+// # Blog: can use scenic/editorial imagery
 function buildSlideImagePrompt(
   slide: { headline: string; body?: string; stat?: { value: string; label: string }; layout: string },
   platform: string,
-  mediaPrompt?: string | null,
+  slideIndex: number,
+  totalSlides: number,
 ): string {
-  // # Use the content creator's mediaPrompt as the base if available
-  if (mediaPrompt) {
-    return `${mediaPrompt}. Professional photography style, high quality, clean modern aesthetic, sharp focus, natural lighting. For ${platform} marketing.`;
+  // # Blog covers — editorial imagery is fine
+  if (platform === "blog") {
+    const topic = `${slide.headline} ${slide.body || ""}`;
+    return `Professional blog cover image for an article about: ${topic}. Clean modern editorial photography or illustration. High quality, sharp, well-lit. Suitable for a career tech blog. No text overlay needed.`;
   }
 
-  // # Auto-derive a scene from the headline/body topic keywords
-  const topicText = `${slide.headline} ${slide.body || ""}`.toLowerCase();
+  // # Social platforms — branded slides with intentional content text
+  const parts: string[] = [];
 
-  // # Map common career/job topics to visual scenes
-  const sceneMap: [RegExp, string][] = [
-    [/interview|hiring|recruiter/, "Professional in a modern glass-walled office during a job interview, confident posture, warm lighting, corporate setting"],
-    [/resume|cv|ats/, "Clean modern desk with a laptop showing a professional document, warm natural light from a window, minimal workspace"],
-    [/linkedin|profile|network/, "Professional networking event in a modern venue, business people connecting, warm ambient lighting"],
-    [/salary|negotiate|compensation/, "Confident professional at a polished conference table in a high-rise office, city skyline through windows"],
-    [/remote|work from home|wfh/, "Stylish home office setup with a laptop, coffee cup, plant, natural light from large windows, clean minimal design"],
-    [/career|growth|promotion/, "Person ascending modern floating staircase in a bright atrium, upward perspective, success metaphor"],
-    [/job search|application|apply/, "Person at a modern desk with multiple screens, focused and productive, soft blue accent lighting"],
-    [/skill|learn|course/, "Modern workspace with books, laptop, and digital tools, growth-oriented imagery, warm light"],
-    [/scam|fraud|warning|safety/, "Professional cybersecurity concept, shield icon, secure workspace, blue-toned lighting, tech protection theme"],
-    [/ai|technology|tool/, "Futuristic workspace with holographic interfaces, clean tech aesthetic, blue and purple accents"],
-  ];
+  parts.push(`A professional branded social media slide. Dark background (#09090b to #18181b gradient). Clean sans-serif typography. Blue (#3b82f6) accent elements.`);
 
-  for (const [pattern, scene] of sceneMap) {
-    if (pattern.test(topicText)) {
-      return `${scene}. Professional photography, high quality, ${platform} marketing visual.`;
-    }
+  // # Brand element on first slide
+  if (slideIndex === 0) {
+    parts.push(`Top-left: "${BRAND_NAME}" in small white text with a small blue wing icon beside it.`);
   }
 
-  // # Generic professional fallback
-  return `Modern professional workspace with clean design, laptop and career-related imagery, warm natural lighting, premium aesthetic. For ${platform} marketing.`;
+  // # Stat prominently if present
+  if (slide.stat) {
+    parts.push(`Render this statistic very large and bold in white: "${slide.stat.value}". Below it in medium gray (#a1a1aa) text: "${slide.stat.label}".`);
+  }
+
+  // # Headline — always present
+  if (slide.headline) {
+    const size = slide.stat ? "medium-large" : "large";
+    parts.push(`Render this headline in ${size} bold white text: "${slide.headline}".`);
+  }
+
+  // # Body text
+  if (slide.body) {
+    parts.push(`Below the headline in smaller gray (#a1a1aa) text: "${slide.body}".`);
+  }
+
+  // # CTA slide
+  if (slideIndex === totalSlides - 1) {
+    parts.push(`Include "${BRAND_URL}" as a prominent blue call-to-action. Below it: "Your AI Career Co-Pilot".`);
+  }
+
+  // # Slide counter for carousels
+  if (totalSlides > 1) {
+    parts.push(`Top-right corner: small "${slideIndex + 1}/${totalSlides}" in muted text.`);
+  }
+
+  parts.push(`Clean spacing, subtle blue gradient accents or thin blue divider lines. No stock photos, no people, no hands, no generic AI imagery. This is a designed content slide, not a photograph.`);
+
+  return parts.join(" ");
 }
 
 /* ---- Main Designer Function ---- */
@@ -108,7 +124,10 @@ Return a JSON object:
       "stat": { "value": "75%", "label": "of resumes rejected by ATS" },
       "bullets": ["item 1", "item 2"],
       "layout": "hero",
-      "imagePrompt": "A photographic SCENE description for AI image generation. Describe what the viewer should SEE: people, settings, objects, lighting, mood, colors. Do NOT include any text to render — the AI cannot render text. Example: 'Confident professional at a modern desk reviewing documents, warm natural light from large windows, clean minimal office, success atmosphere'"
+      "imagePrompt": "${platform === "blog"
+        ? "For blog covers: describe a scenic/editorial image that fits the article topic. Can include photography, illustrations, or abstract visuals. Example: 'Aerial view of a modern city skyline at golden hour, warm tones, editorial magazine quality'"
+        : "For social slides: describe a BRANDED SLIDE DESIGN with the EXACT text to render on a dark background. Include: the headline text in large bold white, body text in smaller gray, stat numbers extra large, blue (#3b82f6) accents, JobPilot AI branding. NO stock photos, NO people, NO hands — this is a designed content card. Example: 'Dark slide (#09090b). Large bold white text: YOUR RESUME IS INVISIBLE. Below in gray: 75% of resumes never reach a human. Blue accent divider line. Top-left: JobPilot AI with blue wing icon. Clean SaaS slide design.'"
+      }"
     }
   ],
   "caption": "Social media caption that complements the visuals (100-400 words for LinkedIn, 50-200 for Twitter, 100-300 for Instagram). Do NOT repeat slide text."
@@ -160,13 +179,14 @@ Return ONLY valid JSON.`;
       layout,
       slideNumber: index + 1,
       totalSlides,
-      // # Prefer Gemini's scene-descriptive imagePrompt, fall back to auto-generated
+      // # Prefer Gemini's imagePrompt, fall back to auto-generated branded prompt
       aiImagePrompt: slide.imagePrompt
         ? String(slide.imagePrompt)
         : buildSlideImagePrompt(
             { headline: String(slide.headline || ""), body: slide.body ? String(slide.body) : undefined, stat: slide.stat as any, layout },
             platform,
-            mediaPrompt,
+            index,
+            totalSlides,
           ),
       // # Keep extended fields for Canvas 2D fallback
       beforeText: slide.beforeText ? String(slide.beforeText) : undefined,
