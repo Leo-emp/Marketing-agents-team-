@@ -44,3 +44,18 @@ next-env.d.ts
 
 /src/generated/prisma
 dev.db
+
+# local SQLite databases (Better Auth + app data)
+db
+db-wal
+auth
+auth-wal
+
+# Claude Code / Superpowers artifacts
+.agents/
+skills-lock.json
+docs/superpowers/
+
+# test artifacts
+test-*.png
+test-*.ts
