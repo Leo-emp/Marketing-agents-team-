@@ -28,7 +28,8 @@ interface PreviewItem {
 interface VisualSlide {
   index: number;
   visualId: string;
-  dataUrl: string;
+  dataUrl?: string;
+  imageUrl?: string;
   width: number;
   height: number;
 }
@@ -221,10 +222,17 @@ function VerifiedBadge() {
 }
 
 /* ---- Helper: parse imageUrl (may be comma-separated) into array ---- */
+// # Data URLs contain commas (data:image/png;base64,XXX) so naive split breaks them
+// # This regex correctly tokenises both HTTPS and data URLs
 function getImageUrls(item: PreviewItem, slides: VisualSlide[]): string[] {
-  if (slides.length > 0) return slides.map(s => s.dataUrl);
-  if (item.imageUrl) return item.imageUrl.split(",").map(u => u.trim()).filter(Boolean);
-  return [];
+  // # slides may come from the API with imageUrl or from local renders with dataUrl
+  if (slides.length > 0) {
+    const urls = slides.map(s => s.dataUrl || s.imageUrl).filter(Boolean) as string[];
+    if (urls.length > 0) return urls;
+  }
+  if (!item.imageUrl) return [];
+  const urls = item.imageUrl.match(/(?:https?:\/\/[^,\s]+|data:[^,]+,[^,\s]*)/g);
+  return urls ? urls.map(u => u.trim()).filter(Boolean) : [item.imageUrl.trim()];
 }
 
 /* ---- Helper: get first image from slides or imageUrl ---- */
@@ -261,6 +269,7 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
   const { text, truncated } = formatBody(item.body, 5);
   const hashtags = formatHashtags(item.hashtags);
   const [expanded, setExpanded] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   return (
     <div style={{ background: "#ffffff", borderRadius: "8px", border: "1px solid #e0e0e0", overflow: "hidden", maxWidth: "555px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -298,20 +307,39 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
         )}
       </div>
 
-      {/* # Image / Carousel */}
+      {/* # Image / Carousel — LinkedIn document-style one-at-a-time with nav */}
       {hasCarousel ? (
-        <div style={{ display: "flex", gap: "2px", overflowX: "auto", scrollSnapType: "x mandatory" }}>
-          {allImages.map((url, i) => (
-            <img
-              key={i}
-              src={url}
-              alt={`Slide ${i + 1}`}
-              style={{ height: "300px", width: "auto", objectFit: "cover", scrollSnapAlign: "start", flexShrink: 0 }}
-            />
-          ))}
+        <div style={{ position: "relative", background: "#f3f2ef" }}>
+          <img
+            src={allImages[currentSlide]}
+            alt={`Slide ${currentSlide + 1}`}
+            style={{ width: "100%", height: "auto", display: "block" }}
+          />
+          {/* # Slide counter badge */}
+          <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "12px" }}>
+            {currentSlide + 1} / {allImages.length}
+          </div>
+          {/* # Left arrow */}
+          {currentSlide > 0 && (
+            <button
+              onClick={() => setCurrentSlide(currentSlide - 1)}
+              style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "1px solid #e0e0e0", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#333", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}
+            >
+              &#8249;
+            </button>
+          )}
+          {/* # Right arrow */}
+          {currentSlide < allImages.length - 1 && (
+            <button
+              onClick={() => setCurrentSlide(currentSlide + 1)}
+              style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.9)", border: "1px solid #e0e0e0", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#333", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}
+            >
+              &#8250;
+            </button>
+          )}
         </div>
       ) : image ? (
-        <img src={image} alt="Post visual" style={{ width: "100%", display: "block" }} />
+        <img src={image} alt="Post visual" style={{ width: "100%", height: "auto", display: "block" }} />
       ) : null}
 
       {/* # Engagement counts */}
@@ -403,7 +431,7 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
             </div>
           ) : image ? (
             <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "12px", border: "1px solid #2f3336" }}>
-              <img src={image} alt="Tweet image" style={{ width: "100%", display: "block" }} />
+              <img src={image} alt="Tweet image" style={{ width: "100%", height: "auto", display: "block" }} />
             </div>
           ) : null}
 
@@ -441,11 +469,14 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
   const allImages = getImageUrls(item, slides);
   const image = allImages.length > 0 ? allImages[0] : null;
   const hasCarousel = allImages.length > 1;
-  const caption = item.captionText || item.body;
+  // # Guard against non-string caption (e.g. object from malformed AI output)
+  const rawCaption = item.captionText || item.body;
+  const caption = typeof rawCaption === "string" ? rawCaption : String(rawCaption ?? "");
   const hashtags = formatHashtags(item.hashtags);
   const truncatedCaption = caption.length > 125 ? caption.slice(0, 125) : caption;
   const isTruncated = caption.length > 125;
   const [expanded, setExpanded] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   return (
     <div style={{ background: "#000000", borderRadius: "8px", border: "1px solid #262626", overflow: "hidden", maxWidth: "470px", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -469,23 +500,40 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
         <div style={{ cursor: "pointer", color: "#f5f5f5" }}><MoreDotsIcon color="#f5f5f5" /></div>
       </div>
 
-      {/* # Image / Carousel */}
+      {/* # Image / Carousel with swipe-style nav */}
       {hasCarousel ? (
         <div style={{ position: "relative" }}>
-          <div style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory" }}>
-            {allImages.map((url, i) => (
-              <img
-                key={i}
-                src={url}
-                alt={`Slide ${i + 1}`}
-                style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", scrollSnapAlign: "start", flexShrink: 0 }}
-              />
-            ))}
+          <img
+            src={allImages[currentSlide]}
+            alt={`Slide ${currentSlide + 1}`}
+            style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }}
+          />
+          {/* # Slide counter badge */}
+          <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "12px" }}>
+            {currentSlide + 1}/{allImages.length}
           </div>
+          {/* # Left arrow */}
+          {currentSlide > 0 && (
+            <button
+              onClick={() => setCurrentSlide(currentSlide - 1)}
+              style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#333", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+            >
+              &#8249;
+            </button>
+          )}
+          {/* # Right arrow */}
+          {currentSlide < allImages.length - 1 && (
+            <button
+              onClick={() => setCurrentSlide(currentSlide + 1)}
+              style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#333", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+            >
+              &#8250;
+            </button>
+          )}
           {/* # Carousel indicator dots */}
           <div style={{ position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "4px" }}>
             {allImages.map((_, i) => (
-              <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === 0 ? "#3897f0" : "rgba(255,255,255,0.4)" }} />
+              <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: i === currentSlide ? "#3897f0" : "rgba(255,255,255,0.4)", transition: "background 0.2s" }} />
             ))}
           </div>
         </div>
@@ -540,20 +588,51 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
    TIKTOK PREVIEW
    ================================================================ */
 function TikTokPreview({ item, slides, agent }: PlatformPreviewProps) {
-  const image = getFirstImage(item, slides);
-  const caption = item.captionText || item.body;
+  const allImages = getImageUrls(item, slides);
+  const image = allImages.length > 0 ? allImages[0] : null;
+  const hasCarousel = allImages.length > 1;
+  // # Guard against non-string caption
+  const rawCaption = item.captionText || item.body;
+  const caption = typeof rawCaption === "string" ? rawCaption : String(rawCaption ?? "");
   const isTruncated = caption.length > 100;
   const truncatedCaption = isTruncated ? caption.slice(0, 100) + "..." : caption;
   const hashtags = formatHashtags(item.hashtags);
   const [expanded, setExpanded] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const currentImage = hasCarousel ? allImages[currentSlide] : image;
 
   return (
     <div style={{ width: "320px", aspectRatio: "9/16", borderRadius: "12px", overflow: "hidden", position: "relative", background: "#000", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* # Background image/video */}
-      {image ? (
-        <img src={image} alt="TikTok post" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      {currentImage ? (
+        <img src={currentImage} alt="TikTok post" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       ) : (
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }} />
+      )}
+
+      {/* # Carousel slide counter + nav for photo mode */}
+      {hasCarousel && (
+        <>
+          <div style={{ position: "absolute", top: "44px", right: "12px", background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: "11px", fontWeight: 600, padding: "3px 8px", borderRadius: "10px", zIndex: 3 }}>
+            {currentSlide + 1}/{allImages.length}
+          </div>
+          {currentSlide > 0 && (
+            <button
+              onClick={() => setCurrentSlide(currentSlide - 1)}
+              style={{ position: "absolute", left: "8px", top: "45%", transform: "translateY(-50%)", width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#fff", zIndex: 3 }}
+            >
+              &#8249;
+            </button>
+          )}
+          {currentSlide < allImages.length - 1 && (
+            <button
+              onClick={() => setCurrentSlide(currentSlide + 1)}
+              style={{ position: "absolute", right: "52px", top: "45%", transform: "translateY(-50%)", width: "28px", height: "28px", borderRadius: "50%", background: "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#fff", zIndex: 3 }}
+            >
+              &#8250;
+            </button>
+          )}
+        </>
       )}
 
       {/* # Dark gradient overlay at bottom for text readability */}

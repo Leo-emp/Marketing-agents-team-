@@ -20,32 +20,44 @@ const VALID_LAYOUTS: SlideLayout[] = [
   "split_image", "progress_bar",
 ];
 
-// # Auto-generate an image prompt from slide content
-// # This describes WHAT to show, not HOW to lay it out
-function buildSlideImagePrompt(slide: { headline: string; body?: string; stat?: { value: string; label: string }; layout: string }, platform: string, slideIndex: number, totalSlides: number): string {
-  const parts: string[] = [];
-
-  // # Context about slide position
-  if (slideIndex === 0) {
-    parts.push(`This is the opening slide of a ${platform} carousel — it must stop the scroll with a bold, eye-catching design.`);
-  } else if (slideIndex === totalSlides - 1) {
-    parts.push(`This is the final CTA slide — include "${BRAND_URL}" prominently as a call to action.`);
-  } else {
-    parts.push(`This is slide ${slideIndex + 1} of ${totalSlides} in a ${platform} carousel.`);
+// # Build a scene-descriptive prompt for AI image generation (fal.ai Flux)
+// # Flux models render photorealistic scenes — they cannot render text
+// # So the prompt describes a VISUAL SCENE that supports the content topic
+function buildSlideImagePrompt(
+  slide: { headline: string; body?: string; stat?: { value: string; label: string }; layout: string },
+  platform: string,
+  mediaPrompt?: string | null,
+): string {
+  // # Use the content creator's mediaPrompt as the base if available
+  if (mediaPrompt) {
+    return `${mediaPrompt}. Professional photography style, high quality, clean modern aesthetic, sharp focus, natural lighting. For ${platform} marketing.`;
   }
 
-  // # Content to visualize
-  if (slide.headline) {
-    parts.push(`Display this text prominently: "${slide.headline}"`);
-  }
-  if (slide.body) {
-    parts.push(`Supporting text: "${slide.body}"`);
-  }
-  if (slide.stat) {
-    parts.push(`Feature this statistic large and bold: ${slide.stat.value} — ${slide.stat.label}`);
+  // # Auto-derive a scene from the headline/body topic keywords
+  const topicText = `${slide.headline} ${slide.body || ""}`.toLowerCase();
+
+  // # Map common career/job topics to visual scenes
+  const sceneMap: [RegExp, string][] = [
+    [/interview|hiring|recruiter/, "Professional in a modern glass-walled office during a job interview, confident posture, warm lighting, corporate setting"],
+    [/resume|cv|ats/, "Clean modern desk with a laptop showing a professional document, warm natural light from a window, minimal workspace"],
+    [/linkedin|profile|network/, "Professional networking event in a modern venue, business people connecting, warm ambient lighting"],
+    [/salary|negotiate|compensation/, "Confident professional at a polished conference table in a high-rise office, city skyline through windows"],
+    [/remote|work from home|wfh/, "Stylish home office setup with a laptop, coffee cup, plant, natural light from large windows, clean minimal design"],
+    [/career|growth|promotion/, "Person ascending modern floating staircase in a bright atrium, upward perspective, success metaphor"],
+    [/job search|application|apply/, "Person at a modern desk with multiple screens, focused and productive, soft blue accent lighting"],
+    [/skill|learn|course/, "Modern workspace with books, laptop, and digital tools, growth-oriented imagery, warm light"],
+    [/scam|fraud|warning|safety/, "Professional cybersecurity concept, shield icon, secure workspace, blue-toned lighting, tech protection theme"],
+    [/ai|technology|tool/, "Futuristic workspace with holographic interfaces, clean tech aesthetic, blue and purple accents"],
+  ];
+
+  for (const [pattern, scene] of sceneMap) {
+    if (pattern.test(topicText)) {
+      return `${scene}. Professional photography, high quality, ${platform} marketing visual.`;
+    }
   }
 
-  return parts.join(" ");
+  // # Generic professional fallback
+  return `Modern professional workspace with clean design, laptop and career-related imagery, warm natural lighting, premium aesthetic. For ${platform} marketing.`;
 }
 
 /* ---- Main Designer Function ---- */
@@ -95,7 +107,8 @@ Return a JSON object:
       "body": "15-30 word body text",
       "stat": { "value": "75%", "label": "of resumes rejected by ATS" },
       "bullets": ["item 1", "item 2"],
-      "layout": "hero"
+      "layout": "hero",
+      "imagePrompt": "A photographic SCENE description for AI image generation. Describe what the viewer should SEE: people, settings, objects, lighting, mood, colors. Do NOT include any text to render — the AI cannot render text. Example: 'Confident professional at a modern desk reviewing documents, warm natural light from large windows, clean minimal office, success atmosphere'"
     }
   ],
   "caption": "Social media caption that complements the visuals (100-400 words for LinkedIn, 50-200 for Twitter, 100-300 for Instagram). Do NOT repeat slide text."
@@ -147,13 +160,14 @@ Return ONLY valid JSON.`;
       layout,
       slideNumber: index + 1,
       totalSlides,
-      // # Every slide gets an aiImagePrompt — OpenAI renders all slides
-      aiImagePrompt: buildSlideImagePrompt(
-        { headline: String(slide.headline || ""), body: slide.body ? String(slide.body) : undefined, stat: slide.stat as any, layout },
-        platform,
-        index,
-        totalSlides
-      ),
+      // # Prefer Gemini's scene-descriptive imagePrompt, fall back to auto-generated
+      aiImagePrompt: slide.imagePrompt
+        ? String(slide.imagePrompt)
+        : buildSlideImagePrompt(
+            { headline: String(slide.headline || ""), body: slide.body ? String(slide.body) : undefined, stat: slide.stat as any, layout },
+            platform,
+            mediaPrompt,
+          ),
       // # Keep extended fields for Canvas 2D fallback
       beforeText: slide.beforeText ? String(slide.beforeText) : undefined,
       afterText: slide.afterText ? String(slide.afterText) : undefined,

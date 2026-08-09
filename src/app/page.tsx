@@ -65,7 +65,8 @@ interface ContentPlan {
 interface VisualSlide {
   index: number;
   visualId: string;
-  dataUrl: string;
+  dataUrl?: string;
+  imageUrl?: string;
   width: number;
   height: number;
 }
@@ -311,6 +312,28 @@ export default function Dashboard() {
         setContent(data.items);
         setTotal(data.total);
         setTotalPages(data.totalPages);
+
+        // # Hydrate visualPreviews from persisted imageUrl so images show on page load
+        setVisualPreviews(prev => {
+          const merged = { ...prev };
+          let changed = false;
+          for (const item of data.items as ContentItem[]) {
+            if (item.imageUrl && !merged[item.id]) {
+              const urls = item.imageUrl.match(/(?:https?:\/\/[^,\s]+|data:[^,]+,[^,\s]*)/g);
+              if (urls && urls.length > 0) {
+                merged[item.id] = urls.map((url: string, i: number) => ({
+                  index: i,
+                  visualId: `persisted-${i}`,
+                  imageUrl: url.trim(),
+                  width: 0,
+                  height: 0,
+                }));
+                changed = true;
+              }
+            }
+          }
+          return changed ? merged : prev;
+        });
       }
     } catch {
       showToast("Failed to load content", "error");
@@ -1172,6 +1195,25 @@ export default function Dashboard() {
                 </button>
               )}
 
+              {/* # Bulk generate missing images via fal.ai */}
+              {content.filter(c => !c.imageUrl && c.contentType !== "post" && c.contentType !== "thread").length > 0 && (
+                <button
+                  onClick={async () => {
+                    const missing = content.filter(c => !c.imageUrl && c.contentType !== "post" && c.contentType !== "thread");
+                    showToast(`Generating images for ${missing.length} posts...`, "success");
+                    for (const item of missing) {
+                      try {
+                        await handleGenerateVisual(item, true);
+                      } catch { /* individual errors handled by handleGenerateVisual */ }
+                    }
+                    showToast(`Done generating images`, "success");
+                  }}
+                  className="px-3 py-1.5 bg-purple-500/15 text-purple-400 text-xs font-medium rounded-lg hover:bg-purple-500/25 transition-colors border border-purple-500/20"
+                >
+                  Generate Missing Images ({content.filter(c => !c.imageUrl && c.contentType !== "post" && c.contentType !== "thread").length})
+                </button>
+              )}
+
               <span className="text-text-muted text-sm ml-auto">{total} items</span>
 
               {/* # View mode toggle: Dashboard (raw data) vs Preview (platform-faithful) */}
@@ -1372,12 +1414,12 @@ export default function Dashboard() {
                             {previews.map((slide) => (
                               <div key={slide.index} className="shrink-0 relative group">
                                 <img
-                                  src={slide.dataUrl}
+                                  src={slide.dataUrl || slide.imageUrl}
                                   alt={`Slide ${slide.index + 1}`}
                                   className="h-40 w-auto rounded-lg border border-card-border"
                                 />
                                 <button
-                                  onClick={() => downloadVisual(slide.dataUrl, `jobpilot-${item.platform}-slide-${slide.index + 1}.png`)}
+                                  onClick={() => downloadVisual(slide.dataUrl || slide.imageUrl || "", `jobpilot-${item.platform}-slide-${slide.index + 1}.png`)}
                                   className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   Download
@@ -2315,12 +2357,12 @@ export default function Dashboard() {
                     {previewSlides.map((slide) => (
                       <div key={slide.index} className="shrink-0 relative group">
                         <img
-                          src={slide.dataUrl}
+                          src={slide.dataUrl || slide.imageUrl}
                           alt={`Slide ${slide.index + 1}`}
                           className={`rounded-xl border border-card-border ${previewSlides.length === 1 ? "max-h-[400px] w-auto" : "h-52 w-auto"}`}
                         />
                         <button
-                          onClick={(e) => { e.stopPropagation(); downloadVisual(slide.dataUrl, `jobpilot-${previewItem.platform}-slide-${slide.index + 1}.png`); }}
+                          onClick={(e) => { e.stopPropagation(); downloadVisual(slide.dataUrl || slide.imageUrl || "", `jobpilot-${previewItem.platform}-slide-${slide.index + 1}.png`); }}
                           className="absolute bottom-2 right-2 px-2.5 py-1 bg-black/70 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
                         >
                           Download

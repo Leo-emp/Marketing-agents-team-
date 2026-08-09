@@ -15,9 +15,11 @@ import { generateWeeklyDigest } from "@/lib/performance-digest";
 import { buildDynamicVoiceSamples } from "@/lib/dynamic-voice";
 import { designVisual } from "@/lib/visual/designer-agent";
 import { assembleCarouselPdf } from "@/lib/visual/pdf-carousel";
+import { generateFalImage } from "@/lib/visual/fal-image";
 import { generateImage } from "@/lib/visual/openai-image";
+import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { uploadImage, uploadMedia } from "@/lib/blob-storage";
-import { getDimensions } from "@/lib/visual/types";
+import { getDimensions, type SlideData } from "@/lib/visual/types";
 import { reviewContent } from "@/lib/editorial";
 import { notifyAdmin } from "@/lib/notify-admin";
 
@@ -165,14 +167,29 @@ Return ONLY valid JSON.`;
             const { width, height } = getDimensions(item.platform, item.contentType);
             const imageBuffers: Buffer[] = [];
 
-            // # Render each slide via OpenAI
+            // # Render each slide: fal.ai Flux Pro → OpenAI → Canvas 2D
             for (const slide of design.slides) {
+              let imgBuffer: Buffer | null = null;
+
               if (slide.aiImagePrompt) {
-                const imgBuffer = await generateImage(slide.aiImagePrompt, width, height, item.platform);
-                if (imgBuffer) {
-                  imageBuffers.push(imgBuffer);
+                // # Try fal.ai Flux Pro first (best quality, supports exact dimensions)
+                imgBuffer = await generateFalImage(slide.aiImagePrompt, width, height, { model: "flux-pro" });
+
+                // # Fall back to OpenAI gpt-image-1
+                if (!imgBuffer) {
+                  console.log(`[Pipeline] fal.ai failed for slide — trying OpenAI...`);
+                  imgBuffer = await generateImage(slide.aiImagePrompt, width, height, item.platform);
                 }
               }
+
+              // # Final fallback: Canvas 2D text rendering (always works, no API key needed)
+              if (!imgBuffer) {
+                console.log(`[Pipeline] AI image gen failed — using Canvas 2D fallback`);
+                const slideData: SlideData = { ...slide, slideNumber: slide.slideNumber ?? imageBuffers.length + 1, totalSlides: slide.totalSlides ?? design.slides.length };
+                imgBuffer = await renderSlideCanvas(slideData, width, height);
+              }
+
+              imageBuffers.push(imgBuffer);
             }
 
             if (imageBuffers.length > 0) {

@@ -171,14 +171,11 @@ export async function POST(req: NextRequest) {
         saved.push(record);
       }
 
-      // # Auto-design visuals for visual content types (runs in background, non-blocking)
-      for (const record of saved) {
-        if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
-          autoGenerateVisual(record.id).catch((e) =>
-            console.error(`[Visual] Batch auto-visual failed for ${record.id}:`, e)
-          );
-        }
-      }
+      // # Auto-design visuals for visual content types (awaited so Vercel doesn't kill the function)
+      const visualRecords = saved.filter((r) => VISUAL_CONTENT_TYPES.includes(r.contentType));
+      await Promise.allSettled(
+        visualRecords.map((record) => autoGenerateVisual(record.id))
+      );
 
       await prisma.contentPlan.update({
         where: { id: body.planId },
