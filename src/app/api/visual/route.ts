@@ -17,6 +17,7 @@ import { designVisual } from "@/lib/visual/designer-agent";
 import { generateImage } from "@/lib/visual/openai-image";
 import { generateFalImage } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
+import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
 
 /* # Render a single slide with three-tier fallback:
    # 1. fal.ai Flux Pro (primary — best quality, $0.05/image)
@@ -29,26 +30,46 @@ async function renderSlide(
   platform: string,
   model?: string
 ): Promise<Buffer> {
-  if (model === "canvas") {
-    return renderSlideCanvas(slide, width, height);
-  }
+  let buffer: Buffer;
 
-  const prompt = slide.aiImagePrompt;
-  if (prompt) {
-    // # fal.ai Flux — primary for flux-pro/flux-schnell or when no model specified
-    if (!model || model === "flux-pro" || model === "flux-schnell") {
-      const falBuffer = await generateFalImage(prompt, width, height, { model: (model as "flux-pro" | "flux-schnell") || "flux-pro" });
-      if (falBuffer) return falBuffer;
-      console.log("[Visual API] fal.ai failed — trying OpenAI...");
+  if (model === "canvas") {
+    buffer = await renderSlideCanvas(slide, width, height);
+  } else {
+    const prompt = slide.aiImagePrompt;
+    let resolved = false;
+
+    if (prompt) {
+      // # fal.ai Flux — primary for flux-pro/flux-schnell or when no model specified
+      if (!model || model === "flux-pro" || model === "flux-schnell") {
+        const falBuffer = await generateFalImage(prompt, width, height, { model: (model as "flux-pro" | "flux-schnell") || "flux-pro" });
+        if (falBuffer) { buffer = falBuffer; resolved = true; }
+        else console.log("[Visual API] fal.ai failed — trying OpenAI...");
+      }
+
+      // # OpenAI — secondary for explicit "openai" model or fal.ai fallback
+      if (!resolved) {
+        const aiBuffer = await generateImage(prompt, width, height, platform);
+        if (aiBuffer) { buffer = aiBuffer; resolved = true; }
+        else console.log("[Visual API] OpenAI failed — falling back to Canvas 2D");
+      }
     }
 
-    // # OpenAI — secondary for explicit "openai" model or fal.ai fallback
-    const aiBuffer = await generateImage(prompt, width, height, platform);
-    if (aiBuffer) return aiBuffer;
-    console.log("[Visual API] OpenAI failed — falling back to Canvas 2D");
+    if (!resolved) {
+      buffer = await renderSlideCanvas(slide, width, height);
+    }
   }
 
-  return renderSlideCanvas(slide, width, height);
+  // # Post-process: overlay logo + brand name + domain on every slide
+  // # Blog covers skip the overlay since they use editorial imagery
+  if (platform !== "blog") {
+    try {
+      buffer = await applyBrandOverlay(buffer!, width, height);
+    } catch (err) {
+      console.warn("[Visual API] Brand overlay failed, using raw image:", err);
+    }
+  }
+
+  return buffer!;
 }
 
 /* # Render slides to PNGs, upload to Vercel Blob, and save Visual records */

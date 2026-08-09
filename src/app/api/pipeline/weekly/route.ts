@@ -20,6 +20,7 @@ import { generateImage } from "@/lib/visual/openai-image";
 import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { uploadImage, uploadMedia } from "@/lib/blob-storage";
 import { getDimensions, type SlideData } from "@/lib/visual/types";
+import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
 import { reviewContent } from "@/lib/editorial";
 import { notifyAdmin } from "@/lib/notify-admin";
 
@@ -187,6 +188,15 @@ Return ONLY valid JSON.`;
                 console.log(`[Pipeline] AI image gen failed — using Canvas 2D fallback`);
                 const slideData: SlideData = { ...slide, slideNumber: slide.slideNumber ?? imageBuffers.length + 1, totalSlides: slide.totalSlides ?? design.slides.length };
                 imgBuffer = await renderSlideCanvas(slideData, width, height);
+              }
+
+              // # Post-process: overlay logo + brand name + domain (skip blog covers)
+              if (item.platform !== "blog") {
+                try {
+                  imgBuffer = await applyBrandOverlay(imgBuffer, width, height);
+                } catch (err) {
+                  console.warn("[Pipeline] Brand overlay failed, using raw image:", err);
+                }
               }
 
               imageBuffers.push(imgBuffer);

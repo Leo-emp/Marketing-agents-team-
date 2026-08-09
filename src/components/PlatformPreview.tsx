@@ -502,11 +502,11 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
 
       {/* # Image / Carousel with swipe-style nav */}
       {hasCarousel ? (
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", background: "#000" }}>
           <img
             src={allImages[currentSlide]}
             alt={`Slide ${currentSlide + 1}`}
-            style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }}
+            style={{ width: "100%", aspectRatio: "4/5", objectFit: "contain", display: "block" }}
           />
           {/* # Slide counter badge */}
           <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "12px" }}>
@@ -538,9 +538,9 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
           </div>
         </div>
       ) : image ? (
-        <img src={image} alt="Post" style={{ width: "100%", aspectRatio: "1/1", objectFit: "cover", display: "block" }} />
+        <img src={image} alt="Post" style={{ width: "100%", aspectRatio: "4/5", objectFit: "contain", display: "block", background: "#000" }} />
       ) : (
-        <div style={{ width: "100%", aspectRatio: "1/1", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: "100%", aspectRatio: "4/5", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <span style={{ color: "#555", fontSize: "14px" }}>No image</span>
         </div>
       )}
