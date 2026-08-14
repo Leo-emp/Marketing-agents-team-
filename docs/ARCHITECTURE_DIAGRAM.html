@@ -1,0 +1,418 @@
+<title>Marketing Agents Architecture</title>
+<style>
+:root {
+  --bg: #0A0D16;
+  --surface: #111620;
+  --text: #B0BEC5;
+  --text-dim: #546E7A;
+  --text-bright: #ECEFF1;
+  --magenta: #E040FB;
+  --cyan: #00E5FF;
+  --orange: #FF9100;
+  --green: #69F0AE;
+  --blue: #448AFF;
+  --pink: #FF4081;
+  --connector: #263238;
+}
+
+*,*::before,*::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  padding: 2rem 1.25rem;
+  min-height: 100vh;
+}
+.page { max-width: 1140px; margin: 0 auto; }
+
+header { text-align: center; margin-bottom: 1.5rem; }
+.eyebrow { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.22em; color: var(--magenta); margin-bottom: 0.25rem; }
+h1 { font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace; font-size: 1.3rem; font-weight: 300; color: var(--text-bright); }
+.subtitle { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+.diagram-wrap { overflow-x: auto; margin-bottom: 1.2rem; }
+svg.arch { display: block; width: 100%; min-width: 740px; height: auto; }
+.node rect { transition: filter 0.2s; cursor: default; }
+.node:hover rect { filter: brightness(1.4) saturate(1.2); }
+.node text { pointer-events: none; user-select: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .flow-dash { stroke-dasharray: 6 4; animation: flowA 1.4s linear infinite; }
+  @keyframes flowA { to { stroke-dashoffset: -10; } }
+}
+
+.pipeline-bar {
+  display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.85rem;
+  background: #120D16; border: 1px solid #2A1838; border-radius: 7px;
+  margin-bottom: 1.2rem; overflow-x: auto;
+  font-size: 0.65rem; font-family: ui-monospace, monospace;
+}
+.pipe-label { font-weight: 700; color: var(--magenta); letter-spacing: 0.1em; white-space: nowrap; margin-right: 0.2rem; }
+.pipe-item { color: var(--text-dim); white-space: nowrap; padding: 0.15rem 0.45rem; background: #140E1C; border-radius: 3px; border: 1px solid #221838; }
+.pipe-arrow { color: var(--magenta); opacity: 0.4; font-size: 0.7rem; }
+
+.stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 0.55rem; margin-bottom: 1.2rem;
+}
+.stat { background: var(--surface); border: 1px solid #1C2838; border-radius: 5px; padding: 0.55rem 0.65rem; text-align: center; }
+.stat-val { display: block; font-family: ui-monospace, monospace; font-size: 1rem; font-weight: 600; color: var(--text-bright); font-variant-numeric: tabular-nums; }
+.stat-lbl { display: block; font-size: 0.58rem; color: var(--text-dim); margin-top: 0.1rem; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 0.85rem; justify-content: center; font-size: 0.65rem; color: var(--text-dim); }
+.legend-item { display: flex; align-items: center; gap: 0.3rem; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.footer { text-align: center; margin-top: 1.4rem; font-size: 0.58rem; color: var(--text-dim); opacity: 0.5; }
+</style>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">JOBPILOT MARKETING AGENTS</p>
+    <h1>System Architecture</h1>
+    <p class="subtitle">8 AI agents, 72 visual templates, 4-platform auto-posting, email automation</p>
+  </header>
+
+  <div class="diagram-wrap">
+    <svg class="arch" viewBox="0 0 1080 640" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse">
+          <path d="M22 0L0 0 0 22" fill="none" stroke="#111A24" stroke-width="0.4"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)"/>
+
+      <!-- === LAYER LABELS === -->
+      <text transform="rotate(-90,18,50)" x="18" y="50" text-anchor="middle"
+            fill="#448AFF" font-size="7.5" font-weight="700" letter-spacing="0.14em" font-family="system-ui" opacity="0.5">DASHBOARD</text>
+      <text transform="rotate(-90,18,170)" x="18" y="170" text-anchor="middle"
+            fill="#E040FB" font-size="7.5" font-weight="700" letter-spacing="0.14em" font-family="system-ui" opacity="0.5">AI AGENTS</text>
+      <text transform="rotate(-90,18,330)" x="18" y="330" text-anchor="middle"
+            fill="#00E5FF" font-size="7.5" font-weight="700" letter-spacing="0.14em" font-family="system-ui" opacity="0.5">GENERATION</text>
+      <text transform="rotate(-90,18,490)" x="18" y="490" text-anchor="middle"
+            fill="#69F0AE" font-size="7.5" font-weight="700" letter-spacing="0.14em" font-family="system-ui" opacity="0.5">DELIVERY</text>
+
+      <!-- === ADMIN DASHBOARD === -->
+      <g class="node">
+        <title>Admin dashboard: content queue, scheduling, KPI analytics, visual editor, platform settings</title>
+        <rect x="120" y="12" width="660" height="44" rx="6"
+              fill="#111830" stroke="#448AFF" stroke-width="1.6"/>
+        <text x="450" y="32" text-anchor="middle" fill="#ECEFF1"
+              font-size="12" font-weight="700" font-family="system-ui">ADMIN DASHBOARD</text>
+        <text x="450" y="47" text-anchor="middle" fill="#546E7A"
+              font-size="8" font-family="ui-monospace, monospace">content queue · schedule · KPI · visual editor · settings</text>
+      </g>
+
+      <!-- === 8 AI AGENTS (2 rows of 4) === -->
+      <!-- Row 1 -->
+      <g class="node">
+        <title>Growth Hacker: data-driven marketer, ROI stats, conversion tips (LinkedIn, X)</title>
+        <rect x="60" y="105" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="127" y="126" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Growth Hacker</text>
+        <text x="127" y="146" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">LinkedIn · X</text>
+      </g>
+      <g class="node">
+        <title>Storyteller: narrative builder, user journey arcs (LinkedIn, Instagram)</title>
+        <rect x="210" y="105" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="277" y="126" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Storyteller</text>
+        <text x="277" y="146" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">LinkedIn · IG</text>
+      </g>
+      <g class="node">
+        <title>Data Nerd: analytics obsessed, charts and benchmarks (LinkedIn, X)</title>
+        <rect x="360" y="105" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="427" y="126" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Data Nerd</text>
+        <text x="427" y="146" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">LinkedIn · X</text>
+      </g>
+      <g class="node">
+        <title>Provocateur: hot takes, contrarian views, debate starters (X, TikTok)</title>
+        <rect x="510" y="105" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="577" y="126" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Provocateur</text>
+        <text x="577" y="146" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">X · TikTok</text>
+      </g>
+      <!-- Row 2 -->
+      <g class="node">
+        <title>Educator: patient teacher, how-to guides, step-by-step tutorials (LinkedIn, Instagram)</title>
+        <rect x="60" y="168" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="127" y="189" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Educator</text>
+        <text x="127" y="209" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">LinkedIn · IG</text>
+      </g>
+      <g class="node">
+        <title>Visualist: design thinker, carousel explainers, infographics (Instagram, TikTok)</title>
+        <rect x="210" y="168" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="277" y="189" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Visualist</text>
+        <text x="277" y="209" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">IG · TikTok</text>
+      </g>
+      <g class="node">
+        <title>Trend Surfer: culture connector, trending formats, meme-aware (TikTok, X)</title>
+        <rect x="360" y="168" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="427" y="189" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Trend Surfer</text>
+        <text x="427" y="209" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">TikTok · X</text>
+      </g>
+      <g class="node">
+        <title>Ambassador: customer voice, testimonials, case studies, social proof (all platforms)</title>
+        <rect x="510" y="168" width="135" height="50" rx="5"
+              fill="#1A0E20" stroke="#E040FB" stroke-width="1.3"/>
+        <text x="577" y="189" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Ambassador</text>
+        <text x="577" y="209" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">all platforms</text>
+      </g>
+
+      <!-- Research + Editorial (right side, same row as agents) -->
+      <g class="node">
+        <title>Research Agent: topic discovery, competitor analysis, trend identification, content gaps</title>
+        <rect x="690" y="105" width="170" height="50" rx="5"
+              fill="#0E1820" stroke="#00E5FF" stroke-width="1.3"/>
+        <text x="775" y="126" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Research Agent</text>
+        <text x="775" y="146" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">topics · trends · gaps</text>
+      </g>
+      <g class="node">
+        <title>Editorial Review: 4-dimensional quality scoring — hook, specificity, brand alignment, platform fit</title>
+        <rect x="690" y="168" width="170" height="50" rx="5"
+              fill="#0E1820" stroke="#00E5FF" stroke-width="1.3"/>
+        <text x="775" y="189" text-anchor="middle" fill="#ECEFF1"
+              font-size="10" font-weight="600" font-family="system-ui">Editorial Review</text>
+        <text x="775" y="209" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">hook · spec · brand · fit</text>
+      </g>
+
+      <!-- === GENERATION LAYER === -->
+      <!-- Visual Engine -->
+      <g class="node">
+        <title>Visual Engine: fal.ai Flux Pro AI images, HTML to PNG templates, PDF carousels, brand overlay</title>
+        <rect x="60" y="278" width="230" height="58" rx="5"
+              fill="#0E1820" stroke="#00E5FF" stroke-width="1.4"/>
+        <text x="175" y="300" text-anchor="middle" fill="#ECEFF1"
+              font-size="11" font-weight="600" font-family="system-ui">Visual Engine</text>
+        <text x="175" y="315" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">fal.ai Flux Pro · HTML→PNG</text>
+        <text x="175" y="329" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">PDF carousels · 72 templates</text>
+      </g>
+      <!-- Content DB -->
+      <g class="node">
+        <title>Content Database: Prisma + SQLite, 10 models, content queue with status tracking</title>
+        <rect x="310" y="278" width="195" height="58" rx="5"
+              fill="#1A1208" stroke="#FF9100" stroke-width="1.4"/>
+        <text x="407" y="300" text-anchor="middle" fill="#ECEFF1"
+              font-size="11" font-weight="600" font-family="system-ui">Content Database</text>
+        <text x="407" y="315" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">Prisma · SQLite · 10 models</text>
+        <text x="407" y="329" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">queue · schedule · analytics</text>
+      </g>
+      <!-- Video Pipeline -->
+      <g class="node">
+        <title>Video Pipeline: Remotion reel assembly, caption burning, background music, transitions</title>
+        <rect x="525" y="278" width="195" height="58" rx="5"
+              fill="#0E1820" stroke="#00E5FF" stroke-width="1.4"/>
+        <text x="622" y="300" text-anchor="middle" fill="#ECEFF1"
+              font-size="11" font-weight="600" font-family="system-ui">Video Pipeline</text>
+        <text x="622" y="315" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">Remotion · reel assembly</text>
+        <text x="622" y="329" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">captions · music · transitions</text>
+      </g>
+
+      <!-- Blog Writer -->
+      <g class="node">
+        <title>Blog Writer: SEO-optimized blog posts for jobpilotai.co, auto-publish via cron</title>
+        <rect x="740" y="278" width="155" height="58" rx="5"
+              fill="#0E1820" stroke="#00E5FF" stroke-width="1.4"/>
+        <text x="817" y="300" text-anchor="middle" fill="#ECEFF1"
+              font-size="11" font-weight="600" font-family="system-ui">Blog Writer</text>
+        <text x="817" y="315" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">SEO articles</text>
+        <text x="817" y="329" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">auto-publish · cron</text>
+      </g>
+
+      <!-- === DELIVERY LAYER (4 platforms + email + analytics) === -->
+      <g class="node">
+        <title>LinkedIn: OAuth 2.0, company page posting, carousel PDFs, image uploads</title>
+        <rect x="60" y="405" width="130" height="50" rx="5"
+              fill="#0A1A12" stroke="#69F0AE" stroke-width="1.3"/>
+        <text x="125" y="426" text-anchor="middle" fill="#ECEFF1"
+              font-size="10.5" font-weight="600" font-family="system-ui">LinkedIn</text>
+        <text x="125" y="446" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">OAuth · company page</text>
+      </g>
+      <g class="node">
+        <title>X / Twitter: OAuth 2.0, tweet posting, thread support, image uploads</title>
+        <rect x="205" y="405" width="130" height="50" rx="5"
+              fill="#0A1A12" stroke="#69F0AE" stroke-width="1.3"/>
+        <text x="270" y="426" text-anchor="middle" fill="#ECEFF1"
+              font-size="10.5" font-weight="600" font-family="system-ui">X / Twitter</text>
+        <text x="270" y="446" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">OAuth · threads</text>
+      </g>
+      <g class="node">
+        <title>Instagram: API posting, carousel support, reels upload, stories</title>
+        <rect x="350" y="405" width="130" height="50" rx="5"
+              fill="#0A1A12" stroke="#69F0AE" stroke-width="1.3"/>
+        <text x="415" y="426" text-anchor="middle" fill="#ECEFF1"
+              font-size="10.5" font-weight="600" font-family="system-ui">Instagram</text>
+        <text x="415" y="446" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">API · reels · carousel</text>
+      </g>
+      <g class="node">
+        <title>TikTok: OAuth, video upload, caption posting</title>
+        <rect x="495" y="405" width="130" height="50" rx="5"
+              fill="#0A1A12" stroke="#69F0AE" stroke-width="1.3"/>
+        <text x="560" y="426" text-anchor="middle" fill="#ECEFF1"
+              font-size="10.5" font-weight="600" font-family="system-ui">TikTok</text>
+        <text x="560" y="446" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">OAuth · video</text>
+      </g>
+
+      <!-- Email Engine -->
+      <g class="node">
+        <title>Email Engine: 7 automated sequences via Resend API, webhook tracking, unsubscribe handling</title>
+        <rect x="660" y="405" width="155" height="50" rx="5"
+              fill="#1A0A12" stroke="#FF4081" stroke-width="1.3"/>
+        <text x="737" y="426" text-anchor="middle" fill="#ECEFF1"
+              font-size="10.5" font-weight="600" font-family="system-ui">Email Engine</text>
+        <text x="737" y="446" text-anchor="middle" fill="#546E7A"
+              font-size="7.5" font-family="ui-monospace, monospace">7 sequences · Resend</text>
+      </g>
+
+      <!-- Scheduler -->
+      <g class="node">
+        <title>Cron Scheduler: automated posting, token refresh, retry with backoff, engagement pull</title>
+        <rect x="310" y="495" width="220" height="48" rx="6"
+              fill="#111830" stroke="#448AFF" stroke-width="1.5"/>
+        <text x="420" y="516" text-anchor="middle" fill="#ECEFF1"
+              font-size="11" font-weight="700" font-family="system-ui">CRON SCHEDULER</text>
+        <text x="420" y="532" text-anchor="middle" fill="#546E7A"
+              font-size="8" font-family="ui-monospace, monospace">post · refresh · retry · pull metrics</text>
+      </g>
+
+      <!-- Analytics -->
+      <g class="node">
+        <title>KPI Analytics: engagement tracking, A/B testing, UTM attribution, performance feedback loop</title>
+        <rect x="560" y="495" width="190" height="48" rx="5"
+              fill="#1A1208" stroke="#FF9100" stroke-width="1.4"/>
+        <text x="655" y="516" text-anchor="middle" fill="#ECEFF1"
+              font-size="11" font-weight="600" font-family="system-ui">KPI Analytics</text>
+        <text x="655" y="532" text-anchor="middle" fill="#546E7A"
+              font-size="8" font-family="ui-monospace, monospace">engagement · A/B · UTM · funnel</text>
+      </g>
+
+      <!-- Feedback loop arrow -->
+      <path d="M750,519 H780 V168 H860" stroke="#FF9100" stroke-width="1" stroke-dasharray="4 3" fill="none" opacity="0.35"/>
+      <text transform="rotate(-90,790,340)" x="790" y="340" text-anchor="middle"
+            fill="#FF9100" font-size="6.5" font-family="ui-monospace, monospace" opacity="0.4">FEEDBACK LOOP</text>
+
+      <!-- External services panel -->
+      <text x="890" y="108" fill="#FF9100" font-size="7.5" font-weight="700"
+            letter-spacing="0.12em" font-family="system-ui" opacity="0.5">SERVICES</text>
+      <g>
+        <rect x="890" y="120" width="150" height="195" rx="5"
+              fill="#1A1208" stroke="#FF9100" stroke-width="1" opacity="0.5"/>
+        <text x="965" y="142" text-anchor="middle" fill="#B0BEC5" font-size="9" font-family="ui-monospace, monospace">Gemini AI</text>
+        <text x="965" y="162" text-anchor="middle" fill="#B0BEC5" font-size="9" font-family="ui-monospace, monospace">fal.ai Flux Pro</text>
+        <text x="965" y="182" text-anchor="middle" fill="#B0BEC5" font-size="9" font-family="ui-monospace, monospace">Resend Email</text>
+        <text x="965" y="202" text-anchor="middle" fill="#B0BEC5" font-size="9" font-family="ui-monospace, monospace">Vercel Blob</text>
+        <text x="965" y="222" text-anchor="middle" fill="#B0BEC5" font-size="9" font-family="ui-monospace, monospace">Pexels Stock</text>
+        <text x="965" y="242" text-anchor="middle" fill="#B0BEC5" font-size="9" font-family="ui-monospace, monospace">Remotion</text>
+        <text x="965" y="262" text-anchor="middle" fill="#546E7A" font-size="8" font-family="ui-monospace, monospace">+ 4 social APIs</text>
+        <text x="965" y="302" text-anchor="middle" fill="#546E7A" font-size="7.5" font-family="ui-monospace, monospace">10 integrations</text>
+      </g>
+
+      <!-- === CONNECTIONS === -->
+      <!-- Dashboard to agents -->
+      <path d="M450,56 V80" stroke="#263238" stroke-width="1.2" fill="none" class="flow-dash"/>
+      <path d="M127,80 H775" stroke="#263238" stroke-width="0.8" fill="none" opacity="0.3"/>
+      <path d="M127,80 V105 M277,80 V105 M427,80 V105 M577,80 V105 M775,80 V105"
+            stroke="#263238" stroke-width="1.2" fill="none" class="flow-dash"/>
+
+      <!-- Agents to generation layer -->
+      <path d="M127,218 V255 M277,218 V255 M427,218 V255 M577,218 V255"
+            stroke="#263238" stroke-width="1" fill="none" opacity="0.35"/>
+      <path d="M127,255 H817" stroke="#263238" stroke-width="0.8" fill="none" opacity="0.3"/>
+      <path d="M175,255 V278 M407,255 V278 M622,255 V278 M817,255 V278"
+            stroke="#263238" stroke-width="1.2" fill="none" class="flow-dash"/>
+
+      <!-- Generation to delivery -->
+      <path d="M175,336 V380 M407,336 V380 M622,336 V380"
+            stroke="#263238" stroke-width="1" fill="none" opacity="0.35"/>
+      <path d="M125,380 H737" stroke="#263238" stroke-width="0.8" fill="none" opacity="0.3"/>
+      <path d="M125,380 V405 M270,380 V405 M415,380 V405 M560,380 V405 M737,380 V405"
+            stroke="#263238" stroke-width="1.2" fill="none" class="flow-dash"/>
+
+      <!-- Platforms to scheduler -->
+      <path d="M125,455 V480 M270,455 V480 M415,455 V480 M560,455 V480"
+            stroke="#263238" stroke-width="1" fill="none" opacity="0.3"/>
+      <path d="M125,480 H560" stroke="#263238" stroke-width="0.8" fill="none" opacity="0.25"/>
+      <path d="M340,480 V495" stroke="#263238" stroke-width="1.2" fill="none" class="flow-dash"/>
+
+      <!-- Vercel / deployment bar -->
+      <rect x="60" y="575" width="840" height="30" rx="5"
+            fill="#0F0F18" stroke="#263238" stroke-width="0.8"/>
+      <text x="480" y="594" text-anchor="middle" fill="#546E7A" font-size="8"
+            font-family="ui-monospace, monospace">DEPLOYMENT: Vercel (serverless + cron jobs) · Vercel Blob (media storage) · SQLite (content DB)</text>
+
+    </svg>
+  </div>
+
+  <div class="pipeline-bar">
+    <span class="pipe-label">CONTENT PIPELINE</span>
+    <span class="pipe-item">Research</span>
+    <span class="pipe-arrow">&#x2192;</span>
+    <span class="pipe-item">Generate</span>
+    <span class="pipe-arrow">&#x2192;</span>
+    <span class="pipe-item">Editorial Review</span>
+    <span class="pipe-arrow">&#x2192;</span>
+    <span class="pipe-item">Visual Render</span>
+    <span class="pipe-arrow">&#x2192;</span>
+    <span class="pipe-item">Schedule</span>
+    <span class="pipe-arrow">&#x2192;</span>
+    <span class="pipe-item">Auto-Post</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="stat-val">6,700+</span><span class="stat-lbl">Lines of TypeScript</span></div>
+    <div class="stat"><span class="stat-val">148</span><span class="stat-lbl">Source Files</span></div>
+    <div class="stat"><span class="stat-val">46</span><span class="stat-lbl">API Routes</span></div>
+    <div class="stat"><span class="stat-val">8</span><span class="stat-lbl">AI Agents</span></div>
+    <div class="stat"><span class="stat-val">72</span><span class="stat-lbl">Visual Templates</span></div>
+    <div class="stat"><span class="stat-val">7</span><span class="stat-lbl">Email Sequences</span></div>
+    <div class="stat"><span class="stat-val">4</span><span class="stat-lbl">Platforms</span></div>
+    <div class="stat"><span class="stat-val">10</span><span class="stat-lbl">DB Models</span></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#448AFF"></span>Dashboard</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#E040FB"></span>AI Agents</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#00E5FF"></span>Generation</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#69F0AE"></span>Social Platforms</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#FF4081"></span>Email</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#FF9100"></span>Data & Services</div>
+  </div>
+
+  <p class="footer">JobPilot Marketing Agents &middot; github.com/Leo-emp/Marketing-agents-team-</p>
+</div>
