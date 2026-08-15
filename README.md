@@ -9,69 +9,37 @@ Built to run a SaaS marketing operation with near-zero human effort: **6,700+ li
 ## Architecture
 
 ```mermaid
-graph TB
-    subgraph Dashboard["ADMIN DASHBOARD"]
-        AD[Content queue · Schedule<br/>KPI · Visual editor · Settings]
-    end
+graph TD
+    DASH[Admin Dashboard] --> API[46 API Routes]
 
-    subgraph API["46 API ROUTES"]
-        GN[/generate · /research]
-        VS[/visual · /creative]
-        PS[/post · /scheduler]
-        EM[/email · /kpi · /funnel]
-    end
+    API --> AGENTS[8 AI Agents]
+    AGENTS --> GH[Growth Hacker]
+    AGENTS --> ST[Storyteller]
+    AGENTS --> DN[Data Nerd]
+    AGENTS --> PV[Provocateur]
+    AGENTS --> ED[Educator]
+    AGENTS --> VI[Visualist]
+    AGENTS --> TS[Trend Surfer]
+    AGENTS --> AM[Ambassador]
 
-    subgraph Agents["8 AI AGENTS"]
-        A1[Growth Hacker<br/>ROI stats, conversions]
-        A2[Storyteller<br/>User journeys, arcs]
-        A3[Data Nerd<br/>Charts, benchmarks]
-        A4[Provocateur<br/>Hot takes, debates]
-        A5[Educator<br/>How-to guides]
-        A6[Visualist<br/>Carousels, infographics]
-        A7[Trend Surfer<br/>Trending formats]
-        A8[Ambassador<br/>Testimonials, proof]
-    end
+    AGENTS --> QP[Quality Pipeline - Score 1-10: hook, specificity, brand, platform]
 
-    subgraph Visual["VISUAL ENGINE"]
-        FAL[fal.ai Flux Pro<br/>AI image generation]
-        TMP[72 Templates<br/>LinkedIn · Instagram · TikTok]
-        PDF[PDF Carousels<br/>Multi-slide builder]
-        BO[Brand Overlay<br/>Logo + watermark]
-    end
+    QP --> VIS[Visual Engine]
+    VIS --> FAL[fal.ai Flux Pro]
+    VIS --> TMP[72 Templates]
+    VIS --> PDF[PDF Carousels]
 
-    subgraph Pipeline["QUALITY PIPELINE"]
-        QP[Research → Generate → Editorial Review → Visual → Schedule<br/>Score 1-10: hook · specificity · brand · platform fit]
-    end
+    QP --> POST[Auto-Posting - Cron + retry]
+    POST --> LI[LinkedIn]
+    POST --> TW[Twitter/X]
+    POST --> IG[Instagram]
+    POST --> TK[TikTok]
 
-    subgraph Delivery["AUTO-POSTING"]
-        LI[LinkedIn OAuth]
-        TW[Twitter/X OAuth]
-        IG[Instagram API]
-        TK[TikTok API]
-        CR[Cron Scheduler<br/>Retry + backoff]
-    end
+    QP --> EMAIL[7 Email Sequences - Resend API]
 
-    subgraph Email["EMAIL MARKETING"]
-        ES[7 Sequences<br/>Onboarding · Drip · Re-engage<br/>Upgrade · Win-back · Digest]
-        RE[Resend API]
-    end
+    POST --> KPI[KPI Analytics - A/B testing, UTM, attribution]
 
-    subgraph Analytics["KPI ANALYTICS"]
-        KP[Engagement tracking<br/>A/B testing · UTM funnel<br/>Attribution sync]
-    end
-
-    Dashboard --> API
-    API --> Agents --> Pipeline
-    Pipeline --> Visual
-    Pipeline --> Delivery
-    Pipeline --> Email
-    Delivery --> Analytics
-    ES --> RE
-
-    style Agents fill:#1a1a2e,stroke:#F472B6,color:#fff
-    style Visual fill:#1a1a2e,stroke:#06B6D4,color:#fff
-    style Pipeline fill:#1a1a2e,stroke:#F59E0B,color:#fff
-    style Delivery fill:#1a1a2e,stroke:#10B981,color:#fff
+    API --> DB[(SQLite - Prisma - 10 models)]
 ```
 
 ## Problem Statement
