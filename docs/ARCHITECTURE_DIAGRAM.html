@@ -414,5 +414,70 @@ svg.arch { display: block; width: 100%; min-width: 740px; height: auto; }
     <div class="legend-item"><span class="legend-dot" style="background:#FF9100"></span>Data & Services</div>
   </div>
 
+  <style>
+    .justifications { margin-top: 2rem; border-top: 1px solid #2A1838; padding-top: 1.5rem; }
+    .justifications h2 { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.18em; color: var(--magenta); margin-bottom: 1rem; }
+    .just-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+    .just-card { background: var(--surface); border: 1px solid #1C2838; border-radius: 6px; padding: 0.85rem 1rem; }
+    .just-card h3 { font-size: 0.8rem; font-weight: 600; color: var(--text-bright); margin-bottom: 0.3rem; }
+    .just-card .tech { font-size: 0.65rem; color: var(--magenta); font-family: ui-monospace, monospace; margin-bottom: 0.4rem; }
+    .just-card p { font-size: 0.72rem; line-height: 1.55; color: var(--text); }
+    .just-card .alt { font-size: 0.65rem; color: var(--text-dim); margin-top: 0.35rem; font-style: italic; }
+  </style>
+
+  <div class="justifications">
+    <h2>TECHNOLOGY JUSTIFICATIONS</h2>
+    <div class="just-grid">
+      <div class="just-card">
+        <h3>8 AI Agent Personas</h3>
+        <div class="tech">Multi-Agent Architecture</div>
+        <p>Each social platform has distinct content norms — a LinkedIn thought leadership post reads differently than a TikTok hook. 8 specialized agents (Growth Hacker, Storyteller, Data Nerd, Provocateur, Educator, Visualist, Trend Surfer, Ambassador) with injected voice samples produce platform-native content that a single generic prompt cannot match. Voice samples ground the LLM in specific writing styles.</p>
+        <p class="alt">Rejected: single agent (generic voice), template-only (no creativity), human writers ($5K-15K/month)</p>
+      </div>
+      <div class="just-card">
+        <h3>Two-Pass Editorial Pipeline</h3>
+        <div class="tech">Quality Control</div>
+        <p>Generation and evaluation are fundamentally different objectives — creativity vs. quality. The first pass optimizes for engaging, platform-specific content. The second pass scores on 4 independent dimensions (hook strength, specificity, brand alignment, platform fit) with rejection below threshold. LLMs perform better when optimizing for one objective at a time.</p>
+        <p class="alt">Rejected: single-pass (quality variance too high), human review (doesn't scale for daily posting), no review (brand risk)</p>
+      </div>
+      <div class="just-card">
+        <h3>fal.ai Flux Pro</h3>
+        <div class="tech">AI Image Generation</div>
+        <p>API-first design with fast generation (2-4s), transparent per-image pricing, and no content restrictions on professional marketing imagery. The HTML template fallback (72 branded templates rendered to PNG) ensures visuals are always available even during API outages. Dual approach provides both creative AI images and brand-consistent templated slides.</p>
+        <p class="alt">Rejected: DALL-E (content restrictions on marketing), Midjourney (no API), Stable Diffusion self-hosted (GPU cost)</p>
+      </div>
+      <div class="just-card">
+        <h3>OAuth 2.0 Auto-Posting</h3>
+        <div class="tech">4-Platform Distribution</div>
+        <p>OAuth 2.0 with automatic token refresh via cron eliminates the manual posting bottleneck. The cron scheduler handles optimal timing per platform, retry with exponential backoff for API failures, and engagement metric pull-back. A solo founder cannot manually maintain consistent posting across LinkedIn, X, Instagram, and TikTok — automation is the only path.</p>
+        <p class="alt">Rejected: Buffer/Hootsuite (monthly cost, no AI generation), manual posting (10-15 hrs/week), RSS-to-social (no customization)</p>
+      </div>
+      <div class="just-card">
+        <h3>Gemini AI</h3>
+        <div class="tech">Content Generation</div>
+        <p>Gemini provides the best quality-to-cost ratio for high-volume content generation. The free tier supports development and testing, while the paid tier handles production volume at lower cost-per-token than GPT-4. Long context windows accommodate the full brand context, voice samples, and research data injected into each prompt.</p>
+        <p class="alt">Rejected: GPT-4 (2-3x cost per token), Claude (no free tier for development), open-source (quality gap on creative writing)</p>
+      </div>
+      <div class="just-card">
+        <h3>72 Branded HTML Templates</h3>
+        <div class="tech">Visual System</div>
+        <p>Templates organized by platform (LinkedIn, Instagram, TikTok) with shared brand constants ensure every visual carries the brand identity. HTML-to-PNG rendering produces pixel-perfect output without design tools. Templates cover 5 content types: stats cards, feature highlights, tip lists, quotes, and comparison slides — the formats that drive highest engagement per platform.</p>
+        <p class="alt">Rejected: Canva API (cost per render), design-on-demand (doesn't scale), AI-only visuals (no brand consistency)</p>
+      </div>
+      <div class="just-card">
+        <h3>Resend Email API</h3>
+        <div class="tech">Email Marketing</div>
+        <p>7 automated email sequences (welcome, feature discovery, engagement, upgrade, win-back, weekly digest, blog notify) handle the full user lifecycle. Resend provides delivery reliability, webhook tracking for bounces/complaints, and a developer-first API. Seed-on-deploy ensures email sequences are always available in production without manual setup.</p>
+        <p class="alt">Rejected: SendGrid (complex pricing), Mailchimp (overkill for transactional), self-hosted SMTP (deliverability nightmare)</p>
+      </div>
+      <div class="just-card">
+        <h3>SQLite + Prisma</h3>
+        <div class="tech">Content Database</div>
+        <p>The marketing system's data model (content queue, schedule, analytics, email sends) is read-heavy with low write contention — a perfect fit for SQLite. Prisma provides type-safe queries, auto-generated migrations, and a schema that serves as documentation. 10 models cover the full content lifecycle from generation to analytics.</p>
+        <p class="alt">Rejected: Postgres (connection overhead for serverless), MongoDB (schema flexibility unnecessary here), Redis-only (no relational queries)</p>
+      </div>
+    </div>
+  </div>
+
   <p class="footer">JobPilot Marketing Agents &middot; github.com/Leo-emp/Marketing-agents-team-</p>
 </div>
