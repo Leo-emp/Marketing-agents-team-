@@ -1,8 +1,16 @@
 {
   "crons": [
     {
+      "path": "/api/pipeline/strategy",
+      "schedule": "0 21 * * 0"
+    },
+    {
       "path": "/api/pipeline/weekly",
       "schedule": "0 22 * * 0"
+    },
+    {
+      "path": "/api/pipeline/trend-radar",
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/scheduler",

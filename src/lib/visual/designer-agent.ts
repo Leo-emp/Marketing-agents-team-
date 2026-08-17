@@ -1,18 +1,25 @@
 /* ============================================================
-   VISUAL DESIGNER AGENT V3 — Content-Only Output
+   VISUAL DESIGNER AGENT V4 — Template-First Pipeline
    ============================================================
-   Takes generated text content and produces structured SlideData.
-   Every slide gets an aiImagePrompt — OpenAI gpt-image-1 renders
-   all slides with full creative freedom. Canvas 2D is only used
-   if OpenAI fails (automatic fallback in the visual route).
+   # Render priority:
+   #   1. HTML templates (Puppeteer) — primary for all social posts
+   #   2. OpenAI gpt-image-1 — fallback if Puppeteer fails
+   #   3. Canvas 2D — last resort (always works, no API needed)
+   #   4. fal.ai Flux Pro — blog post covers ONLY
+   #
+   # The designer agent now calls Template Intelligence to pick
+   # the best HTML template (t1-t96) for each slide, then maps
+   # Gemini's output to TemplateContent format for rendering.
    ============================================================ */
 
 import { callGemini } from "../gemini";
 import { getDimensions, type SlideData, type SlideLayout } from "./types";
 import { BRAND_NAME, BRAND_URL } from "./brand";
+import { selectTemplate, slideToTemplateContent } from "./template-intelligence";
+import type { TemplateId, TemplateContent } from "./templates/shared";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// # Valid layouts — used for Canvas 2D fallback rendering
+// # Valid Canvas 2D layouts — used as last-resort fallback
 const VALID_LAYOUTS: SlideLayout[] = [
   "hero", "stat_card", "tip", "quote", "list", "cta",
   "before_after", "screenshot", "data_chart", "comparison",
@@ -20,53 +27,46 @@ const VALID_LAYOUTS: SlideLayout[] = [
   "split_image", "progress_bar",
 ];
 
-// # Build an image prompt for AI rendering (Flux Pro / GPT-image-1)
-// # Social platforms: branded slide with actual text content about JobPilot AI
-// # Blog: can use scenic/editorial imagery
+// # Build an image prompt for OpenAI gpt-image-1 (fallback renderer)
+// # Social platforms: branded slide with actual text content
+// # Blog: editorial photography / illustration
 function buildSlideImagePrompt(
   slide: { headline: string; body?: string; stat?: { value: string; label: string }; layout: string },
   platform: string,
   slideIndex: number,
   totalSlides: number,
 ): string {
-  // # Blog covers — editorial imagery is fine
+  // # Blog covers — editorial imagery
   if (platform === "blog") {
     const topic = `${slide.headline} ${slide.body || ""}`;
     return `Professional blog cover image for an article about: ${topic}. Clean modern editorial photography or illustration. High quality, sharp, well-lit. Suitable for a career tech blog. No text overlay needed.`;
   }
 
-  // # Social platforms — branded slides with intentional content text
+  // # Social platforms — branded slides
   const parts: string[] = [];
-
   parts.push(`A professional branded social media slide. Dark background (#09090b to #18181b gradient). Clean sans-serif typography. Blue (#3b82f6) accent elements.`);
 
-  // # Brand element on first slide
   if (slideIndex === 0) {
     parts.push(`Top-left: "${BRAND_NAME}" in small white text with a small blue wing icon beside it.`);
   }
 
-  // # Stat prominently if present
   if (slide.stat) {
     parts.push(`Render this statistic very large and bold in white: "${slide.stat.value}". Below it in medium gray (#a1a1aa) text: "${slide.stat.label}".`);
   }
 
-  // # Headline — always present
   if (slide.headline) {
     const size = slide.stat ? "medium-large" : "large";
     parts.push(`Render this headline in ${size} bold white text: "${slide.headline}".`);
   }
 
-  // # Body text
   if (slide.body) {
     parts.push(`Below the headline in smaller gray (#a1a1aa) text: "${slide.body}".`);
   }
 
-  // # CTA slide
   if (slideIndex === totalSlides - 1) {
     parts.push(`Include "${BRAND_URL}" as a prominent blue call-to-action. Below it: "Your AI Career Co-Pilot".`);
   }
 
-  // # Slide counter for carousels
   if (totalSlides > 1) {
     parts.push(`Top-right corner: small "${slideIndex + 1}/${totalSlides}" in muted text.`);
   }
@@ -76,6 +76,24 @@ function buildSlideImagePrompt(
   return parts.join(" ");
 }
 
+/* ---- Template Selection Result ---- */
+/* # Stored alongside each slide so the pipeline knows what was picked */
+export interface TemplateSelection {
+  templateId: TemplateId;
+  templateName: string;
+  reasoning: string;
+  templateContent: TemplateContent;
+}
+
+/* ---- Design Result ---- */
+/* # Extended to include template selections for each slide */
+export interface DesignResult {
+  slides: SlideData[];
+  caption: string;
+  // # Template selections — one per slide, for HTML renderer
+  templateSelections: (TemplateSelection | null)[];
+}
+
 /* ---- Main Designer Function ---- */
 
 export async function designVisual(
@@ -83,15 +101,16 @@ export async function designVisual(
   platform: string,
   contentType: string,
   mediaPrompt: string | null,
-  topic?: string
-): Promise<{ slides: SlideData[]; caption: string }> {
+  topic?: string,
+  pillar?: string,
+): Promise<DesignResult> {
   const { width, height } = getDimensions(platform, contentType);
   const orientation = width > height ? "landscape" : width === height ? "square" : "portrait";
   const isSingleImage = contentType === "single_image" || contentType === "post";
 
-  // # Determine slide count based on content type
-  const slideCount = isSingleImage ? 1 : contentType === "reel_script" ? "4-6" : "4-6";
+  const slideCount = isSingleImage ? 1 : "4-6";
 
+  // # Step 1: Generate structured slide data via Gemini
   const prompt = `You are a content strategist for ${BRAND_NAME}, a premium career tech platform. Extract the key messages from this content and structure them for a visual post.
 
 CONTENT TO STRUCTURE:
@@ -120,14 +139,19 @@ Return a JSON object:
   "slides": [
     {
       "headline": "5-12 word punchy headline",
+      "subheadline": "optional subtitle",
       "body": "15-30 word body text",
       "stat": { "value": "75%", "label": "of resumes rejected by ATS" },
       "bullets": ["item 1", "item 2"],
       "layout": "hero",
-      "imagePrompt": "${platform === "blog"
-        ? "For blog covers: describe a scenic/editorial image that fits the article topic. Can include photography, illustrations, or abstract visuals. Example: 'Aerial view of a modern city skyline at golden hour, warm tones, editorial magazine quality'"
-        : "For social slides: describe a BRANDED SLIDE DESIGN with the EXACT text to render on a dark background. Include: the headline text in large bold white, body text in smaller gray, stat numbers extra large, blue (#3b82f6) accents, JobPilot AI branding. NO stock photos, NO people, NO hands — this is a designed content card. Example: 'Dark slide (#09090b). Large bold white text: YOUR RESUME IS INVISIBLE. Below in gray: 75% of resumes never reach a human. Blue accent divider line. Top-left: JobPilot AI with blue wing icon. Clean SaaS slide design.'"
-      }"
+      "eyebrow": "optional category label",
+      "beforeText": "bad example text (for comparison slides)",
+      "afterText": "good example text (for comparison slides)",
+      "steps": [{"number": 1, "title": "Step name", "detail": "brief detail"}],
+      "bars": [{"label": "Category", "value": 85}],
+      "tips": [{"title": "Tip name", "description": "brief description"}],
+      "tags": ["keyword1", "keyword2"],
+      "cta": "call to action text"
     }
   ],
   "caption": "Social media caption that complements the visuals (100-400 words for LinkedIn, 50-200 for Twitter, 100-300 for Instagram). Do NOT repeat slide text."
@@ -137,7 +161,7 @@ Return ONLY valid JSON.`;
 
   let raw = await callGemini(prompt);
 
-  // # Parse the response — retry once if JSON is malformed
+  // # Parse response — retry once if JSON is malformed
   let parsed: { slides?: unknown[]; caption?: string };
   try {
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -159,12 +183,18 @@ Return ONLY valid JSON.`;
 
   const totalSlides = parsed.slides.length;
 
-  // # Normalize slide data and auto-generate aiImagePrompt for every slide
-  const slides: SlideData[] = (parsed.slides as Record<string, unknown>[]).map((slide, index) => {
+  // # Step 2: Normalize slides and build both SlideData + TemplateContent
+  const slides: SlideData[] = [];
+  const templateSelections: (TemplateSelection | null)[] = [];
+
+  for (let index = 0; index < parsed.slides.length; index++) {
+    const slide = parsed.slides[index] as Record<string, unknown>;
+
     const layout = VALID_LAYOUTS.includes(slide.layout as SlideLayout)
       ? (slide.layout as SlideLayout)
       : "hero";
 
+    // # Normalize to SlideData (used by OpenAI/Canvas fallbacks)
     const normalized: SlideData = {
       headline: String(slide.headline || ""),
       subheadline: slide.subheadline ? String(slide.subheadline) : undefined,
@@ -179,7 +209,6 @@ Return ONLY valid JSON.`;
       layout,
       slideNumber: index + 1,
       totalSlides,
-      // # Prefer Gemini's imagePrompt, fall back to auto-generated branded prompt
       aiImagePrompt: slide.imagePrompt
         ? String(slide.imagePrompt)
         : buildSlideImagePrompt(
@@ -188,7 +217,6 @@ Return ONLY valid JSON.`;
             index,
             totalSlides,
           ),
-      // # Keep extended fields for Canvas 2D fallback
       beforeText: slide.beforeText ? String(slide.beforeText) : undefined,
       afterText: slide.afterText ? String(slide.afterText) : undefined,
       bars: Array.isArray(slide.bars)
@@ -203,11 +231,59 @@ Return ONLY valid JSON.`;
       rightLabel: slide.rightLabel ? String(slide.rightLabel) : undefined,
     };
 
-    return normalized;
-  });
+    slides.push(normalized);
+
+    // # Step 3: Select an HTML template for this slide (non-blog only)
+    if (platform !== "blog") {
+      try {
+        // # Build the full content text for template matching
+        const slideText = [normalized.headline, normalized.body, normalized.subheadline]
+          .filter(Boolean).join(" ");
+
+        const selection = await selectTemplate(
+          platform,
+          contentType,
+          slideText,
+          pillar,
+          undefined,
+        );
+
+        // # Convert SlideData → TemplateContent for the HTML renderer
+        const templateContent = slideToTemplateContent(normalized);
+
+        // # Merge in Gemini's extra fields that slideToTemplateContent doesn't know about
+        if (slide.eyebrow) templateContent.eyebrow = String(slide.eyebrow);
+        if (slide.headlineHighlight) templateContent.headlineHighlight = String(slide.headlineHighlight);
+        if (slide.bodyBold) templateContent.bodyBold = String(slide.bodyBold);
+        if (slide.cta) templateContent.cta = String(slide.cta);
+        if (slide.score !== undefined) templateContent.score = Number(slide.score);
+        if (Array.isArray(slide.tags)) templateContent.tags = (slide.tags as unknown[]).map(String);
+        if (Array.isArray(slide.annotations)) templateContent.annotations = slide.annotations as any;
+        if (slide.methodName) templateContent.methodName = String(slide.methodName);
+        if (slide.benchmarkAt !== undefined) templateContent.benchmarkAt = Number(slide.benchmarkAt);
+        if (Array.isArray(slide.legend)) templateContent.legend = slide.legend as any;
+
+        templateSelections.push({
+          templateId: selection.templateId,
+          templateName: selection.templateName,
+          reasoning: selection.reasoning,
+          templateContent,
+        });
+
+        console.log(`[Designer] Slide ${index + 1}: selected template ${selection.templateId} "${selection.templateName}" — ${selection.reasoning}`);
+      } catch (err) {
+        console.warn(`[Designer] Template selection failed for slide ${index + 1}, will use fallback:`, err);
+        templateSelections.push(null);
+      }
+    } else {
+      // # Blog covers don't use HTML templates
+      templateSelections.push(null);
+    }
+  }
 
   return {
     slides,
     caption: parsed.caption ? String(parsed.caption) : "",
+    templateSelections,
   };
 }

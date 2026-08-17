@@ -18,11 +18,36 @@ import { generateImage } from "@/lib/visual/openai-image";
 import { generateFalImage } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
 import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
+import { isTemplateId } from "@/lib/visual/templates/index";
+import { renderTemplateHTML } from "@/lib/visual/html-renderer";
+import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
+
+/* # Convert SlideData to TemplateContent for the HTML renderer */
+function slideToTemplateContent(slide: SlideData): TemplateContent {
+  return {
+    headline: slide.headline,
+    subheadline: slide.subheadline,
+    body: slide.body,
+    stat: slide.stat,
+    beforeText: slide.beforeText,
+    afterText: slide.afterText,
+    bars: slide.bars,
+    steps: slide.steps?.map(s => ({
+      label: String(s.number),
+      title: s.title,
+      description: s.detail,
+    })),
+    bullets: slide.bullets,
+    // # Extended fields pass through if present on the slide data
+    ...(slide as unknown as Record<string, unknown>),
+  };
+}
 
 /* # Render a single slide with three-tier fallback:
-   # 1. fal.ai Flux Pro (primary — best quality, $0.05/image)
-   # 2. OpenAI gpt-image-1 (secondary)
-   # 3. Canvas 2D (final fallback — text-only, free) */
+   # 1. HTML template (if layout is t1-t72 — Puppeteer render)
+   # 2. fal.ai Flux Pro (primary — best quality, $0.05/image)
+   # 3. OpenAI gpt-image-1 (secondary)
+   # 4. Canvas 2D (final fallback — text-only, free) */
 async function renderSlide(
   slide: SlideData,
   width: number,
@@ -31,6 +56,15 @@ async function renderSlide(
   model?: string
 ): Promise<Buffer> {
   let buffer: Buffer;
+
+  // # HTML template path — for template IDs (t1-t72)
+  // # These are our branded Puppeteer-rendered templates
+  // # They already include brand strip, so skip brand overlay after
+  if (isTemplateId(slide.layout)) {
+    const content = slideToTemplateContent(slide);
+    buffer = await renderTemplateHTML(slide.layout as TemplateId, content, width, height);
+    return buffer;
+  }
 
   if (model === "canvas") {
     buffer = await renderSlideCanvas(slide, width, height);

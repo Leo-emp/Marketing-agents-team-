@@ -6,7 +6,7 @@
    the full generation request with platform dimensions.
    ============================================================ */
 
-/* # Layout options for each slide/image */
+/* # Legacy layout names — used by Canvas 2D renderer */
 export type SlideLayout =
   | "hero"           // # Full-width headline with gradient accent
   | "stat_card"      // # Large number/stat with label
@@ -24,6 +24,11 @@ export type SlideLayout =
   | "split_image"    // # Left accent + right text panel
   | "progress_bar";  // # Multiple progress bars with labels
 
+/* # Template IDs (t1-t72) — used by HTML/Puppeteer renderer */
+/* # T1-T15, T65-T72 = LinkedIn | T16-T21, T28-T33, T40-T44, T49-T52 = TikTok */
+/* # T22-T27, T34-T39, T45-T48, T53-T56, T57-T64 = Instagram */
+export type TemplateLayout = `t${number}`;
+
 /* # Data for a single slide or image */
 export interface SlideData {
   headline: string;
@@ -32,7 +37,7 @@ export interface SlideData {
   stat?: { value: string; label: string };
   bullets?: string[];
   footer?: string;
-  layout: SlideLayout;
+  layout: SlideLayout | TemplateLayout;
   accentColor?: string;
   slideNumber?: number;
   totalSlides?: number;

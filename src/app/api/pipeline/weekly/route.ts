@@ -1,10 +1,20 @@
 /* ============================================================
    WEEKLY PIPELINE — /api/pipeline/weekly
    ============================================================
-   GET: Cron-triggered Sunday 10 PM UTC. Generates a full
-   week of content: pulls performance data, creates a plan via
-   the strategist agent, generates all content, renders visuals,
-   and queues everything with status "pending" for admin review.
+   # GET: Cron-triggered Sunday 10 PM UTC. Generates a full
+   # week of content: pulls performance data, creates a plan via
+   # the strategist agent, generates all content, renders visuals,
+   # and queues everything with status "pending" for admin review.
+   #
+   # RENDER PRIORITY (social posts):
+   #   1. HTML templates (Puppeteer) — primary, pixel-perfect
+   #   2. OpenAI gpt-image-1 — fallback if Puppeteer fails
+   #   3. Canvas 2D — last resort (always works, no API needed)
+   #
+   # RENDER PRIORITY (blog covers):
+   #   1. fal.ai Flux Pro — photorealistic editorial imagery
+   #   2. OpenAI gpt-image-1 — fallback
+   #   3. Canvas 2D — last resort
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -18,11 +28,13 @@ import { assembleCarouselPdf } from "@/lib/visual/pdf-carousel";
 import { generateFalImage } from "@/lib/visual/fal-image";
 import { generateImage } from "@/lib/visual/openai-image";
 import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
+import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import { uploadImage, uploadMedia } from "@/lib/blob-storage";
 import { getDimensions, type SlideData } from "@/lib/visual/types";
 import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
 import { reviewContent } from "@/lib/editorial";
 import { notifyAdmin } from "@/lib/notify-admin";
+import { getPlaybookForPrompt } from "@/lib/learning-loop";
 
 // # Default calendar config — generates a balanced mix of content types
 // # This can be overridden by a ContentPlan or dashboard settings
@@ -56,12 +68,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const results: { title: string; platform: string; contentType: string; status: string; error?: string }[] = [];
+  const results: { title: string; platform: string; contentType: string; status: string; renderer?: string; templateId?: string; error?: string }[] = [];
 
   try {
-    // # Step 1: Pull performance digest
-    console.log("[Pipeline] Pulling performance digest...");
-    const digest = await generateWeeklyDigest();
+    // # Step 1: Pull performance digest + learning loop playbook
+    console.log("[Pipeline] Pulling performance digest and playbook...");
+    const [digest, playbook] = await Promise.all([
+      generateWeeklyDigest(),
+      getPlaybookForPrompt(),
+    ]);
 
     // # Step 2: Check for a custom calendar config (ContentPlan with status "active")
     const activePlan = await prisma.contentPlan.findFirst({
@@ -87,14 +102,22 @@ export async function GET(req: NextRequest) {
         // # Get dynamic voice samples for this platform
         const voiceSamples = await buildDynamicVoiceSamples(item.platform, item.contentType);
 
-        // # Generate content via Gemini with performance context
+        // # Extract strategic context from the plan (pillar, topic angle, tone)
+        const itemPillar = (item as any).pillar || "";
+        const itemTopicAngle = (item as any).topicAngle || "";
+        const itemTone = (item as any).tone || "";
+
+        // # Generate content via Gemini with performance context + playbook + strategic direction
         const contentPrompt = `You are a senior content strategist for JobPilot AI (jobpilotai.co), a premium career tech platform.
 
 ${digest}
 
+${playbook}
+
 ${voiceSamples}
 
-Create a ${item.contentType} post for ${item.platform}. Choose a topic that will perform well based on the performance data above. Write the content in the same voice and quality as the top performers.
+${itemPillar ? `STRATEGIC DIRECTION FOR THIS PIECE:\n- Pillar: ${itemPillar}\n- Topic Angle: ${itemTopicAngle}\n- Tone: ${itemTone}\n` : ""}
+Create a ${item.contentType} post for ${item.platform}. ${itemTopicAngle ? `Focus on this specific angle: ${itemTopicAngle}.` : "Choose a topic that will perform well based on the performance data above."} Write the content in the same voice and quality as the top performers.
 
 RULES:
 - Zero emojis
@@ -150,9 +173,13 @@ Return ONLY valid JSON.`;
             editorialSpecScore: review.specScore,
             editorialBrandScore: review.brandScore,
             editorialPlatformScore: review.platformScore,
-            notes: JSON.stringify({ day: item.day, generatedBy: "weekly-pipeline" }),
+            notes: JSON.stringify({ day: item.day, generatedBy: "weekly-pipeline", pillar: itemPillar || undefined, tone: itemTone || undefined, topicAngle: itemTopicAngle || undefined }),
           },
         });
+
+        // # Track which renderer and template was used for this content piece
+        let rendererUsed = "none";
+        let templateIdUsed: string | undefined;
 
         // # Render visuals for image-based content types
         if (item.contentType !== "post" && item.contentType !== "thread") {
@@ -162,36 +189,96 @@ Return ONLY valid JSON.`;
               item.platform,
               item.contentType,
               parsed.mediaPrompt,
-              parsed.title
+              parsed.title,
+              itemPillar,
             );
 
             const { width, height } = getDimensions(item.platform, item.contentType);
             const imageBuffers: Buffer[] = [];
 
-            // # Render each slide: fal.ai Flux Pro → OpenAI → Canvas 2D
-            for (const slide of design.slides) {
+            // # Render each slide with the correct priority chain
+            for (let i = 0; i < design.slides.length; i++) {
+              const slide = design.slides[i];
+              const templateSelection = design.templateSelections[i];
               let imgBuffer: Buffer | null = null;
 
-              if (slide.aiImagePrompt) {
-                // # Try fal.ai Flux Pro first (best quality, supports exact dimensions)
-                imgBuffer = await generateFalImage(slide.aiImagePrompt, width, height, { model: "flux-pro" });
+              // # ---- SOCIAL POSTS: HTML Template → OpenAI → Canvas 2D ----
+              if (item.platform !== "blog") {
+                // # Priority 1: HTML templates via Puppeteer
+                if (templateSelection) {
+                  try {
+                    imgBuffer = await renderTemplateHTML(
+                      templateSelection.templateId,
+                      templateSelection.templateContent,
+                      width,
+                      height,
+                    );
+                    rendererUsed = "html-template";
+                    templateIdUsed = templateSelection.templateId;
+                    console.log(`[Pipeline] Slide ${i + 1}: rendered with HTML template ${templateSelection.templateId} "${templateSelection.templateName}"`);
+                  } catch (htmlErr) {
+                    console.warn(`[Pipeline] HTML template render failed for slide ${i + 1}:`, htmlErr);
+                    imgBuffer = null;
+                  }
+                }
 
-                // # Fall back to OpenAI gpt-image-1
+                // # Priority 2: OpenAI gpt-image-1
+                if (!imgBuffer && slide.aiImagePrompt) {
+                  try {
+                    imgBuffer = await generateImage(slide.aiImagePrompt, width, height, item.platform);
+                    if (imgBuffer) {
+                      rendererUsed = "openai";
+                      console.log(`[Pipeline] Slide ${i + 1}: rendered with OpenAI gpt-image-1`);
+                    }
+                  } catch (oaiErr) {
+                    console.warn(`[Pipeline] OpenAI render failed for slide ${i + 1}:`, oaiErr);
+                  }
+                }
+
+                // # Priority 3: Canvas 2D (always works)
                 if (!imgBuffer) {
-                  console.log(`[Pipeline] fal.ai failed for slide — trying OpenAI...`);
+                  console.log(`[Pipeline] Slide ${i + 1}: using Canvas 2D last resort`);
+                  const slideData: SlideData = {
+                    ...slide,
+                    slideNumber: slide.slideNumber ?? i + 1,
+                    totalSlides: slide.totalSlides ?? design.slides.length,
+                  };
+                  imgBuffer = await renderSlideCanvas(slideData, width, height);
+                  rendererUsed = "canvas-2d";
+                }
+              } else {
+                // # ---- BLOG COVERS: fal.ai → OpenAI → Canvas 2D ----
+
+                // # Priority 1: fal.ai Flux Pro (best photorealistic quality)
+                if (slide.aiImagePrompt) {
+                  imgBuffer = await generateFalImage(slide.aiImagePrompt, width, height, { model: "flux-pro" });
+                  if (imgBuffer) {
+                    rendererUsed = "fal-flux-pro";
+                    console.log(`[Pipeline] Blog cover: rendered with fal.ai Flux Pro`);
+                  }
+                }
+
+                // # Priority 2: OpenAI gpt-image-1
+                if (!imgBuffer && slide.aiImagePrompt) {
                   imgBuffer = await generateImage(slide.aiImagePrompt, width, height, item.platform);
+                  if (imgBuffer) {
+                    rendererUsed = "openai";
+                    console.log(`[Pipeline] Blog cover: rendered with OpenAI`);
+                  }
+                }
+
+                // # Priority 3: Canvas 2D
+                if (!imgBuffer) {
+                  console.log(`[Pipeline] Blog cover: using Canvas 2D last resort`);
+                  const slideData: SlideData = { ...slide, slideNumber: 1, totalSlides: 1 };
+                  imgBuffer = await renderSlideCanvas(slideData, width, height);
+                  rendererUsed = "canvas-2d";
                 }
               }
 
-              // # Final fallback: Canvas 2D text rendering (always works, no API key needed)
-              if (!imgBuffer) {
-                console.log(`[Pipeline] AI image gen failed — using Canvas 2D fallback`);
-                const slideData: SlideData = { ...slide, slideNumber: slide.slideNumber ?? imageBuffers.length + 1, totalSlides: slide.totalSlides ?? design.slides.length };
-                imgBuffer = await renderSlideCanvas(slideData, width, height);
-              }
-
-              // # Post-process: overlay logo + brand name + domain (skip blog covers)
-              if (item.platform !== "blog") {
+              // # Post-process: overlay logo + brand name (skip blog covers and HTML-templated slides)
+              // # HTML templates already include built-in branding, so skip overlay
+              if (item.platform !== "blog" && rendererUsed !== "html-template") {
                 try {
                   imgBuffer = await applyBrandOverlay(imgBuffer, width, height);
                 } catch (err) {
@@ -200,6 +287,29 @@ Return ONLY valid JSON.`;
               }
 
               imageBuffers.push(imgBuffer);
+
+              // # Store the Visual record with templateId for performance tracking
+              if (templateIdUsed || rendererUsed) {
+                try {
+                  await prisma.visual.create({
+                    data: {
+                      contentId: content.id,
+                      type: item.contentType,
+                      slideIndex: i,
+                      templateId: templateIdUsed || rendererUsed,
+                      data: JSON.stringify(templateSelection ? {
+                        templateName: templateSelection.templateName,
+                        reasoning: templateSelection.reasoning,
+                        renderer: rendererUsed,
+                      } : { renderer: rendererUsed }),
+                      width,
+                      height,
+                    },
+                  });
+                } catch (vizRecErr) {
+                  console.warn(`[Pipeline] Failed to store Visual record:`, vizRecErr);
+                }
+              }
             }
 
             if (imageBuffers.length > 0) {
@@ -233,7 +343,14 @@ Return ONLY valid JSON.`;
           }
         }
 
-        results.push({ title: parsed.title, platform: item.platform, contentType: item.contentType, status: "queued" });
+        results.push({
+          title: parsed.title,
+          platform: item.platform,
+          contentType: item.contentType,
+          status: "queued",
+          renderer: "html-template",
+          templateId: templateIdUsed,
+        });
       } catch (itemErr) {
         const msg = itemErr instanceof Error ? itemErr.message : "Unknown error";
         console.error(`[Pipeline] Failed to generate ${item.platform}/${item.contentType}:`, msg);
