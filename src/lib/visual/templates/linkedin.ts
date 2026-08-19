@@ -1,16 +1,17 @@
 /* ============================================================
-   LINKEDIN TEMPLATES (T1-T15, T65-T72) — 23 Templates
+   LINKEDIN TEMPLATES (T1-T15, T65-T80, T97-T102)
    ============================================================
    # Each template function returns a complete HTML page string
    # ready for Puppeteer screenshot. CSS is embedded at preview
    # scale and transform:scale() renders at target dimensions.
    #
-   # T1-T15: preview at 540×675 → scale 2× to 1080×1350
-   # T65-T72: preview at 432×540 → scale 2.5× to 1080×1350
+   # T1-T15:   preview at 540×675 → scale 2× to 1080×1350
+   # T65-T80:  preview at 432×540 → scale 2.5× to 1080×1350
+   # T97-T102: preview at 540×675 → scale 2× to 1080×1350 (Premium)
    ============================================================ */
 
 import type { TemplateContent, TemplateId } from "./shared";
-import { LOGO_DATA_URI, FONT_STACK, MONO_STACK, esc } from "./shared";
+import { LOGO_DATA_URI, LOGO_PRO_URI, FONT_STACK, MONO_STACK, esc, proFooterDark, proFooterLight, proFooterBar } from "./shared";
 
 // # All LinkedIn template IDs
 export const LINKEDIN_IDS: TemplateId[] = [
@@ -18,6 +19,9 @@ export const LINKEDIN_IDS: TemplateId[] = [
   "t9","t10","t11","t12","t13","t14","t15",
   "t65","t66","t67","t68","t69","t70","t71","t72",
   "t73","t74","t75","t76","t77","t78","t79","t80",
+  "t97","t98","t99","t100","t101","t102",
+  "t115","t116","t117","t118","t119","t120",
+  "t133","t134","t135","t136","t137","t138",
 ];
 
 // # Brand strip HTML for T1-T15 style (logo + name + url)
@@ -1391,6 +1395,721 @@ function buildT80(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
+   PREMIUM LINKEDIN TEMPLATES (T97-T102)
+   ============================================================
+   # Polished, professional designs with prominent branding.
+   # All use the full-size JobPilot AI logo and clear footer.
+   # Preview at 540×675 → scale 2× to 1080×1350.
+   ============================================================ */
+
+/* ============================================================
+   T97 — SKILL MATCH RINGS (Dark, SVG rings, 540×675)
+   # Concentric progress rings showing skill match percentages.
+   # Center shows overall match score. 3 rings with different
+   # accent colors. Data-visual + product-forward.
+   ============================================================ */
+const T97_CSS = `
+.t97{width:540px;height:675px;background:#08090E;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t97::before{content:'';position:absolute;top:50%;left:50%;width:400px;height:400px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.06),transparent 70%);}
+.t97 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:16px;position:relative;display:flex;align-items:center;gap:6px;}
+.t97 .eyebrow::before{content:'';width:12px;height:1.5px;background:#6366F1;}
+.t97 .headline{font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#E4E2DD;line-height:1.15;margin-bottom:28px;position:relative;}
+.t97 .headline em{font-style:normal;color:#A78BFA;}
+.t97 .rings-wrap{position:relative;display:flex;justify-content:center;align-items:center;flex:1;}
+.t97 .rings-svg{width:260px;height:260px;}
+.t97 .center-score{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.t97 .center-num{font-size:42px;font-weight:900;color:#E4E2DD;line-height:1;}
+.t97 .center-label{font-size:9px;color:#5A596E;margin-top:4px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
+.t97 .legend{display:flex;gap:16px;justify-content:center;margin-top:12px;position:relative;}
+.t97 .legend-item{display:flex;align-items:center;gap:5px;font-size:8px;color:#8B8A9A;}
+.t97 .legend-dot{width:6px;height:6px;border-radius:50%;}
+`;
+
+function buildT97(c: TemplateContent, w: number, h: number): string {
+  // # Extract 3 skill bars for the rings, default to sample data
+  const bars = c.bars || [
+    { label: "Technical Skills", value: 92 },
+    { label: "Experience Match", value: 78 },
+    { label: "Culture Fit", value: 85 },
+  ];
+  const ringColors = ["#6366F1", "#A78BFA", "#34D399"];
+  const score = c.score || Math.round(bars.reduce((a, b) => a + b.value, 0) / bars.length);
+
+  // # SVG ring calculations — 3 concentric circles with stroke-dasharray
+  const rings = bars.slice(0, 3).map((b, i) => {
+    const r = 110 - i * 28;
+    const circumference = 2 * Math.PI * r;
+    const offset = circumference - (Math.min(b.value, 100) / 100) * circumference;
+    return `<circle cx="130" cy="130" r="${r}" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="14"/>
+      <circle cx="130" cy="130" r="${r}" fill="none" stroke="${ringColors[i]}" stroke-width="14"
+        stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+        transform="rotate(-90 130 130)"/>`;
+  }).join("");
+
+  return wrapPage("t97", T97_CSS, `
+    <div class="eyebrow">${esc(c.eyebrow || "SKILL ANALYSIS")}</div>
+    <div class="headline">${hl(c.headline, c.headlineHighlight)}</div>
+    <div class="rings-wrap">
+      <svg class="rings-svg" viewBox="0 0 260 260">${rings}</svg>
+      <div class="center-score">
+        <div class="center-num">${score}%</div>
+        <div class="center-label">Overall Match</div>
+      </div>
+    </div>
+    <div class="legend">
+      ${bars.slice(0, 3).map((b, i) => `<div class="legend-item"><div class="legend-dot" style="background:${ringColors[i]}"></div>${esc(b.label)}</div>`).join("")}
+    </div>
+    ${brandStripT1Dark()}
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T98 — CAREER PATHWAY (Dark, vertical timeline, 540×675)
+   # Vertical connected nodes showing a career journey or
+   # step-by-step process. Dotted connector lines between
+   # numbered milestone circles.
+   ============================================================ */
+const T98_CSS = `
+.t98{width:540px;height:675px;background:#08090E;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t98::before{content:'';position:absolute;top:-80px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(99,102,241,0.05);filter:blur(60px);}
+.t98 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:16px;position:relative;display:flex;align-items:center;gap:6px;}
+.t98 .eyebrow::before{content:'';width:12px;height:1.5px;background:#6366F1;}
+.t98 .headline{font-size:24px;font-weight:800;letter-spacing:-0.03em;color:#E4E2DD;line-height:1.15;margin-bottom:28px;position:relative;}
+.t98 .timeline{display:flex;flex-direction:column;gap:0;flex:1;position:relative;padding-left:20px;}
+.t98 .rail{position:absolute;left:13px;top:14px;bottom:40px;width:2px;border-left:2px dashed rgba(99,102,241,0.2);}
+.t98 .node{display:flex;gap:16px;align-items:flex-start;padding-bottom:20px;position:relative;}
+.t98 .node-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;position:relative;z-index:2;}
+.t98 .node-dot.active{background:#6366F1;color:#fff;}
+.t98 .node-dot.done{background:rgba(99,102,241,0.15);color:#6366F1;border:1.5px solid rgba(99,102,241,0.3);}
+.t98 .node-text{padding-top:4px;}
+.t98 .node-title{font-size:13px;font-weight:700;color:#E4E2DD;margin-bottom:3px;}
+.t98 .node-desc{font-size:10px;color:#5A596E;line-height:1.45;}
+.t98 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
+.t98 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
+.t98 .brand-strip .name span{font-weight:400;color:#5A596E;}
+.t98 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.12);}
+`;
+
+function buildT98(c: TemplateContent, w: number, h: number): string {
+  const steps = c.steps || [];
+  return wrapPage("t98", T98_CSS, `
+    <div class="eyebrow">${esc(c.eyebrow || "CAREER PATHWAY")}</div>
+    <div class="headline">${esc(c.headline)}</div>
+    <div class="timeline">
+      <div class="rail"></div>
+      ${steps.map((s, i) => `<div class="node">
+        <div class="node-dot ${i === 0 ? "active" : "done"}">${esc(s.label || String(i + 1))}</div>
+        <div class="node-text">
+          <div class="node-title">${esc(s.title)}</div>
+          ${s.description ? `<div class="node-desc">${esc(s.description)}</div>` : ""}
+        </div>
+      </div>`).join("")}
+    </div>
+    ${brandStripT1Dark()}
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T99 — MARKET PULSE DASHBOARD (Dark, 2×2 stat grid, 540×675)
+   # Mini dashboard with 4 key stat cards showing market data.
+   # Each card has a large number, label, and trend indicator.
+   # Glassy borders, surface bg cards.
+   ============================================================ */
+const T99_CSS = `
+.t99{width:540px;height:675px;background:#08090E;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t99 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:12px;display:flex;align-items:center;gap:6px;position:relative;}
+.t99 .eyebrow::before{content:'';width:12px;height:1.5px;background:#6366F1;}
+.t99 .headline{font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#E4E2DD;line-height:1.15;margin-bottom:8px;position:relative;}
+.t99 .sub{font-size:10px;color:#5A596E;margin-bottom:24px;position:relative;}
+.t99 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;position:relative;}
+.t99 .card{background:#10111A;border:1px solid #1E1F2E;border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;}
+.t99 .card-val{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;margin-bottom:4px;letter-spacing:-0.03em;}
+.t99 .card-val.accent{color:#6366F1;}
+.t99 .card-val.good{color:#34D399;}
+.t99 .card-val.violet{color:#A78BFA;}
+.t99 .card-val.white{color:#E4E2DD;}
+.t99 .card-label{font-size:9px;color:#5A596E;line-height:1.3;margin-bottom:auto;}
+.t99 .card-trend{font-size:8px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:3px;}
+.t99 .up{color:#34D399;}
+.t99 .down{color:#EF4444;}
+.t99 .flat{color:#5A596E;}
+.t99 .source{font-size:7px;color:rgba(255,255,255,0.12);margin-top:12px;position:relative;}
+.t99 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
+.t99 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
+.t99 .brand-strip .name span{font-weight:400;color:#5A596E;}
+.t99 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.12);}
+`;
+
+function buildT99(c: TemplateContent, w: number, h: number): string {
+  const bars = c.bars || [];
+  const colorCycle = ["accent", "good", "violet", "white"];
+  const trendIcons: Record<string, string> = { up: "↑", down: "↓", flat: "→" };
+  return wrapPage("t99", T99_CSS, `
+    <div class="eyebrow">${esc(c.eyebrow || "MARKET PULSE")}</div>
+    <div class="headline">${esc(c.headline)}</div>
+    <div class="sub">${esc(c.subheadline || "")}</div>
+    <div class="grid">
+      ${bars.slice(0, 4).map((b, i) => {
+        const trend = (b.color || "up").toLowerCase();
+        const cls = trend === "up" ? "up" : trend === "down" ? "down" : "flat";
+        return `<div class="card">
+          <div class="card-val ${colorCycle[i % 4]}">${esc(String(b.value))}</div>
+          <div class="card-label">${esc(b.label)}</div>
+          <div class="card-trend ${cls}">${trendIcons[cls] || "→"} ${esc(trend)}</div>
+        </div>`;
+      }).join("")}
+    </div>
+    ${c.body ? `<div class="source">Source: ${esc(c.body)}</div>` : ""}
+    ${brandStripT1Dark()}
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T100 — THE EQUATION (Brand gradient, formula layout, 540×675)
+   # Equation-style: A + B + C = Result. Each variable is a
+   # card with label below. Mathematical/analytical aesthetic.
+   ============================================================ */
+const T100_CSS = `
+.t100{width:540px;height:675px;background:linear-gradient(145deg,#1E1B4B,#312E81,#3B1F7E);position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t100::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(167,139,250,0.1);filter:blur(60px);}
+.t100::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:rgba(99,102,241,0.08);filter:blur(50px);}
+.t100 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(167,139,250,0.6);margin-bottom:16px;position:relative;z-index:1;}
+.t100 .headline{font-size:24px;font-weight:800;letter-spacing:-0.03em;color:#fff;line-height:1.15;margin-bottom:32px;position:relative;z-index:1;}
+.t100 .equation{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;flex:1;position:relative;z-index:1;}
+.t100 .var-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px 14px;text-align:center;min-width:90px;}
+.t100 .var-val{font-size:20px;font-weight:800;color:#fff;margin-bottom:6px;}
+.t100 .var-label{font-size:8px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;}
+.t100 .operator{font-size:24px;font-weight:300;color:#A78BFA;}
+.t100 .result-card{background:rgba(99,102,241,0.2);border:1.5px solid rgba(99,102,241,0.4);border-radius:12px;padding:20px 18px;text-align:center;min-width:120px;}
+.t100 .result-val{font-size:28px;font-weight:900;color:#A78BFA;margin-bottom:6px;}
+.t100 .result-label{font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;}
+.t100 .context{font-size:10px;color:rgba(255,255,255,0.3);text-align:center;margin-top:16px;line-height:1.5;position:relative;z-index:1;}
+.t100 .brand-strip{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
+.t100 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t100 .brand-strip .name span{font-weight:400;color:rgba(255,255,255,0.3);}
+.t100 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.2);}
+`;
+
+function buildT100(c: TemplateContent, w: number, h: number): string {
+  const steps = c.steps || [];
+  const lastIdx = steps.length - 1;
+  const variables = steps.slice(0, lastIdx);
+  const result = steps[lastIdx];
+
+  return wrapPage("t100", T100_CSS, `
+    <div class="eyebrow">${esc(c.eyebrow || "THE FORMULA")}</div>
+    <div class="headline">${esc(c.headline)}</div>
+    <div class="equation">
+      ${variables.map((s, i) => `
+        <div class="var-card">
+          <div class="var-val">${esc(s.label)}</div>
+          <div class="var-label">${esc(s.title)}</div>
+        </div>
+        ${i < variables.length - 1 ? '<div class="operator">+</div>' : '<div class="operator">=</div>'}
+      `).join("")}
+      ${result ? `<div class="result-card">
+        <div class="result-val">${esc(result.label)}</div>
+        <div class="result-label">${esc(result.title)}</div>
+      </div>` : ""}
+    </div>
+    ${c.body ? `<div class="context">${esc(c.body)}</div>` : ""}
+    ${brandStripT1Dark()}
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T101 — RED FLAG / GREEN FLAG (Light, two-column, 540×675)
+   # Split layout with red flags (left) and green flags (right).
+   # Each item has a flag icon and description. Job posting
+   # evaluation format — high engagement, high saves.
+   ============================================================ */
+const T101_CSS = `
+.t101{width:540px;height:675px;background:#F8F7F4;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t101 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.t101 .eyebrow::before{content:'';width:12px;height:1.5px;background:#6366F1;}
+.t101 .headline{font-size:22px;font-weight:800;letter-spacing:-0.03em;color:#1A1A1A;line-height:1.15;margin-bottom:24px;}
+.t101 .columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;}
+.t101 .col{display:flex;flex-direction:column;gap:8px;}
+.t101 .col-header{font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;border-radius:6px;text-align:center;margin-bottom:4px;}
+.t101 .col-header.red{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;}
+.t101 .col-header.green{background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0;}
+.t101 .flag-item{display:flex;gap:8px;align-items:flex-start;font-size:10px;line-height:1.45;}
+.t101 .flag-icon{font-size:12px;flex-shrink:0;margin-top:1px;}
+.t101 .flag-text{color:#4A4A4A;}
+.t101 .flag-text strong{color:#1A1A1A;font-weight:700;}
+.t101 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
+.t101 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
+.t101 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
+.t101 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#C0BDB5;}
+`;
+
+function buildT101(c: TemplateContent, w: number, h: number): string {
+  // # Use items array: items with highlighted=false are red flags, highlighted=true are green
+  const items = c.items || [];
+  const redFlags = items.filter(it => !it.highlighted);
+  const greenFlags = items.filter(it => it.highlighted);
+
+  return wrapPage("t101", T101_CSS, `
+    <div class="eyebrow">${esc(c.eyebrow || "JOB POSTING ANALYSIS")}</div>
+    <div class="headline">${esc(c.headline)}</div>
+    <div class="columns">
+      <div class="col">
+        <div class="col-header red">🚩 RED FLAGS</div>
+        ${redFlags.map(it => `<div class="flag-item">
+          <span class="flag-icon">✕</span>
+          <span class="flag-text">${esc(it.text)}</span>
+        </div>`).join("")}
+      </div>
+      <div class="col">
+        <div class="col-header green">✅ GREEN FLAGS</div>
+        ${greenFlags.map(it => `<div class="flag-item">
+          <span class="flag-icon">✓</span>
+          <span class="flag-text">${esc(it.text)}</span>
+        </div>`).join("")}
+      </div>
+    </div>
+    ${brandStripT1Light()}
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T102 — WEEKLY DIGEST (Dark, newsletter card, 540×675)
+   # Newsletter-style numbered digest items. Clean information
+   # hierarchy with separators. "This Week in Careers" format.
+   ============================================================ */
+const T102_CSS = `
+.t102{width:540px;height:675px;background:#08090E;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t102::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6366F1,#A78BFA,#6366F1);}
+.t102 .masthead{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:6px;margin-top:8px;display:flex;align-items:center;gap:6px;}
+.t102 .masthead::before{content:'';width:12px;height:1.5px;background:#6366F1;}
+.t102 .headline{font-size:24px;font-weight:800;letter-spacing:-0.03em;color:#E4E2DD;line-height:1.15;margin-bottom:8px;}
+.t102 .date{font-size:9px;color:#5A596E;font-family:${MONO_STACK};margin-bottom:24px;}
+.t102 .digest{display:flex;flex-direction:column;gap:0;flex:1;}
+.t102 .digest-item{display:flex;gap:14px;padding:12px 0;border-top:1px solid #1E1F2E;}
+.t102 .digest-num{font-size:14px;font-weight:900;color:#6366F1;min-width:20px;font-variant-numeric:tabular-nums;}
+.t102 .digest-body{flex:1;}
+.t102 .digest-title{font-size:12px;font-weight:700;color:#E4E2DD;margin-bottom:3px;line-height:1.3;}
+.t102 .digest-desc{font-size:9px;color:#5A596E;line-height:1.45;}
+.t102 .read-more{font-size:9px;color:#6366F1;margin-top:auto;padding-top:16px;text-align:center;font-weight:600;position:relative;}
+.t102 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;}
+.t102 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
+.t102 .brand-strip .name span{font-weight:400;color:#5A596E;}
+.t102 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.12);}
+`;
+
+function buildT102(c: TemplateContent, w: number, h: number): string {
+  const tips = c.tips || [];
+  return wrapPage("t102", T102_CSS, `
+    <div class="masthead">${esc(c.eyebrow || "WEEKLY DIGEST")}</div>
+    <div class="headline">${esc(c.headline)}</div>
+    <div class="date">${esc(c.subheadline || "Week of Aug 18, 2026")}</div>
+    <div class="digest">
+      ${tips.map((t, i) => `<div class="digest-item">
+        <div class="digest-num">${i + 1}</div>
+        <div class="digest-body">
+          <div class="digest-title">${esc(t.title)}</div>
+          <div class="digest-desc">${esc(t.description)}</div>
+        </div>
+      </div>`).join("")}
+    </div>
+    ${c.cta ? `<div class="read-more">${esc(c.cta)}</div>` : ""}
+    ${brandStripT1Dark()}
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   FRESH PRO TEMPLATES — T115-T120
+   ============================================================
+   # White/grey backgrounds, teal/coral/navy/sage/rose accents.
+   # Professional, clean, high-contrast. Preview 540×675 → 2×.
+   ============================================================ */
+
+// # T115 — Clean Metrics: White bg, soft grey cards, teal accent
+const T115_CSS = `
+.t115{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;position:relative;}
+.t115::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#0D9488,#2DD4BF,#0D9488);}
+.t115 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#0D9488;margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:10px;}
+.t115 .ey::before{content:'';width:18px;height:2px;background:#0D9488;border-radius:1px;}
+.t115 .hdl{font-size:28px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:8px;}
+.t115 .sub{font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.5;}
+.t115 .metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;flex:1;}
+.t115 .metric{background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.t115 .metric-val{font-size:28px;font-weight:900;color:#0D9488;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;}
+.t115 .metric-lbl{font-size:10px;color:#9CA3AF;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-top:4px;}
+.t115 .metric-bar{width:100%;height:3px;background:#E5E7EB;border-radius:2px;margin-top:8px;overflow:hidden;}
+.t115 .metric-fill{height:100%;background:linear-gradient(90deg,#0D9488,#2DD4BF);border-radius:2px;}
+`;
+function buildT115(c: TemplateContent, w: number, h: number): string {
+  // # Uses bars data for metrics (label + value)
+  const metrics = (c.bars || []).slice(0, 3);
+  return wrapPage("t115", T115_CSS, `
+    <div class="ey">${esc(c.eyebrow || "KEY METRICS")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
+    <div class="metrics">
+      ${metrics.map(m => `<div class="metric">
+        <div class="metric-val">${esc(m.label)}</div>
+        <div class="metric-lbl">${esc(m.color || "")}</div>
+        <div class="metric-bar"><div class="metric-fill" style="width:${m.value}%"></div></div>
+      </div>`).join("")}
+    </div>
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T116 — Professional Quote: Light grey bg, navy accent, serif quote
+const T116_CSS = `
+.t116{width:540px;height:675px;background:#F3F4F6;padding:44px 40px 28px;display:flex;flex-direction:column;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;position:relative;}
+.t116 .decor{position:absolute;top:40px;left:40px;font-family:Georgia,serif;font-size:120px;font-weight:700;color:rgba(30,58,90,0.06);line-height:0.8;}
+.t116 .quote-text{font-family:Georgia,serif;font-size:22px;font-weight:400;color:#1E3A5A;line-height:1.45;position:relative;z-index:1;margin-bottom:20px;}
+.t116 .quote-text strong{font-weight:700;}
+.t116 .divider{width:40px;height:2px;background:#1E3A5A;border-radius:1px;margin-bottom:16px;}
+.t116 .attr{font-size:12px;font-weight:700;color:#1E3A5A;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.t116 .attr-role{font-size:11px;color:#6B7280;font-weight:400;}
+`;
+function buildT116(c: TemplateContent, w: number, h: number): string {
+  return wrapPage("t116", T116_CSS, `
+    <div class="decor">“</div>
+    <div class="quote-text">${esc(c.headline)}</div>
+    <div class="divider"></div>
+    ${c.body ? `<div class="attr">${esc(c.body)}</div>` : ""}
+    ${c.subheadline ? `<div class="attr-role">${esc(c.subheadline)}</div>` : ""}
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T117 — Feature Spotlight: White bg, coral accent pill, shadow card
+const T117_CSS = `
+.t117{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;}
+.t117 .pill{display:inline-flex;padding:5px 14px;border-radius:20px;background:#FFF7ED;border:1px solid #FDBA74;font-size:10px;font-weight:700;color:#EA580C;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;align-self:flex-start;}
+.t117 .hdl{font-size:28px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:10px;}
+.t117 .hdl em{font-style:normal;color:#EA580C;}
+.t117 .sub{font-size:13px;color:#6B7280;line-height:1.6;margin-bottom:20px;}
+.t117 .feature-card{background:#FFFBF5;border:1px solid #FED7AA;border-radius:12px;padding:22px 20px;flex:1;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.t117 .feat{display:flex;gap:12px;align-items:flex-start;}
+.t117 .feat-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#EA580C,#F97316);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0;}
+.t117 .feat-t{font-size:13px;font-weight:700;color:#111827;margin-bottom:2px;}
+.t117 .feat-d{font-size:11px;color:#9CA3AF;line-height:1.4;}
+`;
+function buildT117(c: TemplateContent, w: number, h: number): string {
+  const features = (c.tips || []).slice(0, 4);
+  return wrapPage("t117", T117_CSS, `
+    <div class="pill">${esc(c.eyebrow || "NEW FEATURE")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
+    <div class="feature-card">
+      ${features.map((f, i) => `<div class="feat">
+        <div class="feat-icon">${i + 1}</div>
+        <div><div class="feat-t">${esc(f.title)}</div><div class="feat-d">${esc(f.description)}</div></div>
+      </div>`).join("")}
+    </div>
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T118 — Comparison Table: White bg, alternating grey rows, teal headers
+const T118_CSS = `
+.t118{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;}
+.t118 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#0D9488;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.t118 .ey::before{content:'';width:18px;height:2px;background:#0D9488;border-radius:1px;}
+.t118 .hdl{font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:20px;}
+.t118 .table{flex:1;display:flex;flex-direction:column;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;}
+.t118 .row{display:flex;padding:12px 16px;align-items:center;gap:10px;}
+.t118 .row-head{background:#F0FDFA;font-size:10px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:0.08em;}
+.t118 .row:nth-child(even){background:#F9FAFB;}
+.t118 .row-label{flex:1;font-size:12px;font-weight:600;color:#374151;}
+.t118 .row-a,.t118 .row-b{width:70px;text-align:center;font-size:12px;font-weight:700;}
+.t118 .check{color:#0D9488;}
+.t118 .cross{color:#D1D5DB;}
+`;
+function buildT118(c: TemplateContent, w: number, h: number): string {
+  // # Uses items for comparison rows. highlighted=true means right column wins
+  const items = (c.items || []).slice(0, 6);
+  return wrapPage("t118", T118_CSS, `
+    <div class="ey">${esc(c.eyebrow || "COMPARISON")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="table">
+      <div class="row row-head"><div class="row-label">Feature</div><div class="row-a">Before</div><div class="row-b">After</div></div>
+      ${items.map(item => `<div class="row">
+        <div class="row-label">${esc(item.text)}</div>
+        <div class="row-a ${item.highlighted ? "cross" : "check"}">${item.highlighted ? "✗" : "✓"}</div>
+        <div class="row-b check">✓</div>
+      </div>`).join("")}
+    </div>
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T119 — Insight Card: Warm grey bg, sage green accent, large pull number
+const T119_CSS = `
+.t119{width:540px;height:675px;background:#F9FAFB;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;position:relative;}
+.t119 .big-num{font-size:160px;font-weight:900;color:rgba(101,163,13,0.06);line-height:0.85;letter-spacing:-0.06em;position:absolute;top:30px;right:20px;}
+.t119 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#65A30D;margin-bottom:12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.t119 .ey::before{content:'';width:18px;height:2px;background:#65A30D;border-radius:1px;}
+.t119 .hdl{font-size:28px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:10px;position:relative;z-index:1;}
+.t119 .body{font-size:14px;color:#6B7280;line-height:1.65;margin-bottom:20px;position:relative;z-index:1;}
+.t119 .body strong{color:#374151;font-weight:700;}
+.t119 .card{background:#FFFFFF;border:1px solid #E5E7EB;border-left:3px solid #65A30D;border-radius:8px;padding:18px 20px;position:relative;z-index:1;}
+.t119 .card-title{font-size:13px;font-weight:700;color:#111827;margin-bottom:4px;}
+.t119 .card-desc{font-size:11px;color:#9CA3AF;line-height:1.5;}
+`;
+function buildT119(c: TemplateContent, w: number, h: number): string {
+  const num = c.stat?.value || "01";
+  return wrapPage("t119", T119_CSS, `
+    <div class="big-num">${esc(num)}</div>
+    <div class="ey">${esc(c.eyebrow || "INSIGHT")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+    ${c.tips && c.tips[0] ? `<div class="card">
+      <div class="card-title">${esc(c.tips[0].title)}</div>
+      <div class="card-desc">${esc(c.tips[0].description)}</div>
+    </div>` : ""}
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T120 — Action Steps: White bg, rose accent numbered circles
+const T120_CSS = `
+.t120{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;}
+.t120 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#E11D48;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.t120 .ey::before{content:'';width:18px;height:2px;background:#E11D48;border-radius:1px;}
+.t120 .hdl{font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:20px;}
+.t120 .steps{flex:1;display:flex;flex-direction:column;gap:12px;}
+.t120 .step{display:flex;gap:14px;align-items:flex-start;}
+.t120 .step-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#E11D48,#FB7185);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;}
+.t120 .step-content{flex:1;padding-top:4px;}
+.t120 .step-t{font-size:14px;font-weight:700;color:#111827;margin-bottom:2px;}
+.t120 .step-d{font-size:11px;color:#9CA3AF;line-height:1.4;}
+.t120 .step-line{width:2px;height:12px;background:#FCE7F3;margin-left:15px;}
+`;
+function buildT120(c: TemplateContent, w: number, h: number): string {
+  const steps = (c.steps || c.tips || []).slice(0, 5);
+  return wrapPage("t120", T120_CSS, `
+    <div class="ey">${esc(c.eyebrow || "ACTION PLAN")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="steps">
+      ${steps.map((s, i) => `
+        ${i > 0 ? '<div class="step-line"></div>' : ""}
+        <div class="step">
+          <div class="step-num">${i + 1}</div>
+          <div class="step-content">
+            <div class="step-t">${esc(s.title)}</div>
+            <div class="step-d">${esc(s.description || "")}</div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+
+/* ============================================================
+   PRO SET 3 — T133-T138
+   ============================================================
+   # Slate, emerald, amber, sky blue accents on white/grey.
+   # New layout patterns: split cards, icon grids, horizontal
+   # timelines, quote walls, stat vs stat. Preview 540×675 → 2×.
+   ============================================================ */
+
+// # T133 — Split Card: White bg, left emerald accent bar, two-zone layout
+const T133_CSS = `
+.t133{width:540px;height:675px;background:#FFFFFF;padding:0;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;position:relative;}
+.t133 .top-zone{padding:40px 40px 20px;flex:1;display:flex;flex-direction:column;}
+.t133 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#059669;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.t133 .ey::before{content:'';width:18px;height:2px;background:#059669;border-radius:1px;}
+.t133 .hdl{font-size:28px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:8px;}
+.t133 .hdl em{font-style:normal;color:#059669;}
+.t133 .sub{font-size:13px;color:#6B7280;line-height:1.5;}
+.t133 .bottom-zone{background:#F0FDF4;border-top:3px solid #059669;padding:20px 40px 28px;display:flex;flex-direction:column;gap:10px;}
+.t133 .point{display:flex;gap:12px;align-items:flex-start;}
+.t133 .point-icon{width:24px;height:24px;border-radius:6px;background:#DCFCE7;border:1px solid #BBF7D0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#059669;flex-shrink:0;}
+.t133 .point-t{font-size:12px;font-weight:700;color:#111827;}
+.t133 .point-d{font-size:10px;color:#6B7280;margin-top:1px;}
+`;
+function buildT133(c: TemplateContent, w: number, h: number): string {
+  const points = (c.tips || []).slice(0, 3);
+  return wrapPage("t133", T133_CSS, `
+    <div class="top-zone">
+      <div class="ey">${esc(c.eyebrow || "KEY TAKEAWAY")}</div>
+      <div class="hdl">${esc(c.headline)}</div>
+      ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
+    </div>
+    <div class="bottom-zone">
+      ${points.map((p, i) => `<div class="point">
+        <div class="point-icon">✓</div>
+        <div><div class="point-t">${esc(p.title)}</div><div class="point-d">${esc(p.description)}</div></div>
+      </div>`).join("")}
+    </div>
+  `, 540, 675, w, h);
+}
+
+// # T134 — Stat vs Stat: White bg, two large numbers side by side, amber accent
+const T134_CSS = `
+.t134{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;}
+.t134 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#D97706;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.t134 .ey::before{content:'';width:18px;height:2px;background:#D97706;border-radius:1px;}
+.t134 .hdl{font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:20px;}
+.t134 .vs{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;flex:1;}
+.t134 .stat-block{text-align:center;}
+.t134 .stat-val{font-size:42px;font-weight:900;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}
+.t134 .stat-val.left{color:#D97706;}
+.t134 .stat-val.right{color:#059669;}
+.t134 .stat-label{font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
+.t134 .stat-desc{font-size:10px;color:#6B7280;margin-top:6px;line-height:1.4;}
+.t134 .vs-divider{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.t134 .vs-line{width:1px;height:40px;background:#E5E7EB;}
+.t134 .vs-text{font-size:10px;font-weight:800;color:#D1D5DB;letter-spacing:0.08em;}
+.t134 .bottom-note{font-size:11px;color:#9CA3AF;text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #F3F4F6;}
+`;
+function buildT134(c: TemplateContent, w: number, h: number): string {
+  const bars = c.bars || [];
+  const left = bars[0] || { label: "Before", value: 32 };
+  const right = bars[1] || { label: "After", value: 89 };
+  return wrapPage("t134", T134_CSS, `
+    <div class="ey">${esc(c.eyebrow || "HEAD TO HEAD")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="vs">
+      <div class="stat-block">
+        <div class="stat-val left">${left.value}%</div>
+        <div class="stat-label">${esc(left.label)}</div>
+        ${left.color ? `<div class="stat-desc">${esc(left.color)}</div>` : ""}
+      </div>
+      <div class="vs-divider"><div class="vs-line"></div><div class="vs-text">VS</div><div class="vs-line"></div></div>
+      <div class="stat-block">
+        <div class="stat-val right">${right.value}%</div>
+        <div class="stat-label">${esc(right.label)}</div>
+        ${right.color ? `<div class="stat-desc">${esc(right.color)}</div>` : ""}
+      </div>
+    </div>
+    ${c.body ? `<div class="bottom-note">${esc(c.body)}</div>` : ""}
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T135 — Icon Grid: Light grey bg, 2×2 icon cards, sky blue accent
+const T135_CSS = `
+.t135{width:540px;height:675px;background:#F8FAFC;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;}
+.t135 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#0284C7;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.t135 .ey::before{content:'';width:18px;height:2px;background:#0284C7;border-radius:1px;}
+.t135 .hdl{font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:20px;}
+.t135 .grid4{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;}
+.t135 .card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(0,0,0,0.03);}
+.t135 .card-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#0284C7,#38BDF8);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;margin-bottom:10px;}
+.t135 .card-t{font-size:13px;font-weight:700;color:#111827;margin-bottom:3px;}
+.t135 .card-d{font-size:10px;color:#94A3B8;line-height:1.4;}
+`;
+function buildT135(c: TemplateContent, w: number, h: number): string {
+  const items = (c.tips || []).slice(0, 4);
+  const icons = ["⚡", "🎯", "📊", "🚀"];
+  return wrapPage("t135", T135_CSS, `
+    <div class="ey">${esc(c.eyebrow || "FEATURES")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="grid4">
+      ${items.map((item, i) => `<div class="card">
+        <div class="card-icon">${icons[i] || "✦"}</div>
+        <div class="card-t">${esc(item.title)}</div>
+        <div class="card-d">${esc(item.description)}</div>
+      </div>`).join("")}
+    </div>
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T136 — Newsletter Card: White bg, top gradient bar, numbered list with dividers, slate accent
+const T136_CSS = `
+.t136{width:540px;height:675px;background:#FFFFFF;padding:0;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;position:relative;}
+.t136::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#475569,#64748B,#94A3B8);}
+.t136 .inner{padding:44px 40px 28px;display:flex;flex-direction:column;flex:1;}
+.t136 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#475569;margin-top:4px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.t136 .ey::before{content:'';width:18px;height:2px;background:#475569;border-radius:1px;}
+.t136 .hdl{font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:4px;}
+.t136 .date{font-size:10px;color:#94A3B8;font-family:'Cascadia Code','Fira Code',Consolas,monospace;margin-bottom:16px;}
+.t136 .items{flex:1;display:flex;flex-direction:column;}
+.t136 .item{display:flex;gap:12px;padding:12px 0;border-top:1px solid #F1F5F9;}
+.t136 .item-num{font-size:14px;font-weight:900;color:#475569;min-width:22px;font-variant-numeric:tabular-nums;}
+.t136 .item-t{font-size:13px;font-weight:700;color:#1E293B;margin-bottom:2px;}
+.t136 .item-d{font-size:10px;color:#94A3B8;line-height:1.4;}
+`;
+function buildT136(c: TemplateContent, w: number, h: number): string {
+  const items = (c.tips || []).slice(0, 5);
+  return wrapPage("t136", T136_CSS, `
+    <div class="inner">
+      <div class="ey">${esc(c.eyebrow || "WEEKLY ROUNDUP")}</div>
+      <div class="hdl">${esc(c.headline)}</div>
+      ${c.subheadline ? `<div class="date">${esc(c.subheadline)}</div>` : ""}
+      <div class="items">
+        ${items.map((item, i) => `<div class="item">
+          <div class="item-num">${String(i + 1).padStart(2, "0")}</div>
+          <div><div class="item-t">${esc(item.title)}</div><div class="item-d">${esc(item.description)}</div></div>
+        </div>`).join("")}
+      </div>
+      ${proFooterLight()}
+    </div>
+  `, 540, 675, w, h);
+}
+
+// # T137 — Ranking Ladder: White bg, numbered ranking with position bars, emerald accent
+const T137_CSS = `
+.t137{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;}
+.t137 .ey{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#059669;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.t137 .ey::before{content:'';width:18px;height:2px;background:#059669;border-radius:1px;}
+.t137 .hdl{font-size:26px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin-bottom:20px;}
+.t137 .ranks{flex:1;display:flex;flex-direction:column;gap:10px;}
+.t137 .rank{display:flex;align-items:center;gap:12px;}
+.t137 .rank-pos{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;}
+.t137 .rank-pos.gold{background:#FEF3C7;color:#D97706;border:1px solid #FDE68A;}
+.t137 .rank-pos.silver{background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;}
+.t137 .rank-pos.bronze{background:#FFF7ED;color:#EA580C;border:1px solid #FED7AA;}
+.t137 .rank-pos.plain{background:#F9FAFB;color:#9CA3AF;border:1px solid #E5E7EB;}
+.t137 .rank-info{flex:1;min-width:0;}
+.t137 .rank-t{font-size:12px;font-weight:700;color:#111827;}
+.t137 .rank-bar{height:5px;background:#F3F4F6;border-radius:3px;margin-top:4px;overflow:hidden;}
+.t137 .rank-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#059669,#34D399);}
+.t137 .rank-val{font-size:12px;font-weight:800;color:#059669;font-variant-numeric:tabular-nums;min-width:36px;text-align:right;}
+`;
+function buildT137(c: TemplateContent, w: number, h: number): string {
+  const bars = (c.bars || []).slice(0, 5);
+  const posStyles = ["gold", "silver", "bronze", "plain", "plain"];
+  return wrapPage("t137", T137_CSS, `
+    <div class="ey">${esc(c.eyebrow || "TOP RANKED")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="ranks">
+      ${bars.map((b, i) => `<div class="rank">
+        <div class="rank-pos ${posStyles[i]}">${i + 1}</div>
+        <div class="rank-info">
+          <div class="rank-t">${esc(b.label)}</div>
+          <div class="rank-bar"><div class="rank-fill" style="width:${b.value}%"></div></div>
+        </div>
+        <div class="rank-val">${b.value}%</div>
+      </div>`).join("")}
+    </div>
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+// # T138 — Minimal Statement: Pure white bg, massive left-aligned headline, thin sky blue rule
+const T138_CSS = `
+.t138{width:540px;height:675px;background:#FFFFFF;padding:44px 40px 28px;display:flex;flex-direction:column;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif;}
+.t138 .hdl{font-size:34px;font-weight:900;color:#0F172A;letter-spacing:-0.04em;line-height:1.1;margin-bottom:16px;}
+.t138 .hdl em{font-style:normal;color:#0284C7;}
+.t138 .rule{width:48px;height:3px;background:linear-gradient(90deg,#0284C7,#7DD3FC);border-radius:2px;margin-bottom:16px;}
+.t138 .body{font-size:14px;color:#94A3B8;line-height:1.6;max-width:400px;}
+.t138 .body strong{color:#334155;font-weight:700;}
+.t138 .tag{display:inline-flex;padding:5px 14px;border-radius:20px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:10px;font-weight:700;color:#0284C7;margin-top:20px;align-self:flex-start;}
+`;
+function buildT138(c: TemplateContent, w: number, h: number): string {
+  return wrapPage("t138", T138_CSS, `
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="rule"></div>
+    ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+    ${c.cta ? `<div class="tag">${esc(c.cta)}</div>` : ""}
+    ${proFooterLight()}
+  `, 540, 675, w, h);
+}
+
+
+/* ============================================================
    ROUTER — Dispatches template ID to the correct builder
    ============================================================ */
 export function buildLinkedInTemplate(
@@ -1431,6 +2150,27 @@ export function buildLinkedInTemplate(
     case "t78": return buildT78(content, width, height);
     case "t79": return buildT79(content, width, height);
     case "t80": return buildT80(content, width, height);
+    // # Premium templates
+    case "t97": return buildT97(content, width, height);
+    case "t98": return buildT98(content, width, height);
+    case "t99": return buildT99(content, width, height);
+    case "t100": return buildT100(content, width, height);
+    case "t101": return buildT101(content, width, height);
+    case "t102": return buildT102(content, width, height);
+    // # Fresh Pro templates
+    case "t115": return buildT115(content, width, height);
+    case "t116": return buildT116(content, width, height);
+    case "t117": return buildT117(content, width, height);
+    case "t118": return buildT118(content, width, height);
+    case "t119": return buildT119(content, width, height);
+    case "t120": return buildT120(content, width, height);
+    // # Pro Set 3 templates
+    case "t133": return buildT133(content, width, height);
+    case "t134": return buildT134(content, width, height);
+    case "t135": return buildT135(content, width, height);
+    case "t136": return buildT136(content, width, height);
+    case "t137": return buildT137(content, width, height);
+    case "t138": return buildT138(content, width, height);
     default:
       // # Fallback: render as T68 Quick Win (most versatile)
       return buildT68(content, width, height);

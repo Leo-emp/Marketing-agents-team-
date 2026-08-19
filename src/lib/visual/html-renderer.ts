@@ -1,7 +1,7 @@
 /* ============================================================
    HTML TEMPLATE RENDERER — Puppeteer-based HTML → PNG
    ============================================================
-   # Renders our 72 branded HTML/CSS templates to PNG buffers
+   # Renders our 186 branded HTML/CSS templates to PNG buffers
    # using headless Chromium. Uses @sparticuz/chromium-min in
    # production (Vercel) and regular Puppeteer locally.
    ============================================================ */
@@ -47,7 +47,7 @@ async function getBrowser() {
 }
 
 // # Render a template to PNG buffer
-// # Takes a template ID (t1-t72), content data, and target dimensions
+// # Takes a template ID (t1-t186), content data, and target dimensions
 export async function renderTemplateHTML(
   templateId: TemplateId,
   content: TemplateContent,

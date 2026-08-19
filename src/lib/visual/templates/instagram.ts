@@ -7,7 +7,7 @@
    ============================================================ */
 
 import type { TemplateContent, TemplateId } from "./shared";
-import { LOGO_DATA_URI, esc } from "./shared";
+import { LOGO_DATA_URI, LOGO_PRO_URI, esc } from "./shared";
 
 // # All Instagram template IDs across all 5 sets
 export const INSTAGRAM_IDS: TemplateId[] = [
@@ -17,6 +17,9 @@ export const INSTAGRAM_IDS: TemplateId[] = [
   "t53", "t54", "t55", "t56",
   "t57", "t58", "t59", "t60", "t61", "t62", "t63", "t64",
   "t89", "t90", "t91", "t92", "t93", "t94", "t95", "t96",
+  "t109", "t110", "t111", "t112", "t113", "t114",
+  "t127", "t128", "t129", "t130", "t131", "t132",
+  "t145", "t146", "t147", "t148", "t149", "t150",
 ];
 
 // # Instagram font stacks — serif headlines for editorial feel
@@ -1229,6 +1232,691 @@ function buildT96(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
+   PREMIUM INSTAGRAM TEMPLATES (T109-T114)
+   ============================================================
+   # Polished, editorial designs with prominent branding.
+   # T109, T111, T113: 4:5 feed (540×675 → 2× to 1080×1350)
+   # T110, T112: 1:1 grid (540×540 → 2× to 1080×1080)
+   # T114: 9:16 story (432×768 → 2.5× to 1080×1920)
+   ============================================================ */
+
+// # Premium brand footer for Instagram — logo + name + domain, centered
+function proIgFooter(color: string = "rgba(255,255,255,0.7)"): string {
+  return `<div style="position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:5;">
+    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:20px;height:20px;border-radius:4px;">
+    <span style="font-family:${IG_SANS};font-size:9px;font-weight:700;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:7px;color:${color};opacity:0.6;letter-spacing:0.03em;">jobpilotai.co</span>
+  </div>`;
+}
+
+// # Premium brand footer in a bar style for dark backgrounds
+function proIgFooterBar(): string {
+  return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(255,255,255,0.06);">
+    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);">
+    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:8px;color:rgba(255,255,255,0.3);margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+  </div>`;
+}
+
+// # Premium brand footer for light backgrounds
+function proIgFooterLight(): string {
+  return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(0,0,0,0.06);">
+    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);">
+    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:#333;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:8px;color:#BBB;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+  </div>`;
+}
+
+/* ============================================================
+   T109 — MAGAZINE EDITORIAL (Warm cream, serif headline, 4:5)
+   ============================================================
+   # Premium editorial layout with serif headline and clean rules.
+   # Warm cream background with rich typography hierarchy.
+   # Best for: carousel covers, thought leadership, insights.
+   ============================================================ */
+const T109_CSS = `
+/* # Warm cream background — editorial/magazine feel */
+.t109{background:#FAF7F2;display:flex;flex-direction:column;padding:44px 40px 28px;}
+/* # Category label — gold, uppercase, small */
+.t109 .cat{font-family:${IG_SANS};font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#B8860B;margin-bottom:8px;}
+/* # Top rule — thin black line */
+.t109 .rule{height:1px;background:#1A1A1A;margin-bottom:24px;}
+/* # Serif headline — large, elegant, high contrast */
+.t109 .hdl{font-family:${IG_SERIF};font-size:28px;font-weight:400;color:#1A1A1A;line-height:1.3;margin-bottom:8px;max-width:420px;}
+.t109 .hdl strong{font-weight:700;}
+/* # Subheadline */
+.t109 .sub{font-family:${IG_SANS};font-size:11px;color:#8A8A8A;line-height:1.5;margin-bottom:auto;}
+/* # Pull quote / featured text block */
+.t109 .pullquote{border-left:3px solid #B8860B;padding-left:16px;margin:20px 0;font-family:${IG_SERIF};font-size:14px;color:#555;line-height:1.5;font-style:italic;}
+/* # Bottom rule */
+.t109 .rule-bottom{height:1px;background:#E2E0DB;margin-top:auto;}
+/* # Footer */
+.t109 .footer{display:flex;align-items:center;gap:10px;padding-top:12px;}
+.t109 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);}
+.t109 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#999;letter-spacing:0.04em;}
+.t109 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#C8C4BC;margin-left:auto;letter-spacing:0.03em;}
+`;
+
+function buildT109(c: TemplateContent, w: number, h: number): string {
+  // # Support headline highlight as bold
+  const headline = c.headlineHighlight
+    ? esc(c.headline).replace(esc(c.headlineHighlight), `<strong>${esc(c.headlineHighlight)}</strong>`)
+    : esc(c.headline);
+  const body = c.body ? esc(c.body) : "";
+
+  return wrapIG("t109", T109_CSS, `
+    <div class="cat">${esc(c.eyebrow || "CAREER INSIGHT")}</div>
+    <div class="rule"></div>
+    <div class="hdl">${headline}</div>
+    <div class="sub">${esc(c.subheadline || "")}</div>
+    ${body ? `<div class="pullquote">${body}</div>` : ""}
+    <div class="rule-bottom"></div>
+    <div class="footer">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
+      <span class="fname">JobPilot AI</span>
+      <span class="furl">jobpilotai.co</span>
+    </div>
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T110 — MINIMAL TIP (White, single focus tip, 1:1)
+   ============================================================
+   # Ultra-clean white design with one bold tip in focus.
+   # Large number accent, minimal distractions, save-worthy.
+   # Best for: single tips, daily advice, quick wins.
+   ============================================================ */
+const T110_CSS = `
+/* # Pure white background */
+.t110{background:#FFFFFF;display:flex;flex-direction:column;padding:40px 36px 28px;}
+/* # Large number accent — oversized, muted */
+.t110 .num{font-size:80px;font-weight:900;letter-spacing:-0.04em;line-height:0.85;color:rgba(99,102,241,0.08);margin-bottom:4px;}
+/* # Eyebrow */
+.t110 .ey{font-family:${IG_SANS};font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.t110 .ey::before{content:'';width:14px;height:2px;background:#6366F1;border-radius:1px;}
+/* # Bold tip headline */
+.t110 .hdl{font-size:22px;font-weight:800;color:#111;letter-spacing:-0.02em;line-height:1.25;margin-bottom:12px;max-width:420px;}
+/* # Description text */
+.t110 .desc{font-size:12px;color:#777;line-height:1.6;max-width:400px;}
+.t110 .desc strong{color:#333;font-weight:600;}
+/* # CTA pill */
+.t110 .cta{display:inline-flex;align-items:center;gap:4px;margin-top:auto;padding:8px 16px;border-radius:6px;background:#6366F1;font-family:${IG_SANS};font-size:10px;font-weight:700;color:#FFF;}
+/* # Footer */
+.t110 .footer{display:flex;align-items:center;gap:8px;padding-top:14px;margin-top:16px;border-top:1px solid #F0F0F0;}
+.t110 .footer img{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,0.06);}
+.t110 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#999;}
+.t110 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#CCC;margin-left:auto;letter-spacing:0.03em;}
+`;
+
+function buildT110(c: TemplateContent, w: number, h: number): string {
+  return wrapIG("t110", T110_CSS, `
+    <div class="num">01</div>
+    <div class="ey">${esc(c.eyebrow || "DAILY TIP")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.body ? `<div class="desc">${esc(c.body)}</div>` : ""}
+    ${c.cta ? `<div class="cta">${esc(c.cta)} →</div>` : ""}
+    <div class="footer">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
+      <span class="fname">JobPilot AI</span>
+      <span class="furl">jobpilotai.co</span>
+    </div>
+  `, 540, 540, w, h);
+}
+
+/* ============================================================
+   T111 — GRADIENT OVERLAY (Indigo gradient with white text, 4:5)
+   ============================================================
+   # Rich gradient background with overlaid white text.
+   # Semi-transparent card area for readability.
+   # Best for: announcements, key messages, feature highlights.
+   ============================================================ */
+const T111_CSS = `
+/* # Rich gradient background */
+.t111{background:linear-gradient(135deg,#312E81 0%,#4C1D95 50%,#5B21B6 100%);display:flex;flex-direction:column;padding:44px 36px 28px;}
+/* # Subtle grid texture */
+.t111::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+/* # Eyebrow */
+.t111 .ey{font-family:${IG_SANS};font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#C4B5FD;margin-bottom:auto;position:relative;z-index:1;display:flex;align-items:center;gap:8px;}
+.t111 .ey::before{content:'';width:14px;height:2px;background:#C4B5FD;border-radius:1px;}
+/* # Headline — large white serif */
+.t111 .hdl{font-family:${IG_SERIF};font-size:30px;font-weight:400;color:#FFF;line-height:1.3;position:relative;z-index:1;margin-bottom:16px;max-width:440px;}
+.t111 .hdl strong{font-weight:700;}
+/* # Body text */
+.t111 .body{font-family:${IG_SANS};font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;position:relative;z-index:1;max-width:400px;}
+.t111 .body strong{color:rgba(255,255,255,0.85);font-weight:600;}
+/* # Footer */
+.t111 .footer{display:flex;align-items:center;gap:10px;padding-top:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
+.t111 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);}
+.t111 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:rgba(255,255,255,0.8);}
+.t111 .footer .furl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.3);margin-left:auto;letter-spacing:0.03em;}
+`;
+
+function buildT111(c: TemplateContent, w: number, h: number): string {
+  const headline = c.headlineHighlight
+    ? esc(c.headline).replace(esc(c.headlineHighlight), `<strong>${esc(c.headlineHighlight)}</strong>`)
+    : esc(c.headline);
+  const body = c.body ? esc(c.body) : "";
+
+  return wrapIG("t111", T111_CSS, `
+    <div class="ey">${esc(c.eyebrow || "FEATURED")}</div>
+    <div class="hdl">${headline}</div>
+    ${body ? `<div class="body">${body}</div>` : ""}
+    <div class="footer">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
+      <span class="fname">JobPilot AI</span>
+      <span class="furl">jobpilotai.co</span>
+    </div>
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T112 — BOLD STATEMENT (Solid color bg, one statement, 1:1)
+   ============================================================
+   # Strong solid-color background with a single bold statement.
+   # High impact, save-worthy, shareable.
+   # Best for: quotes, bold opinions, mindset content.
+   ============================================================ */
+const T112_CSS = `
+/* # Deep indigo solid background */
+.t112{background:#1E1B4B;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 36px;text-align:center;}
+/* # Decorative quote mark */
+.t112::before{content:'"';position:absolute;top:30px;left:50%;transform:translateX(-50%);font-family:${IG_SERIF};font-size:200px;font-weight:700;color:rgba(99,102,241,0.06);pointer-events:none;line-height:1;}
+/* # The bold statement */
+.t112 .statement{font-family:${IG_SERIF};font-size:24px;font-weight:400;color:#FFF;line-height:1.4;position:relative;z-index:1;max-width:420px;}
+.t112 .statement strong{font-weight:700;}
+/* # Attribution / source */
+.t112 .attr{font-family:${IG_SANS};font-size:9px;font-weight:600;color:#A78BFA;margin-top:20px;letter-spacing:0.08em;text-transform:uppercase;position:relative;z-index:1;}
+/* # Thin rule */
+.t112 .rule{width:32px;height:2px;background:#6366F1;border-radius:1px;margin:16px auto 0;position:relative;z-index:1;}
+/* # Footer centered */
+.t112 .footer{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:1;}
+.t112 .footer img{width:18px;height:18px;border-radius:4px;}
+.t112 .footer .fname{font-family:${IG_SANS};font-size:8px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.04em;}
+.t112 .footer .furl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:0.03em;}
+`;
+
+function buildT112(c: TemplateContent, w: number, h: number): string {
+  const headline = c.headlineHighlight
+    ? esc(c.headline).replace(esc(c.headlineHighlight), `<strong>${esc(c.headlineHighlight)}</strong>`)
+    : esc(c.headline);
+
+  return wrapIG("t112", T112_CSS, `
+    <div class="statement">${headline}</div>
+    <div class="rule"></div>
+    <div class="attr">${esc(c.subheadline || c.eyebrow || "— JobPilot AI")}</div>
+    <div class="footer">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
+      <span class="fname">JobPilot AI</span>
+      <span class="furl">jobpilotai.co</span>
+    </div>
+  `, 540, 540, w, h);
+}
+
+/* ============================================================
+   T113 — DATA BARS (Horizontal bar chart on white, 4:5)
+   ============================================================
+   # Professional white layout with horizontal bar chart.
+   # Clean data visualization for engagement-driving content.
+   # Best for: survey results, comparisons, rankings, data.
+   ============================================================ */
+const T113_CSS = `
+/* # White background */
+.t113{background:#FFFFFF;display:flex;flex-direction:column;padding:40px 36px 28px;}
+/* # Eyebrow */
+.t113 .ey{font-family:${IG_SANS};font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.t113 .ey::before{content:'';width:14px;height:2px;background:#6366F1;border-radius:1px;}
+/* # Headline */
+.t113 .hdl{font-size:22px;font-weight:800;color:#111;letter-spacing:-0.02em;line-height:1.2;margin-bottom:24px;}
+/* # Bars container */
+.t113 .bars{display:flex;flex-direction:column;gap:14px;flex:1;}
+/* # Each bar row */
+.t113 .bar-row{display:flex;flex-direction:column;gap:4px;}
+.t113 .bar-label{display:flex;justify-content:space-between;font-family:${IG_SANS};font-size:11px;color:#555;}
+.t113 .bar-label .val{font-weight:700;color:#111;}
+/* # Bar track + fill */
+.t113 .bar-track{height:8px;background:#F0F0F0;border-radius:4px;overflow:hidden;}
+.t113 .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#6366F1,#A78BFA);}
+/* # Footer */
+.t113 .footer{display:flex;align-items:center;gap:10px;padding-top:14px;margin-top:auto;border-top:1px solid #F0F0F0;}
+.t113 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);}
+.t113 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#999;}
+.t113 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#CCC;margin-left:auto;letter-spacing:0.03em;}
+`;
+
+function buildT113(c: TemplateContent, w: number, h: number): string {
+  const bars = c.bars || [];
+  return wrapIG("t113", T113_CSS, `
+    <div class="ey">${esc(c.eyebrow || "DATA INSIGHT")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="bars">
+      ${bars.map(b => `<div class="bar-row">
+        <div class="bar-label"><span>${esc(b.label)}</span><span class="val">${b.value}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.min(b.value, 100)}%"></div></div>
+      </div>`).join("")}
+    </div>
+    <div class="footer">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
+      <span class="fname">JobPilot AI</span>
+      <span class="furl">jobpilotai.co</span>
+    </div>
+  `, 540, 675, w, h);
+}
+
+/* ============================================================
+   T114 — STORY CARD (Floating card on dark gradient, 9:16)
+   ============================================================
+   # Instagram story format with a frosted card floating on
+   # dark gradient background. Animated-look accents.
+   # Best for: story tips, announcements, quick advice.
+   ============================================================ */
+const T114_CSS = `
+/* # Dark gradient background */
+.t114{background:linear-gradient(180deg,#0C0D18 0%,#151830 40%,#0C0D18 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 24px;}
+/* # Glow orb top */
+.t114::before{content:'';position:absolute;top:80px;right:-20px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.1),transparent 70%);pointer-events:none;}
+/* # Glow orb bottom */
+.t114::after{content:'';position:absolute;bottom:120px;left:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,0.08),transparent 70%);pointer-events:none;}
+/* # The floating card */
+.t114 .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px 24px;width:100%;max-width:380px;display:flex;flex-direction:column;position:relative;z-index:1;}
+/* # Eyebrow inside card */
+.t114 .card .ey{font-family:${IG_SANS};font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.t114 .card .ey::before{content:'';width:10px;height:2px;background:#6366F1;border-radius:1px;}
+/* # Headline */
+.t114 .card .hdl{font-size:20px;font-weight:800;color:#FFF;line-height:1.25;letter-spacing:-0.02em;margin-bottom:12px;}
+/* # Body text */
+.t114 .card .body{font-family:${IG_SANS};font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6;}
+.t114 .card .body strong{color:rgba(255,255,255,0.75);font-weight:600;}
+/* # Tips inside card */
+.t114 .card .tips{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.t114 .card .tip{display:flex;gap:8px;align-items:flex-start;font-family:${IG_SANS};font-size:11px;color:rgba(255,255,255,0.5);line-height:1.4;}
+.t114 .card .tip::before{content:'→';color:#6366F1;font-weight:700;flex-shrink:0;}
+/* # Brand badge below card */
+.t114 .badge{display:flex;align-items:center;gap:6px;margin-top:24px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 14px;position:relative;z-index:1;}
+.t114 .badge img{width:18px;height:18px;border-radius:4px;}
+.t114 .badge .bname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:rgba(255,255,255,0.6);}
+.t114 .badge .burl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.25);margin-left:auto;letter-spacing:0.03em;}
+`;
+
+function buildT114(c: TemplateContent, w: number, h: number): string {
+  const body = c.body ? esc(c.body) : "";
+  const tips = c.tips || [];
+  const bullets = c.bullets || [];
+
+  return wrapIG("t114", T114_CSS, `
+    <div class="card">
+      <div class="ey">${esc(c.eyebrow || "QUICK TIP")}</div>
+      <div class="hdl">${esc(c.headline)}</div>
+      ${body ? `<div class="body">${body}</div>` : ""}
+      ${tips.length > 0 ? `<div class="tips">
+        ${tips.slice(0, 4).map(t => `<div class="tip"><strong>${esc(t.title)}</strong> ${esc(t.description)}</div>`).join("")}
+      </div>` : ""}
+      ${bullets.length > 0 && tips.length === 0 ? `<div class="tips">
+        ${bullets.slice(0, 4).map(b => `<div class="tip">${esc(b)}</div>`).join("")}
+      </div>` : ""}
+    </div>
+    <div class="badge">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
+      <span class="bname">JobPilot AI</span>
+      <span class="burl">jobpilotai.co</span>
+    </div>
+  `, 432, 768, w, h);
+}
+
+/* ============================================================
+   FRESH PRO TEMPLATES — T127-T132
+   ============================================================
+   # White/grey/cream backgrounds, navy/coral/teal/rose accents.
+   # Editorial, clean, high-contrast. Mixed formats.
+   ============================================================ */
+
+// # T127 — Magazine Spread: Cream bg, charcoal rules, serif headline (4:5)
+const T127_CSS = `
+.t127{width:540px;height:675px;background:#FAF9F7;display:flex;flex-direction:column;padding:40px 38px 24px;font-family:${IG_SANS};position:relative;}
+.t127 .cat{font-size:9px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#B8860B;margin-bottom:6px;}
+.t127 .rule-top{height:1.5px;background:#1A1A1A;margin-bottom:16px;}
+.t127 .hdl{font-family:${IG_SERIF};font-size:26px;font-weight:400;color:#1A1A1A;line-height:1.3;margin-bottom:8px;}
+.t127 .hdl strong{font-weight:700;}
+.t127 .sub{font-size:11px;color:#8A8A8A;margin-bottom:auto;line-height:1.5;}
+.t127 .pull{border-left:2.5px solid #B8860B;padding-left:14px;margin:16px 0;font-family:${IG_SERIF};font-size:13px;color:#555;font-style:italic;line-height:1.5;}
+.t127 .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+.t127 .col{font-size:10px;color:#666;line-height:1.6;}
+.t127 .col strong{color:#1A1A1A;font-weight:600;}
+.t127 .rule-btm{height:1px;background:#E2E0DB;}
+.t127 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#999;}
+.t127 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+`;
+function buildT127(c: TemplateContent, w: number, h: number): string {
+  const cols = c.bullets || [];
+  return wrapIG("t127", T127_CSS, `
+    <div class="cat">${esc(c.eyebrow || "CAREER INSIGHT")}</div>
+    <div class="rule-top"></div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.subheadline ? `<div class="sub">${esc(c.subheadline)}</div>` : ""}
+    ${c.body ? `<div class="pull">"${esc(c.body)}"</div>` : ""}
+    ${cols.length >= 2 ? `<div class="cols">
+      <div class="col">${esc(cols[0])}</div>
+      <div class="col">${esc(cols[1])}</div>
+    </div>` : ""}
+    <div class="rule-btm"></div>
+    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 675, w, h);
+}
+
+// # T128 — Minimal Grid: White bg, 2×2 grey cards, teal accents (1:1)
+const T128_CSS = `
+.t128{width:540px;height:540px;background:#FFFFFF;display:flex;flex-direction:column;padding:36px 34px 24px;font-family:${IG_SANS};position:relative;}
+.t128 .ey{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#0D9488;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.t128 .ey::before{content:'';width:14px;height:2px;background:#0D9488;border-radius:1px;}
+.t128 .hdl{font-size:22px;font-weight:800;color:#111827;letter-spacing:-0.02em;line-height:1.2;margin-bottom:14px;}
+.t128 .grid4{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;}
+.t128 .g-card{background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:16px 14px;display:flex;flex-direction:column;}
+.t128 .g-num{font-size:20px;font-weight:900;color:#0D9488;margin-bottom:4px;font-variant-numeric:tabular-nums;}
+.t128 .g-lbl{font-size:8px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:auto;}
+.t128 .g-bar{height:3px;background:#E5E7EB;border-radius:2px;overflow:hidden;margin-top:8px;}
+.t128 .g-fill{height:100%;background:linear-gradient(90deg,#0D9488,#2DD4BF);border-radius:2px;}
+.t128 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#999;}
+.t128 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+`;
+function buildT128(c: TemplateContent, w: number, h: number): string {
+  const bars = (c.bars || []).slice(0, 4);
+  return wrapIG("t128", T128_CSS, `
+    <div class="ey">${esc(c.eyebrow || "KEY METRICS")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="grid4">
+      ${bars.map(b => `<div class="g-card">
+        <div class="g-num">${esc(b.label)}</div>
+        <div class="g-lbl">${esc(b.color || "")}</div>
+        <div class="g-bar"><div class="g-fill" style="width:${b.value}%"></div></div>
+      </div>`).join("")}
+    </div>
+    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 540, w, h);
+}
+
+// # T129 — Gradient Soft: Blush→lavender pastel gradient, white text (4:5)
+const T129_CSS = `
+.t129{width:540px;height:675px;background:linear-gradient(145deg,#FDF2F8,#F5F3FF,#EDE9FE);display:flex;flex-direction:column;padding:44px 38px 28px;font-family:${IG_SANS};position:relative;}
+.t129 .ey{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#7C3AED;margin-bottom:auto;display:flex;align-items:center;gap:8px;}
+.t129 .ey::before{content:'';width:14px;height:2px;background:#7C3AED;border-radius:1px;}
+.t129 .hdl{font-family:${IG_SERIF};font-size:26px;font-weight:400;color:#1E1B4B;line-height:1.35;margin-bottom:10px;}
+.t129 .hdl strong{font-weight:700;}
+.t129 .body{font-size:12px;color:#6B7280;line-height:1.6;margin-bottom:auto;}
+.t129 .tips{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.t129 .tip{display:flex;gap:8px;align-items:flex-start;font-size:10px;color:#4B5563;}
+.t129 .tip::before{content:'→';color:#7C3AED;font-weight:700;flex-shrink:0;}
+.t129 .ftr{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid rgba(124,58,237,0.1);font-size:9px;color:#7C3AED;}
+.t129 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:rgba(124,58,237,0.4);}
+`;
+function buildT129(c: TemplateContent, w: number, h: number): string {
+  const tips = c.bullets || [];
+  return wrapIG("t129", T129_CSS, `
+    <div class="ey">${esc(c.eyebrow || "FEATURED")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+    ${tips.length ? `<div class="tips">${tips.slice(0, 4).map(t => `<div class="tip">${esc(t)}</div>`).join("")}</div>` : ""}
+    <div class="ftr"><span>JobPilot AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 675, w, h);
+}
+
+// # T130 — Typography Hero: White bg, massive bold headline, coral line (1:1)
+const T130_CSS = `
+.t130{width:540px;height:540px;background:#FFFFFF;display:flex;flex-direction:column;justify-content:center;padding:40px 36px;font-family:${IG_SANS};position:relative;}
+.t130 .ey{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#EA580C;margin-bottom:16px;}
+.t130 .hdl{font-size:32px;font-weight:900;color:#111827;letter-spacing:-0.04em;line-height:1.1;margin-bottom:12px;}
+.t130 .hdl em{font-style:normal;color:#EA580C;}
+.t130 .line{width:40px;height:3px;background:linear-gradient(90deg,#EA580C,#FDBA74);border-radius:2px;margin-bottom:12px;}
+.t130 .body{font-size:12px;color:#9CA3AF;line-height:1.6;max-width:380px;}
+.t130 .body strong{color:#374151;font-weight:700;}
+.t130 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#999;}
+.t130 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+`;
+function buildT130(c: TemplateContent, w: number, h: number): string {
+  return wrapIG("t130", T130_CSS, `
+    <div class="ey">${esc(c.eyebrow || "TRUTH BOMB")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="line"></div>
+    ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 540, w, h);
+}
+
+// # T131 — Data Story: Light grey bg, clean horizontal bars with navy fills (4:5)
+const T131_CSS = `
+.t131{width:540px;height:675px;background:#F3F4F6;display:flex;flex-direction:column;padding:40px 38px 24px;font-family:${IG_SANS};position:relative;}
+.t131 .ey{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#1E3A5A;margin-bottom:10px;display:flex;align-items:center;gap:8px;opacity:0.6;}
+.t131 .ey::before{content:'';width:14px;height:2px;background:#1E3A5A;border-radius:1px;}
+.t131 .hdl{font-size:24px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.2;margin-bottom:6px;}
+.t131 .sub{font-size:10px;color:#9CA3AF;margin-bottom:20px;}
+.t131 .bars{flex:1;display:flex;flex-direction:column;gap:12px;}
+.t131 .bar-row{display:flex;flex-direction:column;gap:3px;}
+.t131 .bar-meta{display:flex;justify-content:space-between;font-size:10px;}
+.t131 .bar-meta .lbl{color:#374151;font-weight:600;}
+.t131 .bar-meta .val{color:#1E3A5A;font-weight:800;font-variant-numeric:tabular-nums;}
+.t131 .bar-track{height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden;}
+.t131 .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1E3A5A,#3B82F6);}
+.t131 .source{font-size:7px;color:#D1D5DB;margin-top:8px;}
+.t131 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#999;}
+.t131 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+`;
+function buildT131(c: TemplateContent, w: number, h: number): string {
+  const bars = (c.bars || []).slice(0, 6);
+  return wrapIG("t131", T131_CSS, `
+    <div class="ey">${esc(c.eyebrow || "DATA INSIGHT")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.subheadline ? `<div class="sub">${esc(c.subheadline)}</div>` : ""}
+    <div class="bars">
+      ${bars.map(b => `<div class="bar-row">
+        <div class="bar-meta"><span class="lbl">${esc(b.label)}</span><span class="val">${b.value}%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${b.value}%"></div></div>
+      </div>`).join("")}
+    </div>
+    ${c.body ? `<div class="source">${esc(c.body)}</div>` : ""}
+    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 675, w, h);
+}
+
+// # T132 — Story Minimal: White bg, thin grey border frame, rose accent (9:16)
+const T132_CSS = `
+.t132{width:432px;height:768px;background:#FFFFFF;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:50px 32px;font-family:${IG_SANS};position:relative;}
+.t132 .frame{position:absolute;top:20px;left:20px;right:20px;bottom:20px;border:1px solid #E5E7EB;border-radius:12px;pointer-events:none;}
+.t132 .ey{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#E11D48;margin-bottom:16px;position:relative;z-index:1;}
+.t132 .hdl{font-family:${IG_SERIF};font-size:24px;font-weight:400;color:#111827;line-height:1.35;margin-bottom:10px;position:relative;z-index:1;}
+.t132 .hdl strong{font-weight:700;}
+.t132 .divider{width:30px;height:2px;background:#E11D48;border-radius:1px;margin-bottom:12px;}
+.t132 .body{font-size:11px;color:#9CA3AF;line-height:1.6;max-width:300px;position:relative;z-index:1;}
+.t132 .cta-pill{display:inline-flex;padding:8px 18px;border-radius:6px;background:#E11D48;font-size:10px;font-weight:700;color:#fff;margin-top:20px;position:relative;z-index:1;}
+`;
+function buildT132(c: TemplateContent, w: number, h: number): string {
+  return wrapIG("t132", T132_CSS, `
+    <div class="frame"></div>
+    <div class="ey">${esc(c.eyebrow || "STORY")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="divider"></div>
+    ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+    ${c.cta ? `<div class="cta-pill">${esc(c.cta)}</div>` : ""}
+    ${storyBadge()}
+  `, 432, 768, w, h);
+}
+
+
+/* ============================================================
+   PRO SET 3 — T145-T150
+   ============================================================
+   # Slate, emerald, amber, sky blue on white/grey/cream.
+   # Polaroid, split editorial, infographic, duo-tone, card stack.
+   ============================================================ */
+
+// # T145 — Polaroid: White bg, photo-frame card with caption, slate accent (4:5)
+const T145_CSS = `
+.t145{width:540px;height:675px;background:#F1F5F9;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 38px;font-family:${IG_SANS};position:relative;}
+.t145 .card{background:#FFFFFF;border-radius:4px;padding:16px 16px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.08),0 0 1px rgba(0,0,0,0.05);transform:rotate(-1.5deg);max-width:380px;width:100%;}
+.t145 .card-img{background:linear-gradient(135deg,#E2E8F0,#CBD5E1);border-radius:2px;height:180px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden;}
+.t145 .card-img .placeholder{font-size:36px;color:#94A3B8;font-weight:800;letter-spacing:-0.04em;}
+.t145 .card-caption{font-family:${IG_SERIF};font-size:14px;color:#1E293B;line-height:1.4;font-style:italic;}
+.t145 .card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:9px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.t145 .ftr{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:8px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#94A3B8;}
+`;
+function buildT145(c: TemplateContent, w: number, h: number): string {
+  return wrapIG("t145", T145_CSS, `
+    <div class="card">
+      <div class="card-img"><div class="placeholder">${esc(c.stat?.value || "📸")}</div></div>
+      <div class="card-caption">${esc(c.headline)}</div>
+      <div class="card-meta">
+        <span>${esc(c.eyebrow || "JOBPILOT AI")}</span>
+        <span>${esc(c.subheadline || "2026")}</span>
+      </div>
+    </div>
+    <div class="ftr">JOBPILOT AI</div>
+  `, 540, 675, w, h);
+}
+
+// # T146 — Split Editorial: White bg, horizontal split with slate accent (1:1)
+const T146_CSS = `
+.t146{width:540px;height:540px;background:#FFFFFF;display:grid;grid-template-rows:1fr auto 1fr;font-family:${IG_SANS};position:relative;}
+.t146 .top{padding:28px 34px 16px;display:flex;flex-direction:column;justify-content:flex-end;}
+.t146 .ey{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#475569;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.t146 .ey::before{content:'';width:14px;height:2px;background:#475569;border-radius:1px;}
+.t146 .hdl{font-family:${IG_SERIF};font-size:22px;font-weight:700;color:#0F172A;letter-spacing:-0.02em;line-height:1.25;}
+.t146 .divider{height:1px;background:linear-gradient(90deg,#475569 40%,#E2E8F0);}
+.t146 .bottom{padding:16px 34px 24px;display:flex;flex-direction:column;}
+.t146 .body{font-size:12px;color:#64748B;line-height:1.6;}
+.t146 .body strong{color:#0F172A;font-weight:700;}
+.t146 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;font-size:9px;color:#94A3B8;}
+.t146 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#CBD5E1;}
+`;
+function buildT146(c: TemplateContent, w: number, h: number): string {
+  return wrapIG("t146", T146_CSS, `
+    <div class="top">
+      <div class="ey">${esc(c.eyebrow || "INSIGHT")}</div>
+      <div class="hdl">${esc(c.headline)}</div>
+    </div>
+    <div class="divider"></div>
+    <div class="bottom">
+      ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+      <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    </div>
+  `, 540, 540, w, h);
+}
+
+// # T147 — Infographic: White bg, numbered flow with connecting lines, emerald (4:5)
+const T147_CSS = `
+.t147{width:540px;height:675px;background:#FFFFFF;display:flex;flex-direction:column;padding:40px 38px 24px;font-family:${IG_SANS};position:relative;}
+.t147 .ey{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#059669;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.t147 .ey::before{content:'';width:14px;height:2px;background:#059669;border-radius:1px;}
+.t147 .hdl{font-size:22px;font-weight:800;color:#111827;letter-spacing:-0.02em;line-height:1.2;margin-bottom:18px;}
+.t147 .flow{flex:1;display:flex;flex-direction:column;gap:0;}
+.t147 .node{display:flex;gap:14px;align-items:flex-start;}
+.t147 .node-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.t147 .node-num.active{background:#059669;color:#fff;}
+.t147 .node-num.done{background:#DCFCE7;color:#059669;border:1px solid #BBF7D0;}
+.t147 .node-t{font-size:12px;font-weight:700;color:#111827;padding-top:4px;}
+.t147 .node-d{font-size:9px;color:#9CA3AF;margin-top:2px;line-height:1.4;}
+.t147 .connector{width:2px;height:14px;background:#D1FAE5;margin-left:13px;}
+.t147 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#999;}
+.t147 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+`;
+function buildT147(c: TemplateContent, w: number, h: number): string {
+  const steps = (c.steps || c.tips || []).slice(0, 4);
+  return wrapIG("t147", T147_CSS, `
+    <div class="ey">${esc(c.eyebrow || "HOW IT WORKS")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="flow">
+      ${steps.map((s, i) => `
+        ${i > 0 ? '<div class="connector"></div>' : ""}
+        <div class="node">
+          <div class="node-num ${i === 0 ? "active" : "done"}">${i + 1}</div>
+          <div>
+            <div class="node-t">${esc(s.title)}</div>
+            <div class="node-d">${esc(s.description || "")}</div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 675, w, h);
+}
+
+// # T148 — Duo-Tone: Sky blue top, white bottom, clean split (1:1)
+const T148_CSS = `
+.t148{width:540px;height:540px;background:#FFFFFF;display:flex;flex-direction:column;font-family:${IG_SANS};position:relative;overflow:hidden;}
+.t148 .top{background:#0284C7;padding:28px 34px 24px;display:flex;flex-direction:column;justify-content:flex-end;flex:1;}
+.t148 .ey{font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;}
+.t148 .hdl{font-size:20px;font-weight:800;color:#FFFFFF;letter-spacing:-0.02em;line-height:1.2;}
+.t148 .bottom{padding:20px 34px 24px;display:flex;flex-direction:column;}
+.t148 .body{font-size:11px;color:#64748B;line-height:1.6;margin-bottom:auto;}
+.t148 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.t148 .tag{padding:3px 10px;border-radius:12px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:8px;font-weight:600;color:#0284C7;}
+.t148 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:6px;font-size:9px;color:#94A3B8;}
+.t148 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#CBD5E1;}
+`;
+function buildT148(c: TemplateContent, w: number, h: number): string {
+  const tags = c.tags || [];
+  return wrapIG("t148", T148_CSS, `
+    <div class="top">
+      <div class="ey">${esc(c.eyebrow || "FEATURED")}</div>
+      <div class="hdl">${esc(c.headline)}</div>
+    </div>
+    <div class="bottom">
+      ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+      ${tags.length ? `<div class="tags">${tags.slice(0, 5).map(t => `<div class="tag">${esc(t)}</div>`).join("")}</div>` : ""}
+      <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    </div>
+  `, 540, 540, w, h);
+}
+
+// # T149 — Card Stack: Cream bg, overlapping cards with tips, amber accent (4:5)
+const T149_CSS = `
+.t149{width:540px;height:675px;background:#FEFCE8;display:flex;flex-direction:column;padding:40px 38px 24px;font-family:${IG_SANS};position:relative;}
+.t149 .ey{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#D97706;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.t149 .ey::before{content:'';width:14px;height:2px;background:#D97706;border-radius:1px;}
+.t149 .hdl{font-size:22px;font-weight:800;color:#1C1917;letter-spacing:-0.02em;line-height:1.2;margin-bottom:16px;}
+.t149 .stack{flex:1;display:flex;flex-direction:column;gap:8px;position:relative;}
+.t149 .scard{background:#FFFFFF;border:1px solid #FDE68A;border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);display:flex;gap:10px;align-items:flex-start;}
+.t149 .scard-num{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#D97706,#FBBF24);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;}
+.t149 .scard-t{font-size:11px;font-weight:700;color:#1C1917;}
+.t149 .scard-d{font-size:9px;color:#78716C;margin-top:2px;line-height:1.4;}
+.t149 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#A8A29E;}
+.t149 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#D6D3D1;}
+`;
+function buildT149(c: TemplateContent, w: number, h: number): string {
+  const tips = (c.tips || []).slice(0, 4);
+  return wrapIG("t149", T149_CSS, `
+    <div class="ey">${esc(c.eyebrow || "TIPS")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    <div class="stack">
+      ${tips.map((t, i) => `<div class="scard">
+        <div class="scard-num">${i + 1}</div>
+        <div><div class="scard-t">${esc(t.title)}</div><div class="scard-d">${esc(t.description)}</div></div>
+      </div>`).join("")}
+    </div>
+    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+  `, 540, 675, w, h);
+}
+
+// # T150 — Clean Story CTA: White bg, centered headline, sky blue CTA button (9:16)
+const T150_CSS = `
+.t150{width:432px;height:768px;background:#FFFFFF;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:50px 32px;font-family:${IG_SANS};position:relative;}
+.t150 .icon{font-size:36px;margin-bottom:16px;}
+.t150 .ey{font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#0284C7;margin-bottom:14px;}
+.t150 .hdl{font-size:22px;font-weight:800;color:#0F172A;letter-spacing:-0.03em;line-height:1.2;margin-bottom:10px;}
+.t150 .body{font-size:11px;color:#94A3B8;line-height:1.6;max-width:300px;margin-bottom:20px;}
+.t150 .cta-btn{display:inline-flex;padding:10px 24px;border-radius:8px;background:linear-gradient(135deg,#0284C7,#38BDF8);font-size:12px;font-weight:700;color:#fff;letter-spacing:0.02em;box-shadow:0 2px 8px rgba(2,132,199,0.25);}
+.t150 .swipe{font-size:8px;color:#CBD5E1;margin-top:20px;letter-spacing:0.12em;text-transform:uppercase;}
+`;
+function buildT150(c: TemplateContent, w: number, h: number): string {
+  return wrapIG("t150", T150_CSS, `
+    <div class="icon">${esc(c.stat?.value || "🚀")}</div>
+    <div class="ey">${esc(c.eyebrow || "TRY IT NOW")}</div>
+    <div class="hdl">${esc(c.headline)}</div>
+    ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
+    ${c.cta ? `<div class="cta-btn">${esc(c.cta)}</div>` : ""}
+    <div class="swipe">Swipe up ↑</div>
+    ${storyBadge()}
+  `, 432, 768, w, h);
+}
+
+
+/* ============================================================
    ROUTER
    ============================================================ */
 export function buildInstagramTemplate(
@@ -1274,6 +1962,27 @@ export function buildInstagramTemplate(
     case "t94": return buildT94(content, width, height);
     case "t95": return buildT95(content, width, height);
     case "t96": return buildT96(content, width, height);
+    // # Premium templates
+    case "t109": return buildT109(content, width, height);
+    case "t110": return buildT110(content, width, height);
+    case "t111": return buildT111(content, width, height);
+    case "t112": return buildT112(content, width, height);
+    case "t113": return buildT113(content, width, height);
+    case "t114": return buildT114(content, width, height);
+    // # Fresh Pro templates
+    case "t127": return buildT127(content, width, height);
+    case "t128": return buildT128(content, width, height);
+    case "t129": return buildT129(content, width, height);
+    case "t130": return buildT130(content, width, height);
+    case "t131": return buildT131(content, width, height);
+    case "t132": return buildT132(content, width, height);
+    // # Pro Set 3 templates
+    case "t145": return buildT145(content, width, height);
+    case "t146": return buildT146(content, width, height);
+    case "t147": return buildT147(content, width, height);
+    case "t148": return buildT148(content, width, height);
+    case "t149": return buildT149(content, width, height);
+    case "t150": return buildT150(content, width, height);
     default:
       return buildT22(content, width, height);
   }

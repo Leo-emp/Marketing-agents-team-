@@ -8,12 +8,12 @@
    #   4. fal.ai Flux Pro — blog post covers ONLY
    #
    # The designer agent now calls Template Intelligence to pick
-   # the best HTML template (t1-t96) for each slide, then maps
+   # the best HTML template (t1-t186) for each slide, then maps
    # Gemini's output to TemplateContent format for rendering.
    ============================================================ */
 
 import { callGemini } from "../gemini";
-import { getDimensions, type SlideData, type SlideLayout } from "./types";
+import { getDimensions, type SlideData, type SlideLayout, type TemplateLayout } from "./types";
 import { BRAND_NAME, BRAND_URL } from "./brand";
 import { selectTemplate, slideToTemplateContent } from "./template-intelligence";
 import type { TemplateId, TemplateContent } from "./templates/shared";
@@ -262,6 +262,11 @@ Return ONLY valid JSON.`;
         if (slide.methodName) templateContent.methodName = String(slide.methodName);
         if (slide.benchmarkAt !== undefined) templateContent.benchmarkAt = Number(slide.benchmarkAt);
         if (Array.isArray(slide.legend)) templateContent.legend = slide.legend as any;
+
+        // # Inject template ID into slide.layout so the Visual API
+        // # renders via Puppeteer HTML templates (primary path)
+        // # instead of falling through to fal.ai / OpenAI / Canvas
+        normalized.layout = selection.templateId as TemplateLayout;
 
         templateSelections.push({
           templateId: selection.templateId,

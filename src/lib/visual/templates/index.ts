@@ -1,16 +1,26 @@
 /* ============================================================
    TEMPLATE ROUTER — Maps template IDs to HTML generators
    ============================================================
-   # Routes T1-T72 to the correct platform template file.
-   # Each template function returns a complete HTML string
-   # ready for Puppeteer to screenshot at target dimensions.
+   # Routes T1-T186 to the correct platform template file.
+   # Routes carousel IDs (lc1-lc4, tc1-tc4, ic1-ic4) to
+   # the carousel system for multi-slide sequences.
+   # Each function returns a complete HTML string ready for
+   # Puppeteer to screenshot at target dimensions.
    ============================================================ */
 
-import type { TemplateContent, TemplateId } from "./shared";
+import type { TemplateContent, TemplateId, CarouselContent, CarouselId } from "./shared";
 import { esc } from "./shared";
 import { buildLinkedInTemplate, LINKEDIN_IDS } from "./linkedin";
 import { buildTikTokTemplate, TIKTOK_IDS } from "./tiktok";
 import { buildInstagramTemplate, INSTAGRAM_IDS } from "./instagram";
+import {
+  buildCarouselSlide,
+  buildCarouselAllSlides,
+  isCarouselId,
+  CAROUSEL_IDS,
+  CAROUSEL_META,
+} from "./carousels";
+import { buildFreshTemplate, FRESH_IDS } from "./fresh";
 
 // # Build a complete HTML page for a given template
 // # Returns HTML string ready for Puppeteer rendering
@@ -33,6 +43,11 @@ export function buildTemplateHTML(
   // # Instagram templates (T22-T27, T34-T39, T45-T48, T53-T56, T57-T64)
   if (INSTAGRAM_IDS.includes(templateId)) {
     return buildInstagramTemplate(templateId, content, width, height);
+  }
+
+  // # Fresh templates (T151-T186: LinkedIn, TikTok, Instagram)
+  if (FRESH_IDS.includes(templateId)) {
+    return buildFreshTemplate(templateId, content, width, height);
   }
 
   // # Fallback — render a simple branded card
@@ -73,10 +88,21 @@ function buildFallbackTemplate(
 </div></body></html>`;
 }
 
-// # Check if a layout string is a template ID (t1-t72)
+// # Check if a layout string is a template ID (t1-t186)
 export function isTemplateId(layout: string): layout is TemplateId {
   const match = layout.match(/^t(\d+)$/);
   if (!match) return false;
   const num = parseInt(match[1]);
-  return num >= 1 && num <= 96;
+  return num >= 1 && num <= 186;
 }
+
+// # Re-export carousel system for direct use
+export {
+  buildCarouselSlide,
+  buildCarouselAllSlides,
+  isCarouselId,
+  CAROUSEL_IDS,
+  CAROUSEL_META,
+};
+export { buildFreshTemplate, FRESH_IDS };
+export type { CarouselContent, CarouselId };

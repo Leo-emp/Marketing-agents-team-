@@ -43,11 +43,11 @@ function slideToTemplateContent(slide: SlideData): TemplateContent {
   };
 }
 
-/* # Render a single slide with three-tier fallback:
-   # 1. HTML template (if layout is t1-t72 — Puppeteer render)
-   # 2. fal.ai Flux Pro (primary — best quality, $0.05/image)
-   # 3. OpenAI gpt-image-1 (secondary)
-   # 4. Canvas 2D (final fallback — text-only, free) */
+/* # Render a single slide with tiered fallback:
+   # 1. HTML template (PRIMARY — layout is t1-t186, Puppeteer render)
+   # 2. fal.ai Flux Pro (fallback — $0.05/image)
+   # 3. OpenAI gpt-image-1 (secondary fallback)
+   # 4. Canvas 2D (last resort — text-only, free) */
 async function renderSlide(
   slide: SlideData,
   width: number,
@@ -57,7 +57,7 @@ async function renderSlide(
 ): Promise<Buffer> {
   let buffer: Buffer;
 
-  // # HTML template path — for template IDs (t1-t72)
+  // # HTML template path — for template IDs (t1-t186)
   // # These are our branded Puppeteer-rendered templates
   // # They already include brand strip, so skip brand overlay after
   if (isTemplateId(slide.layout)) {
