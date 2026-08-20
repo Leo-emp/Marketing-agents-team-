@@ -1334,9 +1334,9 @@ export default function Dashboard() {
                               <p className="text-indigo-400/60 text-xs mb-4">{item.hashtags.split(",").map((t: string) => `#${t.trim()}`).join(" ")}</p>
                             )}
 
-                            {/* # Template image(s) — full size, carousel for multi-slide */}
+                            {/* # Template image(s) — platform-sized preview */}
                             {allImages.length > 0 && (
-                              <div className="mb-4">
+                              <div className="mb-4" style={{ maxWidth: item.platform === "tiktok" ? "300px" : "480px" }}>
                                 {isCarousel ? (
                                   <div>
                                     <div className="relative rounded-lg overflow-hidden border border-card-border bg-space-800">
