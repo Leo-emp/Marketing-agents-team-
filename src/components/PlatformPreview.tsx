@@ -313,7 +313,7 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
           <img
             src={allImages[currentSlide]}
             alt={`Slide ${currentSlide + 1}`}
-            style={{ width: "100%", maxHeight: "600px", objectFit: "contain", display: "block" }}
+            style={{ width: "100%", height: "auto", display: "block" }}
           />
           {/* # Slide counter badge */}
           <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "12px" }}>
@@ -340,7 +340,7 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
         </div>
       ) : image ? (
         <div style={{ background: "#f3f2ef", display: "flex", justifyContent: "center" }}>
-          <img src={image} alt="Post visual" style={{ width: "100%", maxHeight: "600px", objectFit: "contain", display: "block" }} />
+          <img src={image} alt="Post visual" style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
       ) : null}
 
@@ -433,7 +433,7 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
             </div>
           ) : image ? (
             <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "12px", border: "1px solid #2f3336" }}>
-              <img src={image} alt="Tweet image" style={{ width: "100%", maxHeight: "500px", objectFit: "contain", display: "block" }} />
+              <img src={image} alt="Tweet image" style={{ width: "100%", height: "auto", display: "block" }} />
             </div>
           ) : null}
 
@@ -508,7 +508,7 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
           <img
             src={allImages[currentSlide]}
             alt={`Slide ${currentSlide + 1}`}
-            style={{ width: "100%", aspectRatio: "4/5", objectFit: "contain", display: "block" }}
+            style={{ width: "100%", height: "auto", display: "block" }}
           />
           {/* # Slide counter badge */}
           <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "12px" }}>
@@ -540,7 +540,7 @@ function InstagramPreview({ item, slides, agent }: PlatformPreviewProps) {
           </div>
         </div>
       ) : image ? (
-        <img src={image} alt="Post" style={{ width: "100%", aspectRatio: "4/5", objectFit: "contain", display: "block", background: "#000" }} />
+        <img src={image} alt="Post" style={{ width: "100%", height: "auto", display: "block" }} />
       ) : (
         <div style={{ width: "100%", aspectRatio: "4/5", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <span style={{ color: "#555", fontSize: "14px" }}>No image</span>
@@ -607,7 +607,7 @@ function TikTokPreview({ item, slides, agent }: PlatformPreviewProps) {
     <div style={{ width: "320px", aspectRatio: "9/16", borderRadius: "12px", overflow: "hidden", position: "relative", background: "#000", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* # Background image/video */}
       {currentImage ? (
-        <img src={currentImage} alt="TikTok post" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={currentImage} alt="TikTok post" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
       ) : (
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }} />
       )}
