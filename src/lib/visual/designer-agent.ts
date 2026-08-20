@@ -186,6 +186,9 @@ Return ONLY valid JSON.`;
   // # Step 2: Normalize slides and build both SlideData + TemplateContent
   const slides: SlideData[] = [];
   const templateSelections: (TemplateSelection | null)[] = [];
+  // # For carousels, lock to ONE template so all slides share the same style
+  let carouselLockedTemplate: { templateId: TemplateId; templateName: string; reasoning: string } | null = null;
+  const isCarouselType = contentType === "carousel";
 
   for (let index = 0; index < parsed.slides.length; index++) {
     const slide = parsed.slides[index] as Record<string, unknown>;
@@ -236,17 +239,16 @@ Return ONLY valid JSON.`;
     // # Step 3: Select an HTML template for this slide (non-blog only)
     if (platform !== "blog") {
       try {
-        // # Build the full content text for template matching
-        const slideText = [normalized.headline, normalized.body, normalized.subheadline]
-          .filter(Boolean).join(" ");
-
-        const selection = await selectTemplate(
-          platform,
-          contentType,
-          slideText,
-          pillar,
-          undefined,
-        );
+        // # For carousels: pick template on slide 1, reuse for all slides
+        let selection: { templateId: TemplateId; templateName: string; reasoning: string };
+        if (isCarouselType && carouselLockedTemplate) {
+          selection = carouselLockedTemplate;
+        } else {
+          const slideText = [normalized.headline, normalized.body, normalized.subheadline]
+            .filter(Boolean).join(" ");
+          selection = await selectTemplate(platform, contentType, slideText, pillar, undefined);
+          if (isCarouselType) carouselLockedTemplate = selection;
+        }
 
         // # Convert SlideData → TemplateContent for the HTML renderer
         const templateContent = slideToTemplateContent(normalized);
@@ -265,17 +267,16 @@ Return ONLY valid JSON.`;
 
         // # Inject template ID into slide.layout so the Visual API
         // # renders via Puppeteer HTML templates (primary path)
-        // # instead of falling through to fal.ai / OpenAI / Canvas
         normalized.layout = selection.templateId as TemplateLayout;
 
         templateSelections.push({
           templateId: selection.templateId,
           templateName: selection.templateName,
-          reasoning: selection.reasoning,
+          reasoning: isCarouselType && index > 0 ? `Locked to carousel template ${selection.templateId}` : selection.reasoning,
           templateContent,
         });
 
-        console.log(`[Designer] Slide ${index + 1}: selected template ${selection.templateId} "${selection.templateName}" — ${selection.reasoning}`);
+        console.log(`[Designer] Slide ${index + 1}: ${isCarouselType && index > 0 ? "locked to" : "selected"} template ${selection.templateId} "${selection.templateName}"${isCarouselType && index > 0 ? " (carousel consistency)" : ` — ${selection.reasoning}`}`);
       } catch (err) {
         console.warn(`[Designer] Template selection failed for slide ${index + 1}, will use fallback:`, err);
         templateSelections.push(null);
