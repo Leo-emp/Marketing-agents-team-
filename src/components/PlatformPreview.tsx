@@ -309,11 +309,11 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
 
       {/* # Image / Carousel — LinkedIn document-style one-at-a-time with nav */}
       {hasCarousel ? (
-        <div style={{ position: "relative", background: "#f3f2ef" }}>
+        <div style={{ position: "relative", background: "#f3f2ef", display: "flex", justifyContent: "center" }}>
           <img
             src={allImages[currentSlide]}
             alt={`Slide ${currentSlide + 1}`}
-            style={{ width: "100%", height: "auto", display: "block" }}
+            style={{ width: "100%", maxHeight: "600px", objectFit: "contain", display: "block" }}
           />
           {/* # Slide counter badge */}
           <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "12px" }}>
@@ -339,7 +339,9 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
           )}
         </div>
       ) : image ? (
-        <img src={image} alt="Post visual" style={{ width: "100%", height: "auto", display: "block" }} />
+        <div style={{ background: "#f3f2ef", display: "flex", justifyContent: "center" }}>
+          <img src={image} alt="Post visual" style={{ width: "100%", maxHeight: "600px", objectFit: "contain", display: "block" }} />
+        </div>
       ) : null}
 
       {/* # Engagement counts */}
@@ -431,7 +433,7 @@ function TwitterPreview({ item, slides, agent }: PlatformPreviewProps) {
             </div>
           ) : image ? (
             <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "12px", border: "1px solid #2f3336" }}>
-              <img src={image} alt="Tweet image" style={{ width: "100%", height: "auto", display: "block" }} />
+              <img src={image} alt="Tweet image" style={{ width: "100%", maxHeight: "500px", objectFit: "contain", display: "block" }} />
             </div>
           ) : null}
 
