@@ -8,16 +8,28 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// # Only models that are alive — 2.0 series deprecated by Google (404)
 const GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
 ];
 
 const deadModels = new Map<string, number>();
 const DEAD_TTL = 60 * 60 * 1000;
 const TIMEOUT_MS = 45_000;
+
+// # Rate limiter — free tier allows ~2-3 RPM so we space calls 4s apart
+let lastCallTime = 0;
+const MIN_CALL_GAP_MS = 4000;
+
+async function waitForRateLimit() {
+  const now = Date.now();
+  const elapsed = now - lastCallTime;
+  if (elapsed < MIN_CALL_GAP_MS) {
+    await new Promise((r) => setTimeout(r, MIN_CALL_GAP_MS - elapsed));
+  }
+  lastCallTime = Date.now();
+}
 
 /* # Shared fetch logic for both standard and grounded calls */
 async function callGeminiInternal(
@@ -29,13 +41,17 @@ async function callGeminiInternal(
 
   let lastError = "";
 
-  for (let pass = 0; pass < 2; pass++) {
-    if (pass > 0) await new Promise((r) => setTimeout(r, 2000));
+  // # 3 passes with increasing backoff on rate-limit
+  for (let pass = 0; pass < 3; pass++) {
+    if (pass > 0) await new Promise((r) => setTimeout(r, 5000 * pass));
 
     for (const model of GEMINI_MODELS) {
       const deadSince = deadModels.get(model);
       if (deadSince && Date.now() - deadSince < DEAD_TTL) continue;
       if (deadSince) deadModels.delete(model);
+
+      // # Wait for rate limit window before calling
+      await waitForRateLimit();
 
       try {
         const controller = new AbortController();
@@ -64,7 +80,12 @@ async function callGeminiInternal(
         clearTimeout(timeout);
 
         if (res.status === 404) { deadModels.set(model, Date.now()); continue; }
-        if (res.status === 429 || res.status === 503) { lastError = `${model} rate-limited`; continue; }
+        // # On rate-limit, wait 6s before trying next model
+        if (res.status === 429 || res.status === 503) {
+          lastError = `${model} rate-limited`;
+          await new Promise((r) => setTimeout(r, 6000));
+          continue;
+        }
         if (!res.ok) { const d = await res.json(); lastError = d.error?.message || "API error"; continue; }
 
         const data = await res.json();
