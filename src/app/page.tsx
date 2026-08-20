@@ -9,7 +9,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import PlatformPreview from "@/components/PlatformPreview";
+// # PlatformPreview component available but not used — content cards show caption + full-size images directly
 
 /* ---- Types ---- */
 interface ContentItem {
@@ -210,6 +210,7 @@ export default function Dashboard() {
   const [engagementOpen, setEngagementOpen] = useState<string | null>(null);
   const [engagementValues, setEngagementValues] = useState<Record<string, string>>({});
   const [savingEngagement, setSavingEngagement] = useState(false);
+  const [carouselSlides, setCarouselSlides] = useState<Record<string, number>>({});
 
   /* ---- KPI ---- */
   const [kpiPlatform, setKpiPlatform] = useState("all");
@@ -1269,31 +1270,49 @@ export default function Dashboard() {
                     const hasVisuals = !!item.imageUrl || !!previews;
                     const hasDesignData = !!item.visualData && !item.imageUrl && !previews;
 
-                    // # Platform preview mode — all posts render as platform-faithful previews
-                    const isPlatformPreviewable = ["linkedin", "twitter", "instagram", "tiktok", "blog"].includes(item.platform);
-
                     return (
                       <div key={item.id} className={`bg-card-bg border rounded-xl p-5 transition-all ${isNew ? "border-indigo-500/40 ring-1 ring-indigo-500/20" : "border-card-border hover:border-indigo-500/20"}`}>
 
-                        {isPlatformPreviewable ? (
+                        {(() => {
+                          // # Parse image URLs from comma-separated string or visual slides
+                          const allImages: string[] = (() => {
+                            if (previews && previews.length > 0) {
+                              const urls = previews.map(s => s.dataUrl || s.imageUrl).filter(Boolean) as string[];
+                              if (urls.length > 0) return urls;
+                            }
+                            if (!item.imageUrl) return [];
+                            const urls = item.imageUrl.match(/(?:https?:\/\/[^,\s]+|data:[^,]+,[^,\s]*)/g);
+                            return urls ? urls.map(u => u.trim()).filter(Boolean) : [item.imageUrl.trim()];
+                          })();
+                          const isCarousel = allImages.length > 1;
+                          const carouselKey = `carousel_${item.id}`;
+
+                          return (
                           <>
-                            {/* ==== PLATFORM PREVIEW MODE ==== */}
-                            {/* # Compact header with status + badges */}
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>
-                                  {item.platform === "twitter" ? "X / Twitter" : item.platform.charAt(0).toUpperCase() + item.platform.slice(1)}
-                                </span>
-                                <span className="text-xs text-text-muted">{CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</span>
-                                {isNew && <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-medium">New</span>}
-                                {item.editorialScore != null && item.editorialScore > 0 && (
-                                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-help ${item.editorialScore >= 8 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : item.editorialScore >= 6 ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`} title={item.editorialFeedback || "Editorial review score"}>
-                                    {item.editorialScore}/10
-                                  </span>
-                                )}
-                                {item.variationGroup && (
-                                  <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium" title={`Variation group: ${item.variationGroup}`}>A/B</span>
-                                )}
+                            {/* ==== CONTENT CARD ==== */}
+                            {/* # Header: agent, platform, type, score, status, date */}
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: agent.color }}>{agent.avatar}</div>
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-sm">{agent.name}</span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>
+                                      {item.platform === "twitter" ? "X / Twitter" : item.platform.charAt(0).toUpperCase() + item.platform.slice(1)}
+                                    </span>
+                                    <span className="text-xs text-text-muted">{CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</span>
+                                    {isNew && <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-medium">New</span>}
+                                    {item.editorialScore != null && item.editorialScore > 0 && (
+                                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-help ${item.editorialScore >= 8 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : item.editorialScore >= 6 ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`} title={item.editorialFeedback || "Editorial review score"}>
+                                        {item.editorialScore}/10
+                                      </span>
+                                    )}
+                                    {item.variationGroup && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium" title={`Variation group: ${item.variationGroup}`}>A/B</span>
+                                    )}
+                                  </div>
+                                  <p className="text-text-muted text-xs mt-0.5">{item.title}</p>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_STYLES[item.status] || ""}`}>{item.status}</span>
@@ -1301,23 +1320,103 @@ export default function Dashboard() {
                               </div>
                             </div>
 
-                            {/* # The actual platform-faithful preview */}
-                            <div className={`flex ${item.platform === "tiktok" ? "justify-center" : "justify-center"} mb-4`}>
-                              <PlatformPreview
-                                item={item}
-                                slides={previews || []}
-                                agent={agent}
-                              />
+                            {/* # Hook */}
+                            {item.hook && <p className="text-indigo-400 text-sm font-medium mb-2 italic">&ldquo;{item.hook}&rdquo;</p>}
+
+                            {/* # Caption / Body text */}
+                            <div className="mb-4">
+                              <p className="text-text-muted text-xs font-medium mb-1 uppercase tracking-wider">Caption</p>
+                              <pre className="text-text-secondary text-sm whitespace-pre-wrap font-sans leading-relaxed">{item.captionText || item.body}</pre>
                             </div>
 
-                            {/* # Notes visible below preview */}
+                            {/* # Hashtags */}
+                            {item.hashtags && (
+                              <p className="text-indigo-400/60 text-xs mb-4">{item.hashtags.split(",").map((t: string) => `#${t.trim()}`).join(" ")}</p>
+                            )}
+
+                            {/* # Template image(s) — full size, carousel for multi-slide */}
+                            {allImages.length > 0 && (
+                              <div className="mb-4">
+                                {isCarousel ? (
+                                  <div>
+                                    <div className="relative rounded-lg overflow-hidden border border-card-border bg-space-800">
+                                      <img
+                                        src={allImages[carouselSlides[item.id] || 0]}
+                                        alt={`Slide ${(carouselSlides[item.id] || 0) + 1}`}
+                                        style={{ width: "100%", height: "auto", display: "block" }}
+                                      />
+                                      {/* # Slide counter */}
+                                      <div className="absolute top-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+                                        {(carouselSlides[item.id] || 0) + 1} / {allImages.length}
+                                      </div>
+                                      {/* # Prev arrow */}
+                                      {(carouselSlides[item.id] || 0) > 0 && (
+                                        <button
+                                          onClick={() => setCarouselSlides(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) - 1 }))}
+                                          className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border border-white/20 flex items-center justify-center text-gray-800 hover:bg-white transition-colors shadow-lg"
+                                        >
+                                          &#8249;
+                                        </button>
+                                      )}
+                                      {/* # Next arrow */}
+                                      {(carouselSlides[item.id] || 0) < allImages.length - 1 && (
+                                        <button
+                                          onClick={() => setCarouselSlides(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))}
+                                          className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 border border-white/20 flex items-center justify-center text-gray-800 hover:bg-white transition-colors shadow-lg"
+                                        >
+                                          &#8250;
+                                        </button>
+                                      )}
+                                    </div>
+                                    {/* # Dot indicators */}
+                                    <div className="flex justify-center gap-1.5 mt-2">
+                                      {allImages.map((_, i) => (
+                                        <button
+                                          key={i}
+                                          onClick={() => setCarouselSlides(prev => ({ ...prev, [item.id]: i }))}
+                                          className={`w-2 h-2 rounded-full transition-colors ${i === (carouselSlides[item.id] || 0) ? "bg-indigo-500" : "bg-space-600 hover:bg-space-500"}`}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="rounded-lg overflow-hidden border border-card-border">
+                                    <img
+                                      src={allImages[0]}
+                                      alt="Post visual"
+                                      style={{ width: "100%", height: "auto", display: "block" }}
+                                    />
+                                  </div>
+                                )}
+                                {/* # Download button */}
+                                <button
+                                  onClick={() => {
+                                    const idx = isCarousel ? (carouselSlides[item.id] || 0) : 0;
+                                    downloadVisual(allImages[idx], `jobpilot-${item.platform}-${isCarousel ? `slide-${idx + 1}` : "image"}.png`);
+                                  }}
+                                  className="mt-2 px-3 py-1 bg-space-600 text-text-secondary text-xs rounded-lg hover:text-text-primary transition-colors"
+                                >
+                                  Download {isCarousel ? `Slide ${(carouselSlides[item.id] || 0) + 1}` : "Image"}
+                                </button>
+                              </div>
+                            )}
+
+                            {/* # Video preview for reels */}
+                            {item.videoUrl && (
+                              <div className="mb-3">
+                                <video src={item.videoUrl} controls className="rounded-lg border border-card-border w-full" style={{ maxWidth: "400px" }} />
+                                <a href={item.videoUrl} download={`jobpilot-reel-${item.platform}.mp4`} className="inline-block mt-2 px-3 py-1 bg-space-600 text-text-secondary text-xs rounded-lg hover:text-text-primary transition-colors">Download MP4</a>
+                              </div>
+                            )}
+
+                            {/* # Notes */}
                             {item.notes && (
                               <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2 mb-3">
                                 <p className="text-yellow-400/70 text-xs">{item.notes}</p>
                               </div>
                             )}
 
-                            {/* # Engagement metrics in preview mode */}
+                            {/* # Engagement metrics */}
                             {item.engagementScore != null && item.engagementScore > 0 && (
                               <div className="bg-space-700/50 rounded-lg px-3 py-2 mb-3">
                                 <div className="flex items-center gap-4 text-xs">
@@ -1332,7 +1431,7 @@ export default function Dashboard() {
                               </div>
                             )}
 
-                            {/* # Engagement input form in preview mode */}
+                            {/* # Engagement input form */}
                             {engagementOpen === item.id && (
                               <div className="bg-indigo-500/5 border border-indigo-500/15 rounded-lg px-3 py-3 mb-3">
                                 <p className="text-text-muted text-xs mb-2">Enter engagement metrics from the platform:</p>
@@ -1353,177 +1452,8 @@ export default function Dashboard() {
                               </div>
                             )}
                           </>
-                        ) : (
-                          <>
-                        {/* ==== DASHBOARD MODE (original view) ==== */}
-                        {/* Card header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: agent.color }}>{agent.avatar}</div>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-sm">{agent.name}</span>
-                                {/* # Ambassador videos get a distinct cyan badge; blog articles get emerald; all others get a platform-colored pill */}
-                                {item.contentType === "ambassador_video" ? (
-                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">Ambassador Video</span>
-                                ) : item.platform === "blog" && item.contentType === "blog_article" ? (
-                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Blog Article</span>
-                                ) : (
-                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${PLATFORM_COLORS[item.platform] || "#666"}22`, color: PLATFORM_COLORS[item.platform] || "#999" }}>
-                                    {/* # After a blog article is published, show "Published to blog" rather than the raw platform string */}
-                                    {item.status === "posted" && item.platform === "blog" ? "Published to blog" : item.platform}
-                                  </span>
-                                )}
-                                <span className="text-xs text-text-muted">{CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</span>
-                                {isNew && <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-medium">New</span>}
-                                {hasVisuals && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20 font-medium">Visual</span>}
-                              </div>
-                              <p className="text-text-muted text-xs">{item.title}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {/* # Editorial quality score badge */}
-                            {item.editorialScore != null && item.editorialScore > 0 && (
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full border font-medium cursor-help ${
-                                  item.editorialScore >= 8 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
-                                  item.editorialScore >= 6 ? "bg-yellow-500/15 text-yellow-400 border-yellow-500/30" :
-                                  "bg-red-500/15 text-red-400 border-red-500/30"
-                                }`}
-                                title={item.editorialFeedback || "Editorial review score"}
-                              >
-                                {item.editorialScore}/10
-                              </span>
-                            )}
-                            {/* # Variation group indicator */}
-                            {item.variationGroup && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium" title={`Variation group: ${item.variationGroup}`}>
-                                A/B
-                              </span>
-                            )}
-                            <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_STYLES[item.status] || ""}`}>{item.status}</span>
-                          </div>
-                        </div>
-
-                        {/* Hook */}
-                        {item.hook && <p className="text-indigo-400 text-sm font-medium mb-2 italic">&ldquo;{item.hook}&rdquo;</p>}
-
-                        {/* Visual previews */}
-                        {previews && previews.length > 0 && (
-                          <div className="flex gap-3 mb-3 overflow-x-auto pb-2">
-                            {previews.map((slide) => (
-                              <div key={slide.index} className="shrink-0 relative group">
-                                <img
-                                  src={slide.dataUrl || slide.imageUrl}
-                                  alt={`Slide ${slide.index + 1}`}
-                                  className="h-40 w-auto rounded-lg border border-card-border"
-                                />
-                                <button
-                                  onClick={() => downloadVisual(slide.dataUrl || slide.imageUrl || "", `jobpilot-${item.platform}-slide-${slide.index + 1}.png`)}
-                                  className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  Download
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Video preview for reels */}
-                        {item.videoUrl && (
-                          <div className="mb-3">
-                            <video
-                              src={item.videoUrl}
-                              controls
-                              className="rounded-lg border border-card-border"
-                              style={{ aspectRatio: "9/16", maxWidth: "240px", maxHeight: "320px" }}
-                            />
-                            <a
-                              href={item.videoUrl}
-                              download={`jobpilot-reel-${item.platform}.mp4`}
-                              className="inline-block mt-2 px-3 py-1 bg-space-600 text-text-secondary text-xs rounded-lg hover:text-text-primary transition-colors"
-                            >
-                              Download MP4
-                            </a>
-                          </div>
-                        )}
-
-                        {/* Body */}
-                        <pre className="text-text-secondary text-sm whitespace-pre-wrap font-sans leading-relaxed mb-3 max-h-48 overflow-y-auto">{item.body}</pre>
-
-                        {/* Caption (separate from body for image/carousel posts) */}
-                        {item.captionText && (
-                          <div className="bg-space-700/50 rounded-lg px-3 py-2 mb-3">
-                            <p className="text-text-muted text-xs mb-1">Caption:</p>
-                            <p className="text-text-secondary text-sm">{item.captionText}</p>
-                          </div>
-                        )}
-
-                        {/* Hashtags */}
-                        {item.hashtags && <p className="text-indigo-500/50 text-xs mb-3">{item.hashtags.split(",").map((t) => `#${t.trim()}`).join(" ")}</p>}
-
-                        {/* Media prompt */}
-                        {item.mediaPrompt && (
-                          <div className="bg-space-700 rounded-lg px-3 py-2 mb-3">
-                            <p className="text-text-muted text-xs mb-0.5">Visual direction:</p>
-                            <p className="text-text-secondary text-xs">{item.mediaPrompt}</p>
-                          </div>
-                        )}
-
-                        {/* Notes */}
-                        {item.notes && (
-                          <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-lg px-3 py-2 mb-3">
-                            <p className="text-yellow-400/70 text-xs">{item.notes}</p>
-                          </div>
-                        )}
-
-                        {/* # Engagement metrics display — shows after metrics have been entered */}
-                        {item.engagementScore != null && item.engagementScore > 0 && (
-                          <div className="bg-space-700/50 rounded-lg px-3 py-2 mb-3">
-                            <div className="flex items-center gap-4 text-xs">
-                              <span className="text-text-muted">Performance:</span>
-                              {item.engagementImpressions != null && <span className="text-text-secondary">{item.engagementImpressions.toLocaleString()} views</span>}
-                              {item.engagementLikes != null && <span className="text-text-secondary">{item.engagementLikes} likes</span>}
-                              {item.engagementComments != null && <span className="text-text-secondary">{item.engagementComments} comments</span>}
-                              {item.engagementShares != null && <span className="text-text-secondary">{item.engagementShares} shares</span>}
-                              {item.engagementSaves != null && <span className="text-text-secondary">{item.engagementSaves} saves</span>}
-                              <span className="text-indigo-400 font-medium ml-auto">Score: {item.engagementScore.toFixed(0)}</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* # Engagement input form — appears when "Track" button is clicked on posted items */}
-                        {engagementOpen === item.id && (
-                          <div className="bg-indigo-500/5 border border-indigo-500/15 rounded-lg px-3 py-3 mb-3">
-                            <p className="text-text-muted text-xs mb-2">Enter engagement metrics from the platform:</p>
-                            <div className="grid grid-cols-5 gap-2 mb-2">
-                              {(["impressions", "likes", "comments", "shares", "saves"] as const).map((metric) => (
-                                <div key={metric}>
-                                  <label className="block text-text-muted text-xs mb-0.5 capitalize">{metric}</label>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    value={engagementValues[`${item.id}_${metric}`] || "0"}
-                                    onChange={(e) => setEngagementValues((prev) => ({ ...prev, [`${item.id}_${metric}`]: e.target.value }))}
-                                    className="w-full px-2 py-1 bg-space-700 border border-card-border rounded text-xs text-text-primary focus:outline-none focus:border-indigo-500"
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleSaveEngagement(item.id)}
-                                disabled={savingEngagement}
-                                className="px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs font-medium rounded hover:bg-indigo-500/30 transition-colors disabled:opacity-50"
-                              >
-                                {savingEngagement ? "Saving..." : "Save Metrics"}
-                              </button>
-                              <button onClick={() => setEngagementOpen(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">Cancel</button>
-                            </div>
-                          </div>
-                        )}
-                          </>
-                        )}
+                          );
+                        })()}
 
                         {/* Actions */}
                         <div className="flex items-center gap-2 pt-2 border-t border-card-border flex-wrap">
