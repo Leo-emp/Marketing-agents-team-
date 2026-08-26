@@ -7,16 +7,16 @@
    ============================================================ */
 
 import type { TemplateContent, TemplateId } from "./shared";
-import { LOGO_DATA_URI, LOGO_PRO_URI, esc } from "./shared";
+import { LOGO_DATA_URI, LOGO_PRO_URI, esc, pickGradient } from "./shared";
 
 // # All TikTok template IDs across all 4 sets
 export const TIKTOK_IDS: TemplateId[] = [
   "t16", "t17", "t18", "t19", "t20", "t21",
-  "t28", "t29", "t30", "t31", "t32", "t33",
+  "t28", "t29", "t30", "t31", "t32",
   "t40", "t41", "t42", "t43", "t44",
-  "t49", "t50", "t51", "t52",
-  "t81", "t82", "t83", "t84", "t85", "t86", "t87", "t88",
-  "t103", "t104", "t105", "t106", "t107", "t108",
+  "t50", "t51", "t52",
+  "t82", "t83", "t84", "t85", "t86", "t87", "t88",
+  "t104", "t106", "t107", "t108",
   "t121", "t122", "t123", "t124", "t125", "t126",
   "t139", "t140", "t141", "t142", "t143", "t144",
 ];
@@ -160,29 +160,41 @@ function buildT18(c: TemplateContent, w: number, h: number): string {
 /* ============================================================
    T19 — NEON STATEMENT (Pure black + glow, 432×768)
    ============================================================ */
+// # Teal-style brand footer for gradient templates — logo + name + URL
+function tealFooter(): string {
+  return `<div style="margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;">
+    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
+    <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:-0.01em;">JobPilot AI</span>
+    <span style="font-size:8px;font-family:${TT_MONO};color:rgba(255,255,255,0.3);margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+  </div>`;
+}
+
 const T19_CSS = `
-.t19{background:#0A0A0A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;}
-.t19 .tag{font-size:8px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:32px;}
-.t19 .statement{font-size:42px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-0.03em;margin-bottom:20px;}
-.t19 .neon{display:inline;}
-.t19 .sub{font-size:14px;color:rgba(255,255,255,0.45);max-width:340px;line-height:1.5;}
-.t19 .glow-bg{position:absolute;width:300px;height:300px;border-radius:50%;filter:blur(80px);opacity:0.06;z-index:0;}
+.t19{display:flex;flex-direction:column;padding:60px 28px 32px;}
+.t19 .tag{font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+.t19 .tag::before{content:'';width:16px;height:2px;background:rgba(255,255,255,0.35);border-radius:1px;}
+.t19 .statement{font-size:32px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-0.03em;max-width:380px;}
+.t19 .statement em{font-style:normal;color:#A5B4FC;}
+.t19 .spacer{flex:3;}
+.t19 .spacer-b{flex:2;}
+.t19 .sub{font-size:22px;color:rgba(255,255,255,0.5);max-width:390px;line-height:1.45;}
 `;
 
 function buildT19(c: TemplateContent, w: number, h: number): string {
-  const neonColors = ["#00FF88", "#FF006E", "#FFD60A", "#00D4FF"];
-  const idx = c.stat?.value ? parseInt(c.stat.value) % 4 : 0;
-  const neon = neonColors[idx];
   const headline = esc(c.headline);
   const keyword = esc(c.headlineHighlight || "");
-  const styled = keyword ? headline.replace(keyword, `<span class="neon" style="color:${neon};text-shadow:0 0 20px ${neon}66,0 0 40px ${neon}26">${keyword}</span>`) : headline;
+  const styled = keyword ? headline.replace(keyword, `<em>${keyword}</em>`) : headline;
+  // # Inject rotated gradient as inline style so each post gets a distinct color
+  const gradient = pickGradient(c.headline);
+  const cssWithGradient = T19_CSS + `\n.t19{background:${gradient};}`;
 
-  return wrapTT("t19", T19_CSS, `
-    <div class="glow-bg" style="background:${neon};top:30%;left:20%;"></div>
-    <div class="tag" style="color:${neon}">HOT TAKE</div>
-    <div class="statement" style="position:relative;z-index:1;">${styled}</div>
-    ${c.body ? `<div class="sub" style="position:relative;z-index:1;">${esc(c.body)}</div>` : ""}
-    ${watermark()}
+  return wrapTT("t19", cssWithGradient, `
+    <div class="tag">${esc(c.eyebrow || "HOT TAKE")}</div>
+    <div class="statement">${styled}</div>
+    <div class="spacer"></div>
+    ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
+    <div class="spacer-b"></div>
+    ${tealFooter()}
   `, 432, 768, w, h);
 }
 
@@ -401,34 +413,6 @@ function buildT32(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
-   T33 — NEON OUTLINE (Pure black, outlined text + glow, 432×768)
-   ============================================================ */
-const T33_CSS = `
-.t33{background:#050508;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;}
-.t33 .badge{font-size:4px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#00FFB2;border:1px solid rgba(0,255,178,0.3);border-radius:10px;padding:3px 10px;margin-bottom:28px;}
-.t33 .text{font-size:11px;font-weight:800;color:transparent;-webkit-text-stroke:1px #fff;line-height:1.4;max-width:360px;}
-.t33 .text .filled{-webkit-text-stroke:0;color:#fff;}
-.t33 .text .glow{-webkit-text-stroke:0;color:#00FFB2;text-shadow:0 0 20px rgba(0,255,178,0.4),0 0 40px rgba(0,255,178,0.15);}
-.t33 .sub{font-size:5px;color:rgba(255,255,255,0.3);margin-top:20px;max-width:300px;line-height:1.5;}
-.t33 .grad-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,#00FFB2,transparent);margin:16px 0;}
-.t33 .cta{font-size:4px;color:rgba(0,255,178,0.5);}
-`;
-
-function buildT33(c: TemplateContent, w: number, h: number): string {
-  const text = esc(c.headline);
-  const kw = c.headlineHighlight ? esc(c.headlineHighlight) : "";
-  const styled = kw ? text.replace(kw, `<span class="glow">${kw}</span>`) : text;
-  return wrapTT("t33", T33_CSS, `
-    <div class="badge">${esc(c.eyebrow || "INSIGHT")}</div>
-    <div class="text">${styled}</div>
-    <div class="grad-line"></div>
-    ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
-    ${c.cta ? `<div class="cta">${esc(c.cta)}</div>` : ""}
-    ${watermark()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
    T40 — BRUTALIST HIGHLIGHT (Cream, inverted blocks, 432×768)
    ============================================================ */
 const T40_CSS = `
@@ -600,30 +584,6 @@ function buildT44(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
-   T49 — CENTERED MINIMAL (Maximum negative space, 432×768)
-   ============================================================ */
-const T49_CSS = `
-.t49{background:#0A0A0F;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 32px;text-align:center;}
-.t49 .line-top{width:1px;height:48px;background:linear-gradient(180deg,transparent,#6366F1);margin-bottom:32px;}
-.t49 .statement{font-size:9px;font-weight:600;color:#fff;line-height:1.55;max-width:320px;}
-.t49 .statement em{font-style:normal;color:#6366F1;}
-.t49 .line-bot{width:1px;height:48px;background:linear-gradient(180deg,#6366F1,transparent);margin-top:32px;}
-.t49 .tiny-brand{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:3px;color:rgba(255,255,255,0.12);}
-`;
-
-function buildT49(c: TemplateContent, w: number, h: number): string {
-  const text = esc(c.headline);
-  const kw = c.headlineHighlight ? esc(c.headlineHighlight) : "";
-  const styled = kw ? text.replace(kw, `<em>${kw}</em>`) : text;
-  return wrapTT("t49", T49_CSS, `
-    <div class="line-top"></div>
-    <div class="statement">${styled}</div>
-    <div class="line-bot"></div>
-    <div class="tiny-brand">JOBPILOT AI</div>
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
    T50 — TERMINAL (Code/hacker aesthetic, 432×768)
    ============================================================ */
 const T50_CSS = `
@@ -719,31 +679,6 @@ function buildT52(c: TemplateContent, w: number, h: number): string {
           ${s.description ? `<div class="item-desc">${esc(s.description)}</div>` : ""}
         </div>
       </div>`).join("")}
-    </div>
-    ${watermark()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
-   T81 — POV CARD (First person perspective, 432×768)
-   ============================================================ */
-const T81_CSS = `
-.t81{background:#0A0A0A;display:flex;flex-direction:column;padding:60px 28px 32px;}
-.t81 .pov-tag{font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#00D4FF;margin-bottom:24px;text-align:center;}
-.t81 .context{font-size:10px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:16px;}
-.t81 .statement{font-size:28px;font-weight:900;color:#fff;text-align:center;line-height:1.2;letter-spacing:-0.02em;flex:1;display:flex;align-items:center;justify-content:center;max-width:380px;margin:0 auto;}
-.t81 .reaction{display:flex;gap:8px;justify-content:center;margin-top:auto;padding-top:20px;}
-.t81 .react-pill{background:#1C1C1E;border-radius:14px;padding:6px 12px;font-size:8px;color:rgba(255,255,255,0.6);}
-`;
-
-function buildT81(c: TemplateContent, w: number, h: number): string {
-  return wrapTT("t81", T81_CSS, `
-    <div class="pov-tag">POV</div>
-    <div class="context">${esc(c.eyebrow || "you just got your first tech interview")}</div>
-    <div class="statement">${esc(c.headline)}</div>
-    <div class="reaction">
-      <div class="react-pill">😭 relatable</div>
-      <div class="react-pill">💀 been there</div>
     </div>
     ${watermark()}
   `, 432, 768, w, h);
@@ -1009,52 +944,6 @@ function proBrandBar(): string {
 }
 
 /* ============================================================
-   T103 — NEON GLOW (Bold headline with neon text glow)
-   ============================================================
-   # Dark background with neon-glowing headline text.
-   # Eye-catching, scroll-stopping for TikTok feed.
-   # Best for: bold statements, myths, hot takes.
-   ============================================================ */
-const T103_CSS = `
-/* # Pure black background for max neon contrast */
-.t103{background:#000;display:flex;flex-direction:column;justify-content:center;padding:40px 28px;}
-/* # Soft radial glow behind content */
-.t103::before{content:'';position:absolute;top:40%;left:50%;width:350px;height:300px;transform:translate(-50%,-40%);background:radial-gradient(ellipse,rgba(99,102,241,0.08),transparent 70%);pointer-events:none;}
-/* # Eyebrow */
-.t103 .ey{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#6366F1;margin-bottom:24px;position:relative;z-index:1;display:flex;align-items:center;gap:6px;}
-.t103 .ey::before{content:'';width:12px;height:2px;background:#6366F1;border-radius:1px;}
-/* # Neon headline — white text with indigo glow shadow */
-.t103 .hdl{font-size:36px;font-weight:900;letter-spacing:-0.03em;line-height:1.15;color:#FFF;position:relative;z-index:1;text-shadow:0 0 40px rgba(99,102,241,0.3),0 0 80px rgba(99,102,241,0.1);max-width:360px;}
-/* # Highlighted word gets brighter glow */
-.t103 .hdl em{font-style:normal;color:#A78BFA;text-shadow:0 0 30px rgba(167,139,250,0.5),0 0 60px rgba(167,139,250,0.2);}
-/* # Body text */
-.t103 .body{font-size:13px;color:rgba(255,255,255,0.35);line-height:1.6;margin-top:20px;max-width:340px;position:relative;z-index:1;}
-.t103 .body strong{color:rgba(255,255,255,0.7);font-weight:600;}
-/* # Bullets with neon dots */
-.t103 .bullets{display:flex;flex-direction:column;gap:12px;margin-top:20px;position:relative;z-index:1;}
-.t103 .bullet{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.4;}
-.t103 .bullet::before{content:'';width:6px;height:6px;border-radius:50%;background:#6366F1;box-shadow:0 0 8px rgba(99,102,241,0.5);flex-shrink:0;}
-`;
-
-function buildT103(c: TemplateContent, w: number, h: number): string {
-  const headline = c.headlineHighlight
-    ? esc(c.headline).replace(esc(c.headlineHighlight), `<em>${esc(c.headlineHighlight)}</em>`)
-    : esc(c.headline);
-  const bullets = c.bullets || [];
-  const body = c.body ? esc(c.body) : "";
-
-  return wrapTT("t103", T103_CSS, `
-    <div class="ey">${esc(c.eyebrow || "CAREER HACK")}</div>
-    <div class="hdl">${headline}</div>
-    ${body ? `<div class="body">${body}</div>` : ""}
-    ${bullets.length > 0 ? `<div class="bullets">
-      ${bullets.map(b => `<div class="bullet">${esc(b)}</div>`).join("")}
-    </div>` : ""}
-    ${proBrandBar()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
    T104 — STACKED CARDS (Glass cards with numbered tips)
    ============================================================
    # Vertical stack of frosted glass cards on gradient bg.
@@ -1096,39 +985,6 @@ function buildT104(c: TemplateContent, w: number, h: number): string {
         </div>
       </div>`).join("")}
     </div>
-    ${proBrandBar()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
-   T105 — GRADIENT TEXT (Bold headline with CSS gradient text)
-   ============================================================
-   # Dark background, headline text filled with vibrant gradient.
-   # Scroll-stopping visual impact for short-form content.
-   # Best for: bold statements, single key messages.
-   ============================================================ */
-const T105_CSS = `
-/* # Dark background */
-.t105{background:#080810;display:flex;flex-direction:column;justify-content:center;padding:48px 28px;}
-/* # Eyebrow */
-.t105 .ey{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#6366F1;margin-bottom:28px;display:flex;align-items:center;gap:6px;position:relative;z-index:1;}
-.t105 .ey::before{content:'';width:10px;height:2px;background:#6366F1;border-radius:1px;}
-/* # Gradient-filled headline text */
-.t105 .hdl{font-size:40px;font-weight:900;letter-spacing:-0.03em;line-height:1.15;background:linear-gradient(135deg,#6366F1,#A78BFA 40%,#C4B5FD 60%,#818CF8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;z-index:1;max-width:380px;}
-/* # Body text below */
-.t105 .body{font-size:13px;color:rgba(255,255,255,0.3);line-height:1.6;margin-top:24px;max-width:340px;position:relative;z-index:1;}
-.t105 .body strong{color:rgba(255,255,255,0.6);font-weight:600;-webkit-text-fill-color:rgba(255,255,255,0.6);}
-/* # CTA button style */
-.t105 .cta{display:inline-flex;align-items:center;gap:6px;margin-top:24px;padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#A78BFA);font-size:11px;font-weight:700;color:#FFF;position:relative;z-index:1;}
-`;
-
-function buildT105(c: TemplateContent, w: number, h: number): string {
-  const body = c.body ? esc(c.body) : "";
-  return wrapTT("t105", T105_CSS, `
-    <div class="ey">${esc(c.eyebrow || "TRUTH BOMB")}</div>
-    <div class="hdl">${esc(c.headline)}</div>
-    ${body ? `<div class="body">${body}</div>` : ""}
-    ${c.cta ? `<div class="cta">${esc(c.cta)} →</div>` : ""}
     ${proBrandBar()}
   `, 432, 768, w, h);
 }
@@ -1670,17 +1526,17 @@ export function buildTikTokTemplate(
     case "t30": return buildT30(content, width, height);
     case "t31": return buildT31(content, width, height);
     case "t32": return buildT32(content, width, height);
-    case "t33": return buildT33(content, width, height);
+
     case "t40": return buildT40(content, width, height);
     case "t41": return buildT41(content, width, height);
     case "t42": return buildT42(content, width, height);
     case "t43": return buildT43(content, width, height);
     case "t44": return buildT44(content, width, height);
-    case "t49": return buildT49(content, width, height);
+
     case "t50": return buildT50(content, width, height);
     case "t51": return buildT51(content, width, height);
     case "t52": return buildT52(content, width, height);
-    case "t81": return buildT81(content, width, height);
+
     case "t82": return buildT82(content, width, height);
     case "t83": return buildT83(content, width, height);
     case "t84": return buildT84(content, width, height);
@@ -1689,9 +1545,9 @@ export function buildTikTokTemplate(
     case "t87": return buildT87(content, width, height);
     case "t88": return buildT88(content, width, height);
     // # Premium templates
-    case "t103": return buildT103(content, width, height);
+
     case "t104": return buildT104(content, width, height);
-    case "t105": return buildT105(content, width, height);
+
     case "t106": return buildT106(content, width, height);
     case "t107": return buildT107(content, width, height);
     case "t108": return buildT108(content, width, height);

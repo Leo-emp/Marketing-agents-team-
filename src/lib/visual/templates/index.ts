@@ -68,7 +68,8 @@ function buildFallbackTemplate(
   html, body { width: ${width}px; height: ${height}px; overflow: hidden; }
   .template {
     width: ${width}px; height: ${height}px;
-    background: #08090E; color: #E4E2DD;
+    background: linear-gradient(160deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+    color: #E4E2DD;
     font-family: 'Segoe UI', system-ui, sans-serif;
     display: flex; flex-direction: column;
     justify-content: center; align-items: center;
@@ -94,6 +95,59 @@ export function isTemplateId(layout: string): layout is TemplateId {
   if (!match) return false;
   const num = parseInt(match[1]);
   return num >= 1 && num <= 186;
+}
+
+// # Instagram templates that render at 1:1 (1080×1080)
+const IG_SQUARE: Set<string> = new Set([
+  "t25","t36","t37","t38","t39","t47","t55","t56",
+  "t57","t60","t61","t62","t63","t64","t92","t94","t96",
+  "t110","t112",
+  "t179","t180","t181","t182",
+]);
+
+// # Instagram templates that render at 9:16 (1080×1920)
+const IG_STORY: Set<string> = new Set([
+  "t24","t27","t114","t132","t150",
+  "t183","t184","t185","t186",
+]);
+
+// # Get the correct native render dimensions for any template ID
+// # Templates are designed at a fixed aspect ratio — this returns
+// # the target pixel size they should be rendered at (not the
+// # preview scale). The visual pipeline must use these dimensions
+// # instead of the platform/contentType fallback to avoid clipping.
+export function getTemplateDimensions(templateId: string): { width: number; height: number } | null {
+  if (!isTemplateId(templateId)) return null;
+
+  // # LinkedIn → 1080×1350 (4:5 portrait)
+  if (LINKEDIN_IDS.includes(templateId as TemplateId)) {
+    return { width: 1080, height: 1350 };
+  }
+
+  // # TikTok → 1080×1920 (9:16 full screen)
+  if (TIKTOK_IDS.includes(templateId as TemplateId)) {
+    return { width: 1080, height: 1920 };
+  }
+
+  // # Instagram — depends on the specific template
+  if (INSTAGRAM_IDS.includes(templateId as TemplateId)) {
+    if (IG_SQUARE.has(templateId)) return { width: 1080, height: 1080 };
+    if (IG_STORY.has(templateId)) return { width: 1080, height: 1920 };
+    return { width: 1080, height: 1350 };
+  }
+
+  // # Fresh templates — LinkedIn (T151-T162), TikTok (T163-T174), Instagram (T175-T186)
+  if (FRESH_IDS.includes(templateId as TemplateId)) {
+    const num = parseInt(templateId.slice(1));
+    if (num <= 162) return { width: 1080, height: 1350 };
+    if (num <= 174) return { width: 1080, height: 1920 };
+    // # Instagram fresh: T175-T178 (4:5), T179-T182 (1:1), T183-T186 (9:16)
+    if (num <= 178) return { width: 1080, height: 1350 };
+    if (num <= 182) return { width: 1080, height: 1080 };
+    return { width: 1080, height: 1920 };
+  }
+
+  return { width: 1080, height: 1350 };
 }
 
 // # Re-export carousel system for direct use

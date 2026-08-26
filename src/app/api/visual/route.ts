@@ -18,7 +18,7 @@ import { generateImage } from "@/lib/visual/openai-image";
 import { generateFalImage } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
 import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
-import { isTemplateId } from "@/lib/visual/templates/index";
+import { isTemplateId, getTemplateDimensions } from "@/lib/visual/templates/index";
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
 
@@ -114,7 +114,7 @@ async function renderAndSave(
   contentId: string | null,
   model?: string,
 ) {
-  const { width, height } = getDimensions(platform, type);
+  const platformDims = getDimensions(platform, type);
   const results: { index: number; visualId: string; imageUrl: string; width: number; height: number }[] = [];
 
   for (let i = 0; i < slides.length; i++) {
@@ -123,6 +123,12 @@ async function renderAndSave(
       slideNumber: slides[i].slideNumber ?? i + 1,
       totalSlides: slides[i].totalSlides ?? slides.length,
     };
+
+    // # HTML templates have fixed aspect ratios — use their native
+    // # dimensions so the full template renders without clipping
+    const templateDims = isTemplateId(slide.layout) ? getTemplateDimensions(slide.layout) : null;
+    const width = templateDims?.width ?? platformDims.width;
+    const height = templateDims?.height ?? platformDims.height;
 
     // # Render via fal.ai / OpenAI / Canvas 2D
     const pngBuffer = await renderSlide(slide, width, height, platform, model);

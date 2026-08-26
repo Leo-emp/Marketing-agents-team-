@@ -29,6 +29,7 @@ import { generateFalImage } from "@/lib/visual/fal-image";
 import { generateImage } from "@/lib/visual/openai-image";
 import { renderSlideCanvas } from "@/lib/visual/canvas-renderer";
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
+import { getTemplateDimensions } from "@/lib/visual/templates/index";
 import { uploadImage, uploadMedia } from "@/lib/blob-storage";
 import { getDimensions, type SlideData } from "@/lib/visual/types";
 import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
@@ -207,11 +208,15 @@ Return ONLY valid JSON.`;
                 // # Priority 1: HTML templates via Puppeteer
                 if (templateSelection) {
                   try {
+                    // # Use template's native dimensions to avoid clipping
+                    const tDims = getTemplateDimensions(templateSelection.templateId);
+                    const tW = tDims?.width ?? width;
+                    const tH = tDims?.height ?? height;
                     imgBuffer = await renderTemplateHTML(
                       templateSelection.templateId,
                       templateSelection.templateContent,
-                      width,
-                      height,
+                      tW,
+                      tH,
                     );
                     rendererUsed = "html-template";
                     templateIdUsed = templateSelection.templateId;
@@ -289,6 +294,10 @@ Return ONLY valid JSON.`;
               imageBuffers.push(imgBuffer);
 
               // # Store the Visual record with templateId for performance tracking
+              // # Use template-native dims when an HTML template was rendered
+              const vizDims = (rendererUsed === "html-template" && templateIdUsed)
+                ? (getTemplateDimensions(templateIdUsed) ?? { width, height })
+                : { width, height };
               if (templateIdUsed || rendererUsed) {
                 try {
                   await prisma.visual.create({
@@ -302,8 +311,8 @@ Return ONLY valid JSON.`;
                         reasoning: templateSelection.reasoning,
                         renderer: rendererUsed,
                       } : { renderer: rendererUsed }),
-                      width,
-                      height,
+                      width: vizDims.width,
+                      height: vizDims.height,
                     },
                   });
                 } catch (vizRecErr) {

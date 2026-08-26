@@ -11,7 +11,7 @@
    ============================================================ */
 
 import type { TemplateContent, TemplateId } from "./shared";
-import { LOGO_DATA_URI, LOGO_PRO_URI, FONT_STACK, MONO_STACK, esc, proFooterDark, proFooterLight, proFooterBar } from "./shared";
+import { LOGO_DATA_URI, LOGO_PRO_URI, FONT_STACK, MONO_STACK, esc, proFooterDark, proFooterLight, proFooterBar, pickGradient } from "./shared";
 
 // # All LinkedIn template IDs
 export const LINKEDIN_IDS: TemplateId[] = [
@@ -1353,24 +1353,16 @@ function buildT79(c: TemplateContent, w: number, h: number): string {
    T80 — EXPERT HOT TAKE (Authority card, dark, 540×675)
    ============================================================ */
 const T80_CSS = `
-.t80{width:540px;height:675px;background:#08090E;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
-.t80::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#6366F1,#A78BFA,#6366F1);}
-.t80 .meta{display:flex;align-items:center;gap:10px;margin-bottom:24px;margin-top:8px;}
-.t80 .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#A78BFA);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.t80 .avatar img{width:20px;height:20px;border-radius:4px;}
-.t80 .meta-text{display:flex;flex-direction:column;}
-.t80 .meta-name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t80 .meta-role{font-size:8px;color:#5A596E;}
-.t80 .take{font-size:28px;font-weight:900;color:#E4E2DD;line-height:1.2;letter-spacing:-0.03em;flex:1;display:flex;align-items:center;}
-.t80 .take em{font-style:normal;color:#A78BFA;}
-.t80 .context{font-size:11px;color:#5A596E;line-height:1.5;margin-top:auto;padding-top:16px;border-top:1px solid #1E1F2E;}
-.t80 .context strong{color:#8B8A9A;font-weight:600;}
-.t80 .engage{display:flex;gap:16px;margin-top:12px;}
-.t80 .engage-item{font-size:9px;color:#5A596E;display:flex;align-items:center;gap:4px;}
-.t80 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;position:relative;}
-.t80 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t80 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t80 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t80{width:540px;height:675px;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
+.t80 .ey{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+.t80 .ey::before{content:'';width:14px;height:2px;background:rgba(255,255,255,0.3);border-radius:1px;}
+.t80 .take{font-size:28px;font-weight:900;color:#fff;line-height:1.2;letter-spacing:-0.03em;max-width:420px;}
+.t80 .take em{font-style:normal;color:#C4B5FD;}
+.t80 .spacer{flex:3;}
+.t80 .spacer-b{flex:2;}
+.t80 .context{font-size:22px;color:rgba(255,255,255,0.45);line-height:1.45;max-width:440px;}
+.t80 .context strong{color:rgba(255,255,255,0.7);font-weight:600;}
+.t80 .brand-strip{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:16px;position:relative;}
 `;
 
 function buildT80(c: TemplateContent, w: number, h: number): string {
@@ -1379,18 +1371,20 @@ function buildT80(c: TemplateContent, w: number, h: number): string {
   const styled = kw ? headline.replace(kw, `<em>${kw}</em>`) : headline;
   const body = c.body ? esc(c.body) : "";
   const boldBody = c.bodyBold ? body.replace(esc(c.bodyBold), `<strong>${esc(c.bodyBold)}</strong>`) : body;
-  return wrapPage("t80", T80_CSS, `
-    <div class="meta">
-      <div class="avatar"><img src="${LOGO_DATA_URI}" alt="JP"></div>
-      <div class="meta-text"><span class="meta-name">${esc(c.subheadline || "JobPilot AI")}</span><span class="meta-role">${esc(c.eyebrow || "Career Intelligence")}</span></div>
-    </div>
+  // # Inject rotated gradient so each post gets a distinct color
+  const gradient = pickGradient(c.headline);
+  const cssWithGradient = T80_CSS + `\n.t80{background:${gradient};}`;
+  return wrapPage("t80", cssWithGradient, `
+    <div class="ey">${esc(c.eyebrow || "HOT TAKE")}</div>
     <div class="take">${styled}</div>
+    <div class="spacer"></div>
     ${body ? `<div class="context">${boldBody}</div>` : ""}
-    <div class="engage">
-      <div class="engage-item">💬 Agree or disagree?</div>
-      <div class="engage-item">🔖 Save</div>
+    <div class="spacer-b"></div>
+    <div class="brand-strip">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
+      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);">JobPilot AI</span>
+      <span style="font-size:8px;font-family:${MONO_STACK};color:rgba(255,255,255,0.3);margin-left:auto;">jobpilotai.co</span>
     </div>
-    ${brandStripT1Dark()}
   `, 540, 675, w, h);
 }
 

@@ -62,6 +62,26 @@ export const COLORS = {
   greenLight: "#4ADE80",
 } as const;
 
+// # 6 distinct gradient palettes for Teal-style templates (T19/T80/T27)
+// # Rotated per post so each gets a visually different color
+export const TEAL_GRADIENTS = [
+  "linear-gradient(160deg,#1E1B4B 0%,#312E81 50%,#4338CA 100%)",  // # Brand indigo (signature)
+  "linear-gradient(155deg,#083344 0%,#0E7490 50%,#06B6D4 100%)",  // # Teal/cyan
+  "linear-gradient(160deg,#022C22 0%,#065F46 50%,#059669 100%)",  // # Deep emerald
+  "linear-gradient(150deg,#0C4A6E 0%,#0369A1 50%,#0284C7 100%)",  // # Ocean blue
+  "linear-gradient(155deg,#2E1065 0%,#6D28D9 50%,#7C3AED 100%)",  // # Warm violet
+  "linear-gradient(160deg,#581C87 0%,#9333EA 50%,#A855F7 100%)",  // # Bright purple
+];
+
+// # Pick a gradient based on headline content — same text = same color
+export function pickGradient(headline: string): string {
+  let hash = 0;
+  for (let i = 0; i < headline.length; i++) {
+    hash = ((hash << 5) - hash + headline.charCodeAt(i)) | 0;
+  }
+  return TEAL_GRADIENTS[Math.abs(hash) % TEAL_GRADIENTS.length];
+}
+
 // # Font stack used in all templates
 export const FONT_STACK = `'Segoe UI', system-ui, -apple-system, sans-serif`;
 export const MONO_STACK = `'Cascadia Code', 'Fira Code', Consolas, monospace`;

@@ -7,7 +7,7 @@
    ============================================================ */
 
 import type { TemplateContent, TemplateId } from "./shared";
-import { LOGO_DATA_URI, LOGO_PRO_URI, esc } from "./shared";
+import { LOGO_DATA_URI, LOGO_PRO_URI, esc, pickGradient } from "./shared";
 
 // # All Instagram template IDs across all 5 sets
 export const INSTAGRAM_IDS: TemplateId[] = [
@@ -241,27 +241,36 @@ function buildT26(c: TemplateContent, w: number, h: number): string {
    T27 — REEL COVER (Dark + accent glow, 9:16 reel)
    ============================================================ */
 const T27_CSS = `
-.t27{background:#0A0A0A;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;position:relative;}
-.t27::before{content:'';position:absolute;bottom:20%;left:30%;width:200px;height:200px;border-radius:50%;background:#6366F1;filter:blur(80px);opacity:0.08;}
-.t27 .ep-tag{font-family:${IG_SANS};font-size:6px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:28px;position:relative;z-index:1;}
-.t27 .hero{font-family:${IG_SANS};font-size:38px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-0.03em;margin-bottom:12px;max-width:380px;position:relative;z-index:1;}
-.t27 .hero .accent{color:#A78BFA;}
-.t27 .sub{font-family:${IG_SANS};font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:32px;position:relative;z-index:1;}
-.t27 .play{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;}
-.t27 .play::after{content:'';width:0;height:0;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent rgba(255,255,255,0.6);margin-left:2px;}
+.t27{display:flex;flex-direction:column;padding:60px 28px 32px;position:relative;}
+.t27 .ep-tag{font-family:${IG_SANS};font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+.t27 .ep-tag::before{content:'';width:16px;height:2px;background:rgba(255,255,255,0.3);border-radius:1px;}
+.t27 .hero{font-family:${IG_SANS};font-size:32px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-0.03em;max-width:380px;}
+.t27 .hero .accent{color:#C4B5FD;}
+.t27 .spacer{flex:3;}
+.t27 .spacer-b{flex:2;}
+.t27 .sub{font-family:${IG_SANS};font-size:22px;color:rgba(255,255,255,0.5);max-width:390px;line-height:1.45;}
+.t27 .brand{display:flex;align-items:center;gap:8px;margin-top:auto;}
 `;
 
 function buildT27(c: TemplateContent, w: number, h: number): string {
   const headline = esc(c.headline);
   const accent = c.headlineHighlight ? esc(c.headlineHighlight) : "";
   const styled = accent ? headline.replace(accent, `<span class="accent">${accent}</span>`) : headline;
+  // # Inject rotated gradient so each post gets a distinct color
+  const gradient = pickGradient(c.headline);
+  const cssWithGradient = T27_CSS + `\n.t27{background:${gradient};}`;
 
-  return wrapIG("t27", T27_CSS, `
-    <div class="ep-tag">${esc(c.eyebrow || "EPISODE 01")}</div>
+  return wrapIG("t27", cssWithGradient, `
+    <div class="ep-tag">${esc(c.eyebrow || "REEL")}</div>
     <div class="hero">${styled}</div>
-    ${c.subheadline ? `<div class="sub">${esc(c.subheadline)}</div>` : ""}
-    <div class="play"></div>
-    ${storyBadge()}
+    <div class="spacer"></div>
+    ${c.subheadline ? `<div class="sub">${esc(c.subheadline)}</div>` : (c.body ? `<div class="sub">${esc(c.body)}</div>` : "")}
+    <div class="spacer-b"></div>
+    <div class="brand">
+      <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
+      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);">JobPilot AI</span>
+      <span style="font-size:8px;font-family:${IG_MONO};color:rgba(255,255,255,0.3);margin-left:auto;">jobpilotai.co</span>
+    </div>
   `, 432, 768, w, h);
 }
 

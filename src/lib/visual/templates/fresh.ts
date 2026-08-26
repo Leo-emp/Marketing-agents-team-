@@ -881,9 +881,9 @@ function t185(c: TemplateContent, w: number, h: number): string {
   `, IG916_PW, IG916_PH, w, h);
 }
 
-// # T186 (IF12) — Dark Salary Reveal (9:16)
+// # T186 (IF12) — Gradient Salary Reveal (9:16)
 function t186(c: TemplateContent, w: number, h: number): string {
-  const t = T.dk;
+  const t = T.g1;
   return wrap(t, `
     ${ey(c.eyebrow || "SALARY REVEAL", t.al)}
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;">
