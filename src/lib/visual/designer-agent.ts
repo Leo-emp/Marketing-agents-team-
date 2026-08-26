@@ -27,6 +27,251 @@ const VALID_LAYOUTS: SlideLayout[] = [
   "split_image", "progress_bar",
 ];
 
+// # Fields each template actually renders — used to detect and fill gaps
+// # so the full template layout is populated, not just the headline
+const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
+  // # LinkedIn
+  t1: ["stat", "body", "eyebrow"],
+  t2: ["headline", "stat", "items"],
+  t3: ["headline", "body", "eyebrow"],
+  t4: ["headline", "beforeText", "afterText", "bars"],
+  t5: ["headline", "subheadline", "body"],
+  t6: ["headline", "subheadline", "eyebrow"],
+  t7: ["headline", "body"],
+  t8: ["headline", "beforeText", "afterText"],
+  t9: ["headline", "bars"],
+  t10: ["headline", "body", "subheadline"],
+  t11: ["headline", "bullets"],
+  t12: ["headline", "body"],
+  t13: ["headline", "items"],
+  t14: ["headline", "items"],
+  t15: ["headline", "steps"],
+  t65: ["headline", "body", "eyebrow"],
+  t66: ["headline", "annotations"],
+  t67: ["stat", "bars", "headline"],
+  t68: ["headline", "body", "subheadline"],
+  t69: ["headline", "items"],
+  t70: ["stat", "headline", "body"],
+  t71: ["headline", "steps", "eyebrow"],
+  t72: ["headline", "bars", "legend"],
+  t73: ["headline", "beforeText", "afterText"],
+  t74: ["headline", "items"],
+  t75: ["headline", "annotations", "score"],
+  t76: ["headline", "steps", "subheadline"],
+  t77: ["stat", "bars", "headline", "subheadline"],
+  t78: ["headline", "items"],
+  t79: ["headline", "steps"],
+  t80: ["headline", "body", "eyebrow"],
+  // # TikTok
+  t16: ["headline", "body", "tips"],
+  t17: ["headline", "items"],
+  t18: ["headline", "body"],
+  t19: ["headline", "body", "eyebrow"],
+  t20: ["headline", "body", "eyebrow"],
+  t21: ["headline", "body"],
+  t28: ["stat", "headline", "body"],
+  t29: ["headline", "beforeText", "afterText"],
+  t30: ["headline", "subheadline"],
+  t31: ["headline", "tips"],
+  t32: ["headline", "body", "eyebrow"],
+  t40: ["headline", "body"],
+  t41: ["headline", "bullets", "body"],
+  t42: ["headline", "steps"],
+  t43: ["headline", "subheadline"],
+  t44: ["headline", "items"],
+  t50: ["headline", "body", "bullets"],
+  t51: ["headline", "subheadline"],
+  t52: ["headline", "tips"],
+  t82: ["headline", "score", "annotations"],
+  t83: ["headline", "items"],
+  t84: ["headline", "body"],
+  t85: ["headline", "tips"],
+  t86: ["headline", "beforeText", "afterText"],
+  t87: ["headline", "body"],
+  t88: ["stat", "headline", "body"],
+  // # Instagram
+  t22: ["headline", "subheadline", "eyebrow"],
+  t23: ["headline", "body", "eyebrow"],
+  t24: ["headline", "items"],
+  t25: ["headline", "subheadline"],
+  t26: ["headline", "tips", "eyebrow"],
+  t27: ["headline", "body", "eyebrow"],
+  t34: ["headline", "body", "eyebrow"],
+  t35: ["headline", "tips"],
+  t36: ["headline", "stat", "bars"],
+  t37: ["headline", "body"],
+  t38: ["headline", "items"],
+  t39: ["headline", "body"],
+  t45: ["headline", "beforeText", "afterText"],
+  t46: ["headline", "steps"],
+  t47: ["headline", "body", "subheadline"],
+  t48: ["headline", "body", "eyebrow"],
+  t53: ["headline", "body"],
+  t54: ["headline", "bullets"],
+  t55: ["headline", "body"],
+  t56: ["headline", "body", "tags"],
+  t57: ["stat", "headline"],
+  t58: ["headline", "beforeText", "afterText"],
+  t59: ["headline", "body", "eyebrow"],
+  t60: ["headline", "tags"],
+  t61: ["headline", "score", "stat"],
+  t62: ["headline", "items"],
+  t63: ["headline", "body"],
+  t64: ["headline", "bars"],
+  t89: ["headline", "body", "eyebrow"],
+  t90: ["headline", "body"],
+  t91: ["headline", "items"],
+  t92: ["headline", "items"],
+  t93: ["headline", "bullets"],
+  t94: ["headline", "body"],
+  t95: ["headline", "body", "items"],
+  t96: ["headline", "body"],
+};
+
+// # Check which fields the selected template needs but the content lacks
+function getMissingFields(templateId: string, content: TemplateContent): string[] {
+  const rendered = TEMPLATE_RENDERED_FIELDS[templateId];
+  if (!rendered) return [];
+
+  const missing: string[] = [];
+  for (const field of rendered) {
+    switch (field) {
+      case "headline": if (!content.headline) missing.push(field); break;
+      case "subheadline": if (!content.subheadline) missing.push(field); break;
+      case "body": if (!content.body) missing.push(field); break;
+      case "eyebrow": if (!content.eyebrow) missing.push(field); break;
+      case "stat": if (!content.stat?.value) missing.push(field); break;
+      case "bullets": if (!content.bullets?.length) missing.push(field); break;
+      case "steps": if (!content.steps?.length) missing.push(field); break;
+      case "tips": if (!content.tips?.length) missing.push(field); break;
+      case "items": if (!content.items?.length) missing.push(field); break;
+      case "bars": if (!content.bars?.length) missing.push(field); break;
+      case "beforeText": if (!content.beforeText) missing.push(field); break;
+      case "afterText": if (!content.afterText) missing.push(field); break;
+      case "tags": if (!content.tags?.length) missing.push(field); break;
+      case "annotations": if (!content.annotations?.length) missing.push(field); break;
+      case "score": if (content.score === undefined) missing.push(field); break;
+      case "legend": if (!content.legend?.length) missing.push(field); break;
+      case "cta": if (!content.cta) missing.push(field); break;
+    }
+  }
+  return missing;
+}
+
+// # Field descriptions for Gemini prompt
+const FIELD_SCHEMAS: Record<string, string> = {
+  subheadline: '"subheadline": "short subtitle (10-15 words)"',
+  body: '"body": "supporting text (15-30 words)"',
+  eyebrow: '"eyebrow": "short category label (2-3 words, uppercase)"',
+  stat: '"stat": { "value": "number with unit like 75% or $120K", "label": "what it measures (5-8 words)" }',
+  bullets: '"bullets": ["actionable item 1", "item 2", "item 3", "item 4"]',
+  steps: '"steps": [{"label": "01", "title": "Step Name", "description": "brief detail 8-12 words"}, ...]  (3-4 steps)',
+  tips: '"tips": [{"title": "Tip Name", "description": "brief explanation 8-12 words"}, ...]  (3-4 tips)',
+  items: '"items": [{"text": "label", "value": "data", "highlighted": true/false}, ...]  (3-5 items)',
+  bars: '"bars": [{"label": "Category Name", "value": 85}, ...]  (3-5 bars, values 0-100)',
+  beforeText: '"beforeText": "the bad example or before state (15-25 words)"',
+  afterText: '"afterText": "the improved example or after state (15-25 words)"',
+  tags: '"tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]',
+  annotations: '"annotations": [{"text": "full sentence", "highlights": [{"text": "key phrase", "type": "good"}], "callout": {"text": "explanation", "type": "good"}}]',
+  score: '"score": 85  (number 0-100)',
+  legend: '"legend": [{"label": "Series 1", "color": "#6366F1"}, {"label": "Series 2", "color": "#4B5563"}]',
+  cta: '"cta": "call to action text"',
+};
+
+// # Generate missing content fields for the selected template
+async function enrichContentForTemplate(
+  templateId: string,
+  templateName: string,
+  content: TemplateContent,
+  originalText: string,
+): Promise<TemplateContent> {
+  const missing = getMissingFields(templateId, content);
+  if (missing.length === 0) return content;
+
+  const fieldSchemas = missing.map(f => FIELD_SCHEMAS[f]).filter(Boolean).join(",\n  ");
+
+  const prompt = `You are generating content for a "${templateName}" visual template (${templateId}) for ${BRAND_NAME}.
+
+The template needs these additional fields that are currently missing. Generate them based on the original content.
+
+ORIGINAL CONTENT:
+Headline: ${content.headline}
+${content.body ? `Body: ${content.body}` : ""}
+${content.subheadline ? `Subtitle: ${content.subheadline}` : ""}
+
+CONTEXT (full post text):
+${originalText.slice(0, 400)}
+
+MISSING FIELDS TO GENERATE:
+${missing.join(", ")}
+
+Return ONLY a JSON object with these fields:
+{
+  ${fieldSchemas}
+}
+
+Make the content specific, actionable, and relevant to the headline "${content.headline}". Use real-sounding data points.
+Return ONLY valid JSON.`;
+
+  try {
+    const raw = await callGemini(prompt);
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return content;
+    const generated = JSON.parse(match[0]);
+
+    const enriched = { ...content };
+    if (generated.subheadline && missing.includes("subheadline")) enriched.subheadline = String(generated.subheadline);
+    if (generated.body && missing.includes("body")) enriched.body = String(generated.body);
+    if (generated.eyebrow && missing.includes("eyebrow")) enriched.eyebrow = String(generated.eyebrow);
+    if (generated.cta && missing.includes("cta")) enriched.cta = String(generated.cta);
+    if (generated.score !== undefined && missing.includes("score")) enriched.score = Number(generated.score);
+    if (generated.stat && missing.includes("stat")) {
+      enriched.stat = { value: String(generated.stat.value || ""), label: String(generated.stat.label || "") };
+    }
+    if (Array.isArray(generated.bullets) && missing.includes("bullets")) {
+      enriched.bullets = generated.bullets.map(String);
+    }
+    if (Array.isArray(generated.steps) && missing.includes("steps")) {
+      enriched.steps = generated.steps.map((s: any) => ({
+        label: String(s.label || s.number || ""),
+        title: String(s.title || ""),
+        description: s.description ? String(s.description) : undefined,
+      }));
+    }
+    if (Array.isArray(generated.tips) && missing.includes("tips")) {
+      enriched.tips = generated.tips.map((t: any) => ({
+        title: String(t.title || ""),
+        description: String(t.description || ""),
+      }));
+    }
+    if (Array.isArray(generated.items) && missing.includes("items")) {
+      enriched.items = generated.items.map((it: any) => ({
+        text: String(it.text || ""),
+        value: it.value !== undefined ? String(it.value) : undefined,
+        highlighted: it.highlighted ?? false,
+      }));
+    }
+    if (Array.isArray(generated.bars) && missing.includes("bars")) {
+      enriched.bars = generated.bars.map((b: any) => ({
+        label: String(b.label || ""),
+        value: Number(b.value) || 0,
+        color: b.color ? String(b.color) : undefined,
+      }));
+    }
+    if (generated.beforeText && missing.includes("beforeText")) enriched.beforeText = String(generated.beforeText);
+    if (generated.afterText && missing.includes("afterText")) enriched.afterText = String(generated.afterText);
+    if (Array.isArray(generated.tags) && missing.includes("tags")) enriched.tags = generated.tags.map(String);
+    if (Array.isArray(generated.annotations) && missing.includes("annotations")) enriched.annotations = generated.annotations as any;
+    if (Array.isArray(generated.legend) && missing.includes("legend")) enriched.legend = generated.legend as any;
+
+    console.log(`[Designer] Enriched ${missing.length} missing fields for ${templateId}: ${missing.join(", ")}`);
+    return enriched;
+  } catch (err) {
+    console.warn(`[Designer] Content enrichment failed for ${templateId}:`, err);
+    return content;
+  }
+}
+
 // # Build an image prompt for OpenAI gpt-image-1 (fallback renderer)
 // # Social platforms: branded slide with actual text content
 // # Blog: editorial photography / illustration
@@ -251,7 +496,7 @@ Return ONLY valid JSON.`;
         }
 
         // # Convert SlideData → TemplateContent for the HTML renderer
-        const templateContent = slideToTemplateContent(normalized);
+        let templateContent = slideToTemplateContent(normalized);
 
         // # Merge in Gemini's extra fields that slideToTemplateContent doesn't know about
         if (slide.eyebrow) templateContent.eyebrow = String(slide.eyebrow);
@@ -264,6 +509,15 @@ Return ONLY valid JSON.`;
         if (slide.methodName) templateContent.methodName = String(slide.methodName);
         if (slide.benchmarkAt !== undefined) templateContent.benchmarkAt = Number(slide.benchmarkAt);
         if (Array.isArray(slide.legend)) templateContent.legend = slide.legend as any;
+
+        // # Enrich content — generate missing fields the template needs
+        // # to render fully (e.g. steps for T76, items for T13, bars for T9)
+        templateContent = await enrichContentForTemplate(
+          selection.templateId,
+          selection.templateName,
+          templateContent,
+          content,
+        );
 
         // # Inject template ID into slide.layout so the Visual API
         // # renders via Puppeteer HTML templates (primary path)
