@@ -430,6 +430,11 @@ Return ONLY valid JSON.`;
     throw new Error("Visual designer returned empty or missing slides array");
   }
 
+  // # Enforce single slide for single_image — Gemini sometimes returns multiple
+  if (isSingleImage && parsed.slides.length > 1) {
+    parsed.slides = [parsed.slides[0]];
+  }
+
   const totalSlides = parsed.slides.length;
 
   // # Step 2: Normalize slides and build both SlideData + TemplateContent
