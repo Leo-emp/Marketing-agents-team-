@@ -528,6 +528,20 @@ Return ONLY valid JSON.`;
           content,
         );
 
+        // # Merge enriched fields back into the slide so render functions
+        // # that call slideToTemplateContent(slide) get the full content
+        // # (generate/route.ts and visual/route.ts re-derive from slide data)
+        const stringFields = ["body", "subheadline", "eyebrow", "cta", "beforeText", "afterText"] as const;
+        for (const k of stringFields) {
+          if (templateContent[k] && !(normalized as any)[k]) (normalized as any)[k] = templateContent[k];
+        }
+        if (templateContent.stat?.value && !normalized.stat) normalized.stat = templateContent.stat as any;
+        if (templateContent.score !== undefined && normalized.score === undefined) normalized.score = templateContent.score as any;
+        const arrayFields = ["bullets", "steps", "tips", "items", "bars", "tags", "annotations", "legend"] as const;
+        for (const k of arrayFields) {
+          if ((templateContent as any)[k]?.length && !(normalized as any)[k]?.length) (normalized as any)[k] = (templateContent as any)[k];
+        }
+
         // # Inject template ID into slide.layout so the Visual API
         // # renders via Puppeteer HTML templates (primary path)
         normalized.layout = selection.templateId as TemplateLayout;
