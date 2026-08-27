@@ -19,7 +19,7 @@ import { getDimensions, type SlideData } from "@/lib/visual/types";
 import { generateImage } from "@/lib/visual/openai-image";
 import { generateFalImage } from "@/lib/visual/fal-image";
 import { uploadImage } from "@/lib/blob-storage";
-import { isTemplateId } from "@/lib/visual/templates/index";
+import { isTemplateId, getTemplateDimensions } from "@/lib/visual/templates/index";
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
 
@@ -75,11 +75,15 @@ async function renderSlide(slide: SlideData, width: number, height: number, plat
 // # Render designed slides to PNGs, upload to Blob, return comma-separated URLs
 async function renderAndUploadSlides(slides: SlideData[], platform: string, contentType: string, contentId: string): Promise<string> {
   const visualType = contentType === "carousel" ? "carousel" : contentType === "reel_script" ? "storyboard" : "single_image";
-  const { width, height } = getDimensions(platform, visualType);
+  const platformDims = getDimensions(platform, visualType);
   const urls: string[] = [];
 
   for (let i = 0; i < slides.length; i++) {
     const slide: SlideData = { ...slides[i], slideNumber: slides[i].slideNumber ?? i + 1, totalSlides: slides[i].totalSlides ?? slides.length };
+    // # Use template-native dimensions to avoid clipping portrait templates
+    const tDims = isTemplateId(slide.layout) ? getTemplateDimensions(slide.layout) : null;
+    const width = tDims?.width ?? platformDims.width;
+    const height = tDims?.height ?? platformDims.height;
     const pngBuffer = await renderSlide(slide, width, height, platform);
 
     try {
