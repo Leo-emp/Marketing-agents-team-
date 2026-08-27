@@ -129,13 +129,20 @@ const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
 };
 
 // # Default fields to enrich when a template isn't explicitly mapped
-// # Most templates render headline + body + some list content — extra
-// # fields are harmlessly ignored if the template doesn't use them
+// # Platform-specific: TikTok/Instagram favour scannable lists over paragraphs
+const DEFAULT_FIELDS_BY_PLATFORM: Record<string, string[]> = {
+  tiktok: ["headline", "subheadline", "bullets", "tips"],
+  instagram: ["headline", "subheadline", "bullets", "tips"],
+  linkedin: ["headline", "subheadline", "body", "bullets"],
+  twitter: ["headline", "subheadline", "body", "bullets"],
+};
 const DEFAULT_RENDERED_FIELDS = ["headline", "subheadline", "body", "bullets"];
 
 // # Check which fields the selected template needs but the content lacks
-function getMissingFields(templateId: string, content: TemplateContent): string[] {
-  const rendered = TEMPLATE_RENDERED_FIELDS[templateId] || DEFAULT_RENDERED_FIELDS;
+function getMissingFields(templateId: string, content: TemplateContent, platform?: string): string[] {
+  const rendered = TEMPLATE_RENDERED_FIELDS[templateId]
+    || (platform ? DEFAULT_FIELDS_BY_PLATFORM[platform] : null)
+    || DEFAULT_RENDERED_FIELDS;
 
   const missing: string[] = [];
   for (const field of rendered) {
@@ -165,7 +172,7 @@ function getMissingFields(templateId: string, content: TemplateContent): string[
 // # Field descriptions for Gemini prompt
 const FIELD_SCHEMAS: Record<string, string> = {
   subheadline: '"subheadline": "short subtitle (10-15 words)"',
-  body: '"body": "supporting text (15-30 words)"',
+  body: '"body": "one punchy supporting sentence (8-15 words, no paragraph blocks)"',
   eyebrow: '"eyebrow": "short category label (2-3 words, uppercase)"',
   stat: '"stat": { "value": "number with unit like 75% or $120K", "label": "what it measures (5-8 words)" }',
   bullets: '"bullets": ["actionable item 1", "item 2", "item 3", "item 4"]',
@@ -188,8 +195,9 @@ async function enrichContentForTemplate(
   templateName: string,
   content: TemplateContent,
   originalText: string,
+  platform?: string,
 ): Promise<TemplateContent> {
-  const missing = getMissingFields(templateId, content);
+  const missing = getMissingFields(templateId, content, platform);
   if (missing.length === 0) return content;
 
   const fieldSchemas = missing.map(f => FIELD_SCHEMAS[f]).filter(Boolean).join(",\n  ");
@@ -526,6 +534,7 @@ Return ONLY valid JSON.`;
           selection.templateName,
           templateContent,
           content,
+          platform,
         );
 
         // # Merge enriched fields back into the slide so render functions
