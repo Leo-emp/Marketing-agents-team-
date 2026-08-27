@@ -128,10 +128,14 @@ const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
   t96: ["headline", "body"],
 };
 
+// # Default fields to enrich when a template isn't explicitly mapped
+// # Most templates render headline + body + some list content — extra
+// # fields are harmlessly ignored if the template doesn't use them
+const DEFAULT_RENDERED_FIELDS = ["headline", "subheadline", "body", "bullets"];
+
 // # Check which fields the selected template needs but the content lacks
 function getMissingFields(templateId: string, content: TemplateContent): string[] {
-  const rendered = TEMPLATE_RENDERED_FIELDS[templateId];
-  if (!rendered) return [];
+  const rendered = TEMPLATE_RENDERED_FIELDS[templateId] || DEFAULT_RENDERED_FIELDS;
 
   const missing: string[] = [];
   for (const field of rendered) {
