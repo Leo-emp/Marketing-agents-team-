@@ -41,9 +41,10 @@ async function callGeminiInternal(
 
   let lastError = "";
 
-  // # 3 passes with increasing backoff on rate-limit
-  for (let pass = 0; pass < 3; pass++) {
-    if (pass > 0) await new Promise((r) => setTimeout(r, 5000 * pass));
+  // # 4 passes with increasing backoff on rate-limit
+  // # Free tier is ~2-3 RPM so backoff must exceed 60s to reset
+  for (let pass = 0; pass < 4; pass++) {
+    if (pass > 0) await new Promise((r) => setTimeout(r, 15000 * pass));
 
     for (const model of GEMINI_MODELS) {
       const deadSince = deadModels.get(model);
@@ -80,10 +81,11 @@ async function callGeminiInternal(
         clearTimeout(timeout);
 
         if (res.status === 404) { deadModels.set(model, Date.now()); continue; }
-        // # On rate-limit, wait 6s before trying next model
+        // # On rate-limit, wait 30s before trying next model
+        // # Free tier resets per minute, so short waits just fail again
         if (res.status === 429 || res.status === 503) {
           lastError = `${model} rate-limited`;
-          await new Promise((r) => setTimeout(r, 6000));
+          await new Promise((r) => setTimeout(r, 30000));
           continue;
         }
         if (!res.ok) { const d = await res.json(); lastError = d.error?.message || "API error"; continue; }

@@ -131,7 +131,8 @@ async function autoGenerateVisual(contentId: string) {
     } catch (e) {
       console.error(`[Visual] Auto-design attempt ${attempt} failed for ${contentId}:`, e);
       if (attempt < 2) {
-        await new Promise((r) => setTimeout(r, 2000));
+        // # Wait 30s between attempts so Gemini rate limit resets
+        await new Promise((r) => setTimeout(r, 30000));
       }
     }
   }
