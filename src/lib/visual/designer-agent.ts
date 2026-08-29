@@ -509,6 +509,21 @@ Return ONLY valid JSON.`;
           const slideText = [normalized.headline, normalized.body, normalized.subheadline]
             .filter(Boolean).join(" ");
           selection = await selectTemplate(platform, contentType, slideText, pillar, undefined);
+
+          // # Reject cover-only templates (no body/bullets/tips/steps/items/bars)
+          // # These render as just a headline with empty middle — useless
+          const contentFields = new Set(["body", "bullets", "tips", "steps", "items", "bars", "beforeText", "afterText", "annotations"]);
+          const fields = TEMPLATE_RENDERED_FIELDS[selection.templateId] || [];
+          if (!fields.some((f: string) => contentFields.has(f))) {
+            console.log(`[Designer] Rejected cover-only template ${selection.templateId}, re-selecting...`);
+            for (let retry = 0; retry < 3; retry++) {
+              selection = await selectTemplate(platform, contentType, slideText, pillar, undefined);
+              const retryFields = TEMPLATE_RENDERED_FIELDS[selection.templateId] || [];
+              if (retryFields.some((f: string) => contentFields.has(f))) break;
+              console.log(`[Designer] Retry ${retry + 1}: ${selection.templateId} also cover-only`);
+            }
+          }
+
           if (isCarouselType) carouselLockedTemplate = selection;
         }
 
