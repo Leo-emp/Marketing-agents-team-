@@ -1,7 +1,7 @@
 /* ============================================================
    TEMPLATE ROUTER — Maps template IDs to HTML generators
    ============================================================
-   # Routes T1-T186 to the correct platform template file.
+   # Routes T1-T208 to the correct platform template file.
    # Routes carousel IDs (lc1-lc4, tc1-tc4, ic1-ic4) to
    # the carousel system for multi-slide sequences.
    # Each function returns a complete HTML string ready for
@@ -21,6 +21,7 @@ import {
   CAROUSEL_META,
 } from "./carousels";
 import { buildFreshTemplate, FRESH_IDS } from "./fresh";
+import { buildDesignerTemplate, DESIGNER_IDS } from "./designer";
 
 // # Build a complete HTML page for a given template
 // # Returns HTML string ready for Puppeteer rendering
@@ -48,6 +49,11 @@ export function buildTemplateHTML(
   // # Fresh templates (T151-T186: LinkedIn, TikTok, Instagram)
   if (FRESH_IDS.includes(templateId)) {
     return buildFreshTemplate(templateId, content, width, height);
+  }
+
+  // # Designer templates (T187-T208: LinkedIn, TikTok, Instagram)
+  if (DESIGNER_IDS.includes(templateId)) {
+    return buildDesignerTemplate(templateId, content, width, height);
   }
 
   // # Fallback — render a simple branded card
@@ -94,12 +100,12 @@ export function isTemplateId(layout: string): layout is TemplateId {
   const match = layout.match(/^t(\d+)$/);
   if (!match) return false;
   const num = parseInt(match[1]);
-  return num >= 1 && num <= 186;
+  return num >= 1 && num <= 208;
 }
 
 // # Instagram templates that render at 1:1 (1080×1080)
 const IG_SQUARE: Set<string> = new Set([
-  "t25","t36","t37","t38","t39","t47","t55","t56",
+  "t36","t37","t38","t39","t47","t56",
   "t57","t60","t61","t62","t63","t64","t92","t94","t96",
   "t110","t112",
   "t179","t180","t181","t182",
@@ -147,6 +153,15 @@ export function getTemplateDimensions(templateId: string): { width: number; heig
     return { width: 1080, height: 1920 };
   }
 
+  // # Designer templates — multi-platform (T187-T208)
+  if (DESIGNER_IDS.includes(templateId as TemplateId)) {
+    const num = parseInt(templateId.slice(1));
+    // # T203-T205: TikTok 9:16
+    if (num >= 203 && num <= 205) return { width: 1080, height: 1920 };
+    // # Everything else (LinkedIn T187-T202, Instagram T206-T208): 4:5 portrait
+    return { width: 1080, height: 1350 };
+  }
+
   return { width: 1080, height: 1350 };
 }
 
@@ -159,4 +174,5 @@ export {
   CAROUSEL_META,
 };
 export { buildFreshTemplate, FRESH_IDS };
+export { buildDesignerTemplate, DESIGNER_IDS };
 export type { CarouselContent, CarouselId };

@@ -208,24 +208,24 @@ export interface TemplateContent {
 // # Template ID type — all 72 templates
 export type TemplateId =
   // # LinkedIn Set 1 (T1-T15)
-  | "t1" | "t2" | "t3" | "t4" | "t5" | "t6" | "t7" | "t8"
+  | "t1" | "t2" | "t3" | "t4" | "t5" | "t7" | "t8"
   | "t9" | "t10" | "t11" | "t12" | "t13" | "t14" | "t15"
   // # TikTok Set 1 (T16-T21)
   | "t16" | "t17" | "t18" | "t19" | "t20" | "t21"
   // # Instagram Set 1 (T22-T27)
-  | "t22" | "t23" | "t24" | "t25" | "t26" | "t27"
+  | "t23" | "t24" | "t26" | "t27"
   // # TikTok Set 2 (T28-T33)
-  | "t28" | "t29" | "t30" | "t31" | "t32" | "t33"
+  | "t28" | "t29" | "t31" | "t32" | "t33"
   // # Instagram Set 2 (T34-T39)
   | "t34" | "t35" | "t36" | "t37" | "t38" | "t39"
   // # TikTok Set 3 (T40-T44)
-  | "t40" | "t41" | "t42" | "t43" | "t44"
+  | "t40" | "t41" | "t42" | "t44"
   // # Instagram Set 3 (T45-T48)
   | "t45" | "t46" | "t47" | "t48"
   // # TikTok Set 4 (T49-T52)
-  | "t49" | "t50" | "t51" | "t52"
+  | "t49" | "t50" | "t52"
   // # Instagram Set 4 (T53-T56)
-  | "t53" | "t54" | "t55" | "t56"
+  | "t53" | "t54" | "t56"
   // # Instagram Set 5 (T57-T64)
   | "t57" | "t58" | "t59" | "t60" | "t61" | "t62" | "t63" | "t64"
   // # LinkedIn Set 2 (T65-T72)
@@ -233,7 +233,7 @@ export type TemplateId =
   // # LinkedIn Set 3 (T73-T80)
   | "t73" | "t74" | "t75" | "t76" | "t77" | "t78" | "t79" | "t80"
   // # TikTok Set 5 (T81-T88)
-  | "t81" | "t82" | "t83" | "t84" | "t85" | "t86" | "t87" | "t88"
+  | "t81" | "t82" | "t83" | "t84" | "t85" | "t86" | "t88"
   // # Instagram Set 6 (T89-T96)
   | "t89" | "t90" | "t91" | "t92" | "t93" | "t94" | "t95" | "t96"
   // # Premium LinkedIn (T97-T102)
@@ -262,7 +262,14 @@ export type TemplateId =
   | "t169" | "t170" | "t171" | "t172" | "t173" | "t174"
   // # Fresh Instagram (T175-T186)
   | "t175" | "t176" | "t177" | "t178" | "t179" | "t180"
-  | "t181" | "t182" | "t183" | "t184" | "t185" | "t186";
+  | "t181" | "t182" | "t183" | "t184" | "t185" | "t186"
+  // # Designer LinkedIn (T187-T193)
+  | "t187" | "t188" | "t189" | "t190" | "t191" | "t192" | "t193"
+  | "t194" | "t198" | "t199"
+  // # Designer TikTok (T203-T205), Instagram (T206-T208), LinkedIn (T200-T202)
+  | "t200" | "t201" | "t202"
+  | "t203" | "t204" | "t205"
+  | "t206" | "t207" | "t208";
 
 // # Carousel template IDs — 12 carousels (4 per platform)
 export type CarouselId =

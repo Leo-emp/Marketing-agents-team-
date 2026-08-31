@@ -15,7 +15,7 @@ import { LOGO_DATA_URI, LOGO_PRO_URI, FONT_STACK, MONO_STACK, esc, proFooterDark
 
 // # All LinkedIn template IDs
 export const LINKEDIN_IDS: TemplateId[] = [
-  "t1","t2","t3","t4","t5","t6","t7","t8",
+  "t1","t2","t3","t4","t5","t7","t8",
   "t9","t10","t11","t12","t13","t14","t15",
   "t65","t66","t67","t68","t69","t70","t71","t72",
   "t73","t74","t75","t76","t77","t78","t79","t80",
@@ -693,43 +693,6 @@ function buildT5(c: TemplateContent, w: number, h: number): string {
     </div>
     ${brandStripT1Light()}
   `, 540, 675, w, h);
-}
-
-/* ============================================================
-   T6 — CAROUSEL COVER (Dark, 540×540 → 2× to 1080×1080)
-   ============================================================ */
-const T6_CSS = `
-.t6{width:540px;height:540px;background:#08090E;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
-.t6 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#6366F1;margin-bottom:24px;display:flex;align-items:center;gap:6px;}
-.t6 .eyebrow::before{content:'';width:12px;height:1.5px;background:#6366F1;}
-.t6 .big-num{font-size:110px;font-weight:900;letter-spacing:-0.05em;line-height:0.85;color:#E4E2DD;}
-.t6 .num-label{font-size:14px;font-weight:600;color:#5A596E;margin-top:4px;margin-bottom:16px;}
-.t6 .accent-line{width:40px;height:3px;background:#6366F1;border-radius:2px;margin-bottom:16px;}
-.t6 .headline{font-size:22px;font-weight:700;color:#E4E2DD;line-height:1.3;max-width:360px;}
-.t6 .headline em{font-style:normal;color:#A78BFA;}
-.t6 .bottom-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;border-top:1px solid #1E1F2E;}
-.t6 .swipe{font-size:9px;color:#5A596E;display:flex;align-items:center;gap:6px;}
-.t6 .dots{display:flex;gap:4px;}
-.t6 .dot{width:6px;height:6px;border-radius:3px;background:#2A2B3A;}
-.t6 .dot.active{background:#6366F1;width:14px;}
-.t6 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t6 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t6 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
-`;
-
-function buildT6(c: TemplateContent, w: number, h: number): string {
-  const headline = hl(c.headline, c.headlineHighlight);
-  return wrapPage("t6", T6_CSS, `
-    <div class="eyebrow">${esc(c.eyebrow || "DEEP DIVE")}</div>
-    <div class="big-num">${esc(c.stat?.value || "73%")}</div>
-    <div class="num-label">${esc(c.stat?.label || "")}</div>
-    <div class="accent-line"></div>
-    <div class="headline">${headline}</div>
-    <div class="bottom-row">
-      <div class="swipe">Swipe to learn →</div>
-      <div class="dots"><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-    </div>
-  `, 540, 540, w, h);
 }
 
 /* ============================================================
@@ -2118,7 +2081,6 @@ export function buildLinkedInTemplate(
     case "t3":  return buildT3(content, width, height);
     case "t4":  return buildT4(content, width, height);
     case "t5":  return buildT5(content, width, height);
-    case "t6":  return buildT6(content, width, height);
     case "t7":  return buildT7(content, width, height);
     case "t8":  return buildT8(content, width, height);
     case "t9":  return buildT9(content, width, height);

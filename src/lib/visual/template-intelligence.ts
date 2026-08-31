@@ -1,7 +1,7 @@
 /* ============================================================
    TEMPLATE INTELLIGENCE — AI-Powered Template Selection
    ============================================================
-   # Picks the optimal HTML template (t1-t186) for each content
+   # Picks the optimal HTML template (t1-t208) for each content
    # piece based on: platform, content style, mood, data fields,
    # past performance, and variety enforcement.
    #
@@ -39,7 +39,6 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t3", platform: "linkedin", name: "Tip Card", style: "brand", mood: "educational", bestFor: ["career_tips", "quick_tip", "how_to"], requiredFields: ["headline"], optionalFields: ["body", "eyebrow"], format: "feed" },
   { id: "t4", platform: "linkedin", name: "Before/After", style: "dark", mood: "storytelling", bestFor: ["before_after", "transformation", "product_showcase"], requiredFields: ["beforeText", "afterText"], optionalFields: ["headline"], format: "feed" },
   { id: "t5", platform: "linkedin", name: "Testimonial", style: "light", mood: "storytelling", bestFor: ["social_proof", "testimonial", "user_story"], requiredFields: ["headline"], optionalFields: ["subheadline", "body"], format: "feed" },
-  { id: "t6", platform: "linkedin", name: "Carousel Cover", style: "dark", mood: "authoritative", bestFor: ["carousel_cover", "hook_slide", "series_intro"], requiredFields: ["headline"], optionalFields: ["subheadline", "eyebrow"], format: "grid" },
   { id: "t7", platform: "linkedin", name: "Bold Statement", style: "gradient", mood: "provocative", bestFor: ["hot_take", "contrarian", "motivation"], requiredFields: ["headline"], optionalFields: ["body"], format: "feed" },
   { id: "t8", platform: "linkedin", name: "Myth vs Reality", style: "light", mood: "educational", bestFor: ["myth_busting", "comparison", "contrarian"], requiredFields: ["beforeText", "afterText"], optionalFields: ["headline"], format: "feed" },
   { id: "t9", platform: "linkedin", name: "Data Visual", style: "dark", mood: "data_driven", bestFor: ["data_chart", "industry_insights", "research"], requiredFields: ["bars"], optionalFields: ["headline"], format: "feed" },
@@ -75,30 +74,24 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t21", platform: "tiktok", name: "Bold Color Hot Take", style: "gradient", mood: "provocative", bestFor: ["hot_take", "contrarian", "opinion"], requiredFields: ["headline"], optionalFields: ["body"], format: "story" },
   { id: "t28", platform: "tiktok", name: "Bold Stat", style: "brand", mood: "data_driven", bestFor: ["stat", "data_point", "shocking_number"], requiredFields: ["stat"], optionalFields: ["headline", "body"], format: "story" },
   { id: "t29", platform: "tiktok", name: "Split Contrast", style: "dark", mood: "educational", bestFor: ["comparison", "before_after", "contrast"], requiredFields: ["headline"], optionalFields: ["beforeText", "afterText"], format: "story" },
-  { id: "t30", platform: "tiktok", name: "Gradient Statement", style: "gradient", mood: "motivational", bestFor: ["motivation", "inspiration", "affirmation"], requiredFields: ["headline"], optionalFields: ["subheadline"], format: "story" },
   { id: "t31", platform: "tiktok", name: "Stacked Cards", style: "dark", mood: "educational", bestFor: ["list", "multiple_tips", "breakdown"], requiredFields: ["tips"], optionalFields: ["headline"], format: "story" },
   { id: "t32", platform: "tiktok", name: "Editorial Bold", style: "cream", mood: "editorial", bestFor: ["editorial", "thought_piece", "long_read"], requiredFields: ["headline"], optionalFields: ["body", "eyebrow"], format: "story" },
   { id: "t40", platform: "tiktok", name: "Brutalist Highlight", style: "cream", mood: "provocative", bestFor: ["highlight", "key_point", "emphasis"], requiredFields: ["headline"], optionalFields: ["body", "headlineHighlight"], format: "story" },
   { id: "t41", platform: "tiktok", name: "Keynote Slide", style: "dark", mood: "authoritative", bestFor: ["presentation", "keynote", "framework"], requiredFields: ["headline"], optionalFields: ["bullets", "body"], format: "story" },
   { id: "t42", platform: "tiktok", name: "Vertical Timeline", style: "dark", mood: "educational", bestFor: ["timeline", "process", "step_by_step"], requiredFields: ["steps"], optionalFields: ["headline"], format: "story" },
-  { id: "t43", platform: "tiktok", name: "Quote Card", style: "warm", mood: "motivational", bestFor: ["quote", "inspiration", "wisdom"], requiredFields: ["headline"], optionalFields: ["subheadline"], format: "story" },
   { id: "t44", platform: "tiktok", name: "Metric Dashboard", style: "dark", mood: "data_driven", bestFor: ["dashboard", "metrics", "stats_overview"], requiredFields: ["items"], optionalFields: ["headline"], format: "story" },
   { id: "t50", platform: "tiktok", name: "Terminal", style: "dark", mood: "casual", bestFor: ["tech", "hacker", "code_aesthetic"], requiredFields: ["headline"], optionalFields: ["body", "bullets"], format: "story" },
-  { id: "t51", platform: "tiktok", name: "Gradient Mesh", style: "gradient", mood: "motivational", bestFor: ["inspiration", "statement", "abstract"], requiredFields: ["headline"], optionalFields: ["subheadline"], format: "story" },
   { id: "t52", platform: "tiktok", name: "Number List", style: "dark", mood: "educational", bestFor: ["numbered_list", "tips", "ranking"], requiredFields: ["tips"], optionalFields: ["headline"], format: "story" },
   { id: "t82", platform: "tiktok", name: "Rate My Resume", style: "dark", mood: "educational", bestFor: ["scoring", "rating", "resume_review"], requiredFields: ["score"], optionalFields: ["headline", "annotations"], format: "story" },
   { id: "t83", platform: "tiktok", name: "Red Flag Bingo", style: "dark", mood: "casual", bestFor: ["bingo", "red_flags", "fun_list"], requiredFields: ["items"], optionalFields: ["headline"], format: "story" },
   { id: "t84", platform: "tiktok", name: "Storytime", style: "gradient", mood: "storytelling", bestFor: ["story", "anecdote", "experience"], requiredFields: ["headline"], optionalFields: ["body"], format: "story" },
   { id: "t85", platform: "tiktok", name: "Speed Tips", style: "dark", mood: "educational", bestFor: ["quick_tips", "rapid_fire", "list"], requiredFields: ["tips"], optionalFields: ["headline"], format: "story" },
   { id: "t86", platform: "tiktok", name: "Would You Rather", style: "dark", mood: "casual", bestFor: ["poll", "choice", "engagement"], requiredFields: ["beforeText", "afterText"], optionalFields: ["headline"], format: "story" },
-  { id: "t87", platform: "tiktok", name: "Recruiter DM", style: "dark", mood: "casual", bestFor: ["dm", "message", "recruiter_perspective"], requiredFields: ["headline"], optionalFields: ["body"], format: "story" },
   { id: "t88", platform: "tiktok", name: "Salary Reveal", style: "dark", mood: "data_driven", bestFor: ["salary", "money", "dramatic_number"], requiredFields: ["stat"], optionalFields: ["headline", "body"], format: "story" },
 
   // ============ INSTAGRAM (36 templates) ============
-  { id: "t22", platform: "instagram", name: "Editorial Carousel Cover", style: "cream", mood: "editorial", bestFor: ["carousel_cover", "series_intro", "editorial"], requiredFields: ["headline"], optionalFields: ["subheadline", "eyebrow"], format: "feed" },
   { id: "t23", platform: "instagram", name: "Save-Worthy Tip Card", style: "warm", mood: "educational", bestFor: ["tip", "save_worthy", "actionable"], requiredFields: ["headline"], optionalFields: ["body", "eyebrow"], format: "feed" },
   { id: "t24", platform: "instagram", name: "Story Poll", style: "brand", mood: "casual", bestFor: ["poll", "question", "engagement"], requiredFields: ["headline"], optionalFields: ["items"], format: "story" },
-  { id: "t25", platform: "instagram", name: "Minimal Quote", style: "light", mood: "motivational", bestFor: ["quote", "inspiration", "minimal"], requiredFields: ["headline"], optionalFields: ["subheadline"], format: "grid" },
   { id: "t26", platform: "instagram", name: "Feature Breakdown", style: "cream", mood: "educational", bestFor: ["feature_list", "breakdown", "product_showcase"], requiredFields: ["tips"], optionalFields: ["headline", "eyebrow"], format: "feed" },
   { id: "t27", platform: "instagram", name: "Teal Reel", style: "gradient", mood: "casual", bestFor: ["reel_cover", "video_thumbnail", "hook"], requiredFields: ["headline"], optionalFields: ["body", "eyebrow"], format: "reel" },
   { id: "t34", platform: "instagram", name: "Grain Editorial", style: "warm", mood: "editorial", bestFor: ["editorial", "long_form", "thought_piece"], requiredFields: ["headline"], optionalFields: ["body", "eyebrow"], format: "feed" },
@@ -113,7 +106,6 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t48", platform: "instagram", name: "Magazine Cover", style: "brand", mood: "editorial", bestFor: ["cover", "feature", "magazine_style"], requiredFields: ["headline"], optionalFields: ["subheadline", "eyebrow", "tags"], format: "feed" },
   { id: "t53", platform: "instagram", name: "Carousel Slide", style: "light", mood: "educational", bestFor: ["carousel_slide", "educational", "clean"], requiredFields: ["headline"], optionalFields: ["body", "eyebrow"], format: "feed" },
   { id: "t54", platform: "instagram", name: "Checklist", style: "cream", mood: "educational", bestFor: ["checklist", "action_items", "save_worthy"], requiredFields: ["bullets"], optionalFields: ["headline"], format: "feed" },
-  { id: "t55", platform: "instagram", name: "Pull Quote", style: "warm", mood: "motivational", bestFor: ["quote", "pull_quote", "emphasis"], requiredFields: ["headline"], optionalFields: ["subheadline"], format: "grid" },
   { id: "t56", platform: "instagram", name: "Profile Card", style: "pastel", mood: "casual", bestFor: ["profile", "intro", "about"], requiredFields: ["headline"], optionalFields: ["body", "tags"], format: "grid" },
   { id: "t57", platform: "instagram", name: "Split Stat", style: "dark", mood: "data_driven", bestFor: ["stat_comparison", "two_numbers", "contrast"], requiredFields: ["stat"], optionalFields: ["headline"], format: "grid" },
   { id: "t58", platform: "instagram", name: "Myth vs Fact", style: "light", mood: "educational", bestFor: ["myth_busting", "fact_check", "comparison"], requiredFields: ["beforeText", "afterText"], optionalFields: ["headline"], format: "feed" },
@@ -240,6 +232,30 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t184", platform: "instagram", name: "Amber Poll Story", style: "dark", mood: "casual", bestFor: ["poll", "engagement_hook", "question", "quiz"], requiredFields: ["headline"], optionalFields: ["items", "headlineHighlight", "eyebrow"], format: "story" },
   { id: "t185", platform: "instagram", name: "Light Steps Story", style: "light", mood: "educational", bestFor: ["step_by_step", "how_it_works", "onboarding", "tutorial"], requiredFields: ["headline"], optionalFields: ["steps", "headlineHighlight", "eyebrow"], format: "story" },
   { id: "t186", platform: "instagram", name: "Gradient Salary Reveal", style: "gradient", mood: "data_driven", bestFor: ["salary", "compensation", "salary_reveal", "market_data"], requiredFields: ["stat"], optionalFields: ["subheadline", "body", "cta", "eyebrow"], format: "story" },
+  // # Designer LinkedIn (T187-T193) — premium Google Fonts templates
+  { id: "t187", platform: "linkedin", name: "The Number", style: "dark", mood: "data_driven", bestFor: ["hero_stat", "data_insight", "industry_data", "shocking_number"], requiredFields: ["stat"], optionalFields: ["body", "bodyBold", "items", "cta", "eyebrow"], format: "feed" },
+  { id: "t188", platform: "linkedin", name: "The Analysis", style: "light", mood: "data_driven", bestFor: ["product_showcase", "resume_analysis", "score_breakdown", "feature_demo"], requiredFields: ["headline"], optionalFields: ["score", "bars", "tags", "subheadline", "cta", "eyebrow"], format: "feed" },
+  { id: "t189", platform: "linkedin", name: "The Playbook", style: "gradient", mood: "educational", bestFor: ["tips", "mistakes", "listicle", "how_to", "playbook"], requiredFields: ["headline"], optionalFields: ["tips", "cta", "eyebrow"], format: "feed" },
+  { id: "t190", platform: "linkedin", name: "The Shift", style: "dark", mood: "storytelling", bestFor: ["before_after", "transformation", "comparison", "results", "case_study"], requiredFields: ["headline"], optionalFields: ["beforeText", "afterText", "bullets", "tags", "cta", "eyebrow"], format: "feed" },
+  { id: "t191", platform: "linkedin", name: "The Signal", style: "gradient", mood: "provocative", bestFor: ["bold_claim", "truth_bomb", "hiring_truth", "insight", "contrarian"], requiredFields: ["headline"], optionalFields: ["body", "bodyBold", "headlineHighlight", "items", "eyebrow"], format: "feed" },
+  { id: "t192", platform: "linkedin", name: "The Proof", style: "dark", mood: "authoritative", bestFor: ["social_proof", "testimonial", "milestone", "user_count", "trust"], requiredFields: ["stat"], optionalFields: ["bars", "items", "body", "subheadline", "eyebrow"], format: "feed" },
+  { id: "t193", platform: "linkedin", name: "The Matrix", style: "light", mood: "educational", bestFor: ["framework", "pillars", "quadrant", "strategy", "methodology", "model"], requiredFields: ["headline"], optionalFields: ["tips", "tags", "subheadline", "eyebrow"], format: "feed" },
+
+  // # Designer Set 3 — T194-T199
+  { id: "t194", platform: "linkedin", name: "The Funnel", style: "dark", mood: "data_driven", bestFor: ["funnel", "pipeline", "conversion", "drop_off", "stages", "attrition"], requiredFields: ["headline"], optionalFields: ["items", "eyebrow", "subheadline"], format: "feed" },
+  { id: "t198", platform: "linkedin", name: "The Spotlight", style: "gradient", mood: "provocative", bestFor: ["key_quote", "spotlight", "one_liner", "attention", "truth_bomb", "mic_drop"], requiredFields: ["headline"], optionalFields: ["body", "cta", "eyebrow", "headlineHighlight", "bodyBold"], format: "feed" },
+  { id: "t199", platform: "linkedin", name: "The Calendar", style: "dark", mood: "editorial", bestFor: ["schedule", "timing", "calendar", "best_time", "heatmap", "weekly_pattern"], requiredFields: ["headline"], optionalFields: ["bars", "eyebrow", "subheadline", "cta"], format: "feed" },
+
+  // # Designer Set 4 — T200-T208 (LinkedIn, TikTok, Instagram)
+  { id: "t200", platform: "linkedin", name: "The Roadmap", style: "dark", mood: "storytelling", bestFor: ["journey", "milestones", "career_path", "progression", "roadmap", "timeline_visual"], requiredFields: ["headline"], optionalFields: ["items", "eyebrow", "subheadline", "cta"], format: "feed" },
+  { id: "t201", platform: "linkedin", name: "The Receipt", style: "light", mood: "provocative", bestFor: ["cost_breakdown", "invoice", "waste", "time_cost", "inefficiency", "real_cost"], requiredFields: ["headline"], optionalFields: ["items", "stat", "eyebrow", "subheadline", "cta"], format: "feed" },
+  { id: "t202", platform: "linkedin", name: "The Radar", style: "dark", mood: "data_driven", bestFor: ["skill_assessment", "coverage", "spider_chart", "dimensions", "capability_map", "strength_weakness"], requiredFields: ["headline"], optionalFields: ["bars", "stat", "eyebrow", "subheadline", "cta"], format: "feed" },
+  { id: "t203", platform: "tiktok", name: "The Ticker", style: "dark", mood: "provocative", bestFor: ["breaking_news", "alert", "market_update", "shocking_stat", "urgent", "trending"], requiredFields: ["headline", "stat"], optionalFields: ["items", "body", "bodyBold", "eyebrow"], format: "feed" },
+  { id: "t204", platform: "tiktok", name: "The Verdict", style: "dark", mood: "authoritative", bestFor: ["myth_check", "fact_check", "ruling", "judgment", "truth_test", "career_court"], requiredFields: ["headline"], optionalFields: ["tips", "body", "eyebrow"], format: "feed" },
+  { id: "t205", platform: "tiktok", name: "The Blueprint", style: "dark", mood: "educational", bestFor: ["system_design", "architecture", "blueprint", "framework", "build_plan", "tech_stack"], requiredFields: ["headline"], optionalFields: ["tips", "eyebrow", "subheadline", "cta"], format: "feed" },
+  { id: "t206", platform: "instagram", name: "The Meter", style: "dark", mood: "data_driven", bestFor: ["readiness", "gauge", "score_check", "speedometer", "assessment", "preparation"], requiredFields: ["headline", "stat"], optionalFields: ["items", "eyebrow", "subheadline", "cta"], format: "feed" },
+  { id: "t207", platform: "instagram", name: "The Notification", style: "light", mood: "storytelling", bestFor: ["notification_stack", "alerts", "real_time", "product_demo", "ai_updates", "user_experience"], requiredFields: ["headline"], optionalFields: ["tips", "eyebrow", "subheadline", "cta"], format: "feed" },
+  { id: "t208", platform: "instagram", name: "The Label", style: "light", mood: "educational", bestFor: ["ingredients", "composition", "nutrition_facts", "breakdown", "what_makes", "recipe"], requiredFields: ["headline"], optionalFields: ["items", "stat", "body", "bodyBold", "eyebrow", "subheadline", "cta"], format: "feed" },
 ];
 
 /* ---- Performance Cache ---- */

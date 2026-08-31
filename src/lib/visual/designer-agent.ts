@@ -36,7 +36,6 @@ const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
   t3: ["headline", "body", "eyebrow"],
   t4: ["headline", "beforeText", "afterText", "bars"],
   t5: ["headline", "subheadline", "body"],
-  t6: ["headline", "subheadline", "eyebrow"],
   t7: ["headline", "body"],
   t8: ["headline", "beforeText", "afterText"],
   t9: ["headline", "bars"],
@@ -71,16 +70,13 @@ const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
   t21: ["headline", "body"],
   t28: ["stat", "headline", "body"],
   t29: ["headline", "beforeText", "afterText"],
-  t30: ["headline", "subheadline"],
   t31: ["headline", "steps", "subheadline"],
   t32: ["headline", "body", "eyebrow"],
   t40: ["headline", "body"],
   t41: ["headline", "body", "stat"],
   t42: ["headline", "steps"],
-  t43: ["headline", "subheadline"],
   t44: ["headline", "bars", "eyebrow"],
   t50: ["headline", "steps", "bullets"],
-  t51: ["headline", "subheadline"],
   t52: ["headline", "steps", "eyebrow"],
   t82: ["headline", "score", "annotations"],
   t83: ["headline", "items"],
@@ -90,10 +86,8 @@ const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
   t87: ["headline", "tips", "cta"],
   t88: ["stat", "headline", "body"],
   // # Instagram
-  t22: ["headline", "subheadline", "eyebrow"],
   t23: ["headline", "tips"],
   t24: ["headline", "items"],
-  t25: ["headline", "subheadline"],
   t26: ["headline", "items", "stat", "subheadline", "eyebrow"],
   t27: ["headline", "body", "eyebrow"],
   t34: ["headline", "body", "eyebrow"],
@@ -108,7 +102,6 @@ const TEMPLATE_RENDERED_FIELDS: Record<string, string[]> = {
   t48: ["headline", "body", "eyebrow"],
   t53: ["headline", "body"],
   t54: ["headline", "items", "eyebrow"],
-  t55: ["headline", "subheadline", "eyebrow"],
   t56: ["headline", "body", "tags"],
   t57: ["stat", "headline"],
   t58: ["headline", "tips", "eyebrow"],
@@ -222,7 +215,29 @@ Return ONLY a JSON object with these fields:
   ${fieldSchemas}
 }
 
-Make the content specific, actionable, and relevant to the headline "${content.headline}". Use real-sounding data points.
+QUALITY RULES:
+- Every field must provide STANDALONE VALUE — the reader should learn something specific.
+- Tips/items MUST include concrete "how" details (10-25 words each), never vague labels like "Recommended" or "Essential".
+- Stats/bars MUST use specific, realistic numbers — never round numbers like 50% or 100%.
+- Body text must add a real insight, technique, or data point — not restate the headline.
+- Before/After text must show actual resume language, not generic descriptions.
+- Items must have meaningful text (not just category names) and values that tell a story.
+- Steps must start with an action verb and include a specific technique in the description.
+- Tags should be highly specific keywords (not generic like "career" or "jobs").
+
+BAD ENRICHMENT:
+- tip: { title: "Network", description: "Networking is important" }
+- bar: { label: "Skills", value: 80 }
+- item: { text: "Resume", value: "Good" }
+
+GOOD ENRICHMENT:
+- tip: { title: "Hidden Job Market", description: "80% of roles are filled through referrals — message 3 people per week at target companies on LinkedIn" }
+- bar: { label: "Python proficiency", value: 67 }
+- item: { text: "ATS-optimized formatting with single-column layout", value: "92%" }
+
+Make the content specific, actionable, and relevant to the headline "${content.headline}".
+${platform ? `Platform: ${platform} — tailor content density and tone accordingly.` : ""}
+Use real-sounding data points and industry-specific language.
 Return ONLY valid JSON.`;
 
   try {
@@ -368,7 +383,9 @@ export async function designVisual(
   const slideCount = isSingleImage ? 1 : "4-6";
 
   // # Step 1: Generate structured slide data via Gemini
-  const prompt = `You are a content strategist for ${BRAND_NAME}, a premium career tech platform. Extract the key messages from this content and structure them for a visual post.
+  // # Content quality prompt — requires specific, actionable, value-packed content
+  // # that gives the reader a real takeaway, not vague labels or empty filler
+  const prompt = `You are an expert content strategist for ${BRAND_NAME}, a premium career tech platform. Your job is to create HIGH-VALUE visual content that makes people stop scrolling and SAVE the post.
 
 CONTENT TO STRUCTURE:
 ${content}
@@ -378,16 +395,41 @@ ${topic ? `TOPIC: ${topic}` : ""}
 PLATFORM: ${platform}
 FORMAT: ${contentType} (${orientation}, ${width}x${height}px)
 
+CONTENT QUALITY RULES (CRITICAL — follow these exactly):
+1. Every piece of text must provide STANDALONE VALUE. The reader should learn something specific just from reading the image.
+2. NEVER use vague labels like "Recommended", "Essential", "Must-have", "Important" as descriptions. These say nothing.
+3. Tips MUST include a concrete "how" — not just "Quantify Achievements" but "Replace 'managed team' with 'Led 12-person team that increased revenue 34%'"
+4. Stats MUST be specific and surprising — not "many companies" but "73% of Fortune 500 companies"
+5. Body text MUST add real insight beyond the headline — a specific technique, a real example, or a data point.
+6. Items/cards MUST have meaningful descriptions (10-25 words each) that explain the WHY or HOW, not just a category name.
+7. Bars/data MUST use realistic, specific numbers that tell a story — never round numbers like 50%, 80%, 100%.
+8. Before/After examples MUST show actual resume text, not descriptions of what to do.
+9. Headlines MUST create urgency, curiosity, or surprise — never be a plain label like "Resume Tips" or "Career Advice".
+10. Every slide must pass the "would I save this?" test — if a viewer would not screenshot or bookmark this content, it is not good enough.
+11. For roadmap/timeline content: use specific milestones with dates or durations, not vague phases.
+12. For receipt/cost content: use specific dollar amounts, time costs, or opportunity costs — make the reader feel the pain.
+13. For data visualizations (radar, meter, bars): use 4-6 dimensions with realistic asymmetric values that reveal a pattern.
+
+BAD CONTENT (never do this):
+- "Keyword Alignment — Recommended" (vague label, no value)
+- "Optimize your resume — Essential" (generic advice)
+- "Use AI tools — Must-have" (empty instruction)
+
+GOOD CONTENT (always do this):
+- "Keyword Alignment — Mirror the exact job title and 3-5 hard skills from the posting into your experience section"
+- "ATS Formatting — Single-column layout, standard fonts, no tables or images that parsers skip"
+- "73% of resumes are rejected before a human sees them — here's the 6-second test recruiters actually use"
+
 TASK:
 ${isSingleImage
-  ? `Extract the single most impactful message from this content. Return exactly 1 slide with a punchy headline (5-12 words) and optional body text (15-30 words).`
+  ? `Create exactly 1 slide with maximum impact. The headline must be punchy (5-12 words) and the body text (15-30 words) must deliver a specific, useful insight — not a vague restatement of the headline.`
   : `Break this content into ${slideCount} slides. Rules:
-- Slide 1: Bold hook headline that stops the scroll (5-12 words)
-- Middle slides: One key insight per slide with headline + body text
+- Slide 1: Bold hook headline that creates curiosity or states a surprising fact (5-12 words)
+- Middle slides: One SPECIFIC, ACTIONABLE insight per slide with headline + body text that delivers real value
 - Last slide: Call-to-action mentioning ${BRAND_URL}
 - Each slide headline: 5-12 words, punchy and specific
-- Each slide body: 15-30 words of supporting detail (optional but preferred)
-- Include stat data when the content contains numbers`}
+- Each slide body: 15-30 words of CONCRETE supporting detail (a technique, example, or stat — not a restatement)
+- Include real-sounding stat data with specific numbers whenever possible`}
 
 Choose a layout type for each slide from: hero, stat_card, tip, quote, list, cta, before_after, comparison, numbered_steps, gradient_text, highlight_box.
 
@@ -396,22 +438,43 @@ Return a JSON object:
   "slides": [
     {
       "headline": "5-12 word punchy headline",
-      "subheadline": "optional subtitle",
-      "body": "15-30 word body text",
-      "stat": { "value": "75%", "label": "of resumes rejected by ATS" },
-      "bullets": ["item 1", "item 2"],
+      "subheadline": "optional subtitle with a specific claim or stat",
+      "body": "15-30 words of concrete, actionable detail — a technique, example, or data point",
+      "stat": { "value": "73%", "label": "of resumes rejected before human review" },
+      "bullets": ["Specific actionable item with detail", "Another concrete technique"],
       "layout": "hero",
       "eyebrow": "optional category label",
-      "beforeText": "bad example text (for comparison slides)",
-      "afterText": "good example text (for comparison slides)",
-      "steps": [{"number": 1, "title": "Step name", "detail": "brief detail"}],
-      "bars": [{"label": "Category", "value": 85}],
-      "tips": [{"title": "Tip name", "description": "brief description"}],
+      "beforeText": "Actual bad resume text example",
+      "afterText": "Actual improved resume text example",
+      "steps": [{"number": 1, "title": "Action verb + object", "detail": "specific how-to in 10-15 words"}],
+      "bars": [{"label": "Specific category", "value": 73}],
+      "tips": [{"title": "Specific technique name", "description": "10-25 word explanation of exactly how to do it"}],
       "tags": ["keyword1", "keyword2"],
       "cta": "call to action text"
     }
   ],
-  "caption": "Social media caption that complements the visuals (100-400 words for LinkedIn, 50-200 for Twitter, 100-300 for Instagram). Do NOT repeat slide text."
+  "caption": "Write a HIGH-QUALITY social media caption following these rules:
+
+    LENGTH: ${platform === 'linkedin' ? '150-400 words' : platform === 'twitter' ? '50-180 words' : '80-250 words'}.
+
+    STRUCTURE (${platform === 'linkedin' ? 'LinkedIn' : platform === 'twitter' ? 'Twitter' : 'Instagram'}):
+    - Line 1: A HOOK that makes people stop scrolling. Use a surprising stat, contrarian take, personal confession, or bold claim. Never start with 'Did you know' or 'Here are X tips'.
+    - Lines 2-4: The MEAT — expand on the hook with a specific story, real example, or data-backed insight. Write like you are talking to a friend, not writing an essay.
+    - Last 2 lines: A QUESTION or CTA that invites comments. Ask something specific and debatable, not generic like 'What do you think?'
+    ${platform === 'linkedin' ? '- Use line breaks between paragraphs for readability. No emoji.' : ''}
+    ${platform === 'instagram' ? '- Add 5-10 relevant hashtags at the end (mix of broad + niche). No emoji in the main text.' : ''}
+    ${platform === 'twitter' ? '- Punchy and direct. No hashtags unless truly relevant.' : ''}
+
+    QUALITY RULES:
+    - Do NOT repeat or summarize what the image already says. The caption should ADD new context, a personal angle, or a deeper insight.
+    - Write in first person ('I', 'we') — not third person brand voice.
+    - Include at least ONE specific number, stat, or real example.
+    - Sound like a thoughtful human, not a corporate brand. No buzzwords like 'leverage', 'unlock', 'game-changer', 'empower'.
+    - No emoji anywhere in the caption.
+    - End with a specific question that invites real debate, not a yes/no question.
+
+    BAD CAPTION: 'Your resume matters! Here are some tips to improve it. Check out JobPilot AI for more. What do you think?'
+    GOOD CAPTION: 'I reviewed 200+ resumes last month. The #1 reason people get ghosted after applying? Their resume passes ATS but fails the 6-second human scan.\n\nRecruiters spend an average of 6.2 seconds on each resume. In that window, they are looking for exactly 3 things...\n\nWhat is the one change you made to your resume that actually got results?'"
 }
 
 Return ONLY valid JSON.`;

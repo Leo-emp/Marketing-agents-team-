@@ -11,10 +11,10 @@ import { LOGO_DATA_URI, LOGO_PRO_URI, esc, pickGradient } from "./shared";
 
 // # All Instagram template IDs across all 5 sets
 export const INSTAGRAM_IDS: TemplateId[] = [
-  "t22", "t23", "t24", "t25", "t26", "t27",
+  "t23", "t24", "t26", "t27",
   "t34", "t35", "t36", "t37", "t38", "t39",
   "t45", "t46", "t47", "t48",
-  "t53", "t54", "t55", "t56",
+  "t53", "t54", "t56",
   "t57", "t58", "t59", "t60", "t61", "t62", "t63", "t64",
   "t89", "t90", "t91", "t92", "t93", "t94", "t95", "t96",
   "t109", "t110", "t111", "t112", "t113", "t114",
@@ -53,40 +53,6 @@ function wrapIG(cls: string, css: string, body: string, pw: number, ph: number, 
   ${css}
 </style></head>
 <body><div class="${cls}">${body}</div></body></html>`;
-}
-
-/* ============================================================
-   T22 — EDITORIAL CAROUSEL COVER (Warm cream, 4:5 feed)
-   ============================================================ */
-const T22_CSS = `
-.t22{background:#FAF8F5;display:flex;flex-direction:column;padding:44px 40px 32px;}
-.t22 .cat{font-family:${IG_SANS};font-size:7px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#B8860B;margin-bottom:10px;}
-.t22 .rule{height:1px;background:#1A1A1A;margin-bottom:20px;}
-.t22 .headline{font-family:${IG_SERIF};font-size:27px;font-weight:300;color:#1A1A1A;line-height:1.3;margin-bottom:8px;}
-.t22 .headline strong{font-weight:700;}
-.t22 .sub{font-family:${IG_SANS};font-size:10px;color:#8A8A8A;margin-bottom:auto;}
-.t22 .footer{border-top:1px solid #E2E0DB;padding-top:12px;display:flex;align-items:center;justify-content:space-between;}
-.t22 .footer .brand{font-family:${IG_SANS};font-size:7px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#B0ACA0;}
-.t22 .footer .slide-ct{font-family:${IG_MONO};font-size:7px;color:#B0ACA0;}
-.t22 .footer .url{font-family:${IG_MONO};font-size:6px;color:#C8C4BC;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);}
-`;
-
-function buildT22(c: TemplateContent, w: number, h: number): string {
-  const headline = esc(c.headline);
-  const boldPhrase = c.headlineHighlight ? esc(c.headlineHighlight) : "";
-  const styled = boldPhrase ? headline.replace(boldPhrase, `<strong>${boldPhrase}</strong>`) : headline;
-
-  return wrapIG("t22", T22_CSS, `
-    <div class="cat">${esc(c.eyebrow || "CAREER STRATEGY")}</div>
-    <div class="rule"></div>
-    <div class="headline">${styled}</div>
-    <div class="sub">${esc(c.subheadline || "")}</div>
-    <div class="footer">
-      <span class="brand">JobPilot AI</span>
-      <span class="slide-ct">${esc(c.stat?.value || "01 / 07")}</span>
-      <span class="url">jobpilotai.co</span>
-    </div>
-  `, 540, 675, w, h);
 }
 
 /* ============================================================
@@ -151,32 +117,6 @@ function buildT24(c: TemplateContent, w: number, h: number): string {
     </div>
     ${storyBadge()}
   `, 432, 768, w, h);
-}
-
-/* ============================================================
-   T25 — MINIMAL QUOTE (White, 1:1 grid)
-   ============================================================ */
-const T25_CSS = `
-.t25{background:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 50px;text-align:center;}
-.t25 .rule-top{width:60px;height:1px;background:#1A1A1A;margin-bottom:32px;}
-.t25 .quote{font-family:${IG_SERIF};font-size:18px;font-weight:400;font-style:italic;color:#1A1A1A;line-height:1.5;max-width:380px;margin-bottom:32px;}
-.t25 .quote strong{font-weight:700;font-style:italic;}
-.t25 .rule-bot{width:60px;height:1px;background:#1A1A1A;margin-bottom:20px;}
-.t25 .attr{font-family:${IG_SANS};font-size:7px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#B0ACA0;}
-`;
-
-function buildT25(c: TemplateContent, w: number, h: number): string {
-  const quote = esc(c.headline);
-  const highlight = c.headlineHighlight ? esc(c.headlineHighlight) : "";
-  const styled = highlight ? quote.replace(highlight, `<strong>${highlight}</strong>`) : quote;
-
-  return wrapIG("t25", T25_CSS, `
-    <div class="rule-top"></div>
-    <div class="quote">${styled}</div>
-    <div class="rule-bot"></div>
-    <div class="attr">${esc(c.subheadline || "JOBPILOT AI")}</div>
-    ${brandFooter("rgba(0,0,0,0.12)")}
-  `, 540, 540, w, h);
 }
 
 /* ============================================================
@@ -651,35 +591,6 @@ function buildT54(c: TemplateContent, w: number, h: number): string {
     <div class="progress"><div class="p-row"><div class="p-track"><div class="p-fill" style="width:${pct}%"></div></div><div class="p-pct">${pct}%</div></div></div>
     ${brandFooter("rgba(0,0,0,0.12)")}
   `, 540, 675, w, h);
-}
-
-/* ============================================================
-   T55 — PULL QUOTE (Warm dark, drop cap, 1:1 grid)
-   ============================================================ */
-const T55_CSS = `
-.t55{background:#1C1914;display:flex;flex-direction:column;padding:44px 40px 32px;position:relative;}
-.t55 .cat{font-family:${IG_SANS};font-size:3px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(196,164,112,0.4);margin-bottom:auto;position:relative;z-index:1;}
-.t55 .quote-area{display:flex;gap:4px;position:relative;z-index:1;margin-bottom:auto;}
-.t55 .drop{font-family:${IG_SERIF};font-size:29px;font-weight:400;color:rgba(196,164,112,0.3);line-height:0.85;float:left;margin-right:4px;margin-top:4px;}
-.t55 .q-text{font-family:${IG_SERIF};font-size:7px;font-weight:400;color:#E8DFD0;line-height:1.55;}
-.t55 .gold-rule{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(196,164,112,0.2),transparent);margin-bottom:8px;position:relative;z-index:1;}
-.t55 .attr{font-family:${IG_SANS};font-size:4px;color:rgba(196,164,112,0.35);position:relative;z-index:1;}
-.t55 .foot{font-family:${IG_SANS};font-size:3px;color:rgba(196,164,112,0.2);letter-spacing:0.12em;text-transform:uppercase;text-align:center;margin-top:auto;position:relative;z-index:1;}
-`;
-
-function buildT55(c: TemplateContent, w: number, h: number): string {
-  const firstLetter = (c.headline || "T")[0];
-  const rest = (c.headline || "").substring(1);
-  return wrapIG("t55", T55_CSS, `
-    <div class="cat">${esc(c.eyebrow || "")}</div>
-    <div class="quote-area">
-      <div class="drop">${esc(firstLetter)}</div>
-      <div class="q-text">${esc(rest)}</div>
-    </div>
-    <div class="gold-rule"></div>
-    <div class="attr">${esc(c.subheadline || "")}</div>
-    <div class="foot">JOBPILOT AI</div>
-  `, 540, 540, w, h);
 }
 
 /* ============================================================
@@ -1935,10 +1846,8 @@ export function buildInstagramTemplate(
   height: number
 ): string {
   switch (templateId) {
-    case "t22": return buildT22(content, width, height);
     case "t23": return buildT23(content, width, height);
     case "t24": return buildT24(content, width, height);
-    case "t25": return buildT25(content, width, height);
     case "t26": return buildT26(content, width, height);
     case "t27": return buildT27(content, width, height);
     case "t34": return buildT34(content, width, height);
@@ -1953,7 +1862,6 @@ export function buildInstagramTemplate(
     case "t48": return buildT48(content, width, height);
     case "t53": return buildT53(content, width, height);
     case "t54": return buildT54(content, width, height);
-    case "t55": return buildT55(content, width, height);
     case "t56": return buildT56(content, width, height);
     case "t57": return buildT57(content, width, height);
     case "t58": return buildT58(content, width, height);
@@ -1993,6 +1901,6 @@ export function buildInstagramTemplate(
     case "t149": return buildT149(content, width, height);
     case "t150": return buildT150(content, width, height);
     default:
-      return buildT22(content, width, height);
+      return buildT23(content, width, height);
   }
 }

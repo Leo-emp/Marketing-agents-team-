@@ -12,10 +12,10 @@ import { LOGO_DATA_URI, LOGO_PRO_URI, esc, pickGradient } from "./shared";
 // # All TikTok template IDs across all 4 sets
 export const TIKTOK_IDS: TemplateId[] = [
   "t16", "t17", "t18", "t19", "t20", "t21",
-  "t28", "t29", "t30", "t31", "t32",
-  "t40", "t41", "t42", "t43", "t44",
-  "t50", "t51", "t52",
-  "t82", "t83", "t84", "t85", "t86", "t87", "t88",
+  "t28", "t29", "t31", "t32",
+  "t40", "t41", "t42", "t44",
+  "t50", "t52",
+  "t82", "t83", "t84", "t85", "t86", "t88",
   "t104", "t106", "t107", "t108",
   "t121", "t122", "t123", "t124", "t125", "t126",
   "t139", "t140", "t141", "t142", "t143", "t144",
@@ -330,29 +330,6 @@ function buildT29(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
-   T30 — GRADIENT STATEMENT (Purple gradient, 432×768)
-   ============================================================ */
-const T30_CSS = `
-.t30{background:linear-gradient(165deg,#0F0F1A,#1a103a,#2d1054);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;position:relative;}
-.t30::before{content:'';position:absolute;top:25%;right:10%;width:180px;height:180px;border-radius:50%;background:#A78BFA;filter:blur(80px);opacity:0.15;}
-.t30::after{content:'';position:absolute;bottom:30%;left:15%;width:140px;height:140px;border-radius:50%;background:#FF006E;filter:blur(70px);opacity:0.1;}
-.t30 .statement{font-size:13px;font-weight:800;color:#fff;line-height:1.4;max-width:340px;position:relative;z-index:1;}
-.t30 .gradient-word{background:linear-gradient(90deg,#A78BFA,#FF006E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.t30 .sub{font-size:5px;color:rgba(255,255,255,0.35);margin-top:16px;position:relative;z-index:1;}
-`;
-
-function buildT30(c: TemplateContent, w: number, h: number): string {
-  const text = esc(c.headline);
-  const kw = c.headlineHighlight ? esc(c.headlineHighlight) : "";
-  const styled = kw ? text.replace(kw, `<span class="gradient-word">${kw}</span>`) : text;
-  return wrapTT("t30", T30_CSS, `
-    <div class="statement">${styled}</div>
-    ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
-    ${watermark()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
    T31 — STACKED CARDS (Dark glass, 432×768)
    ============================================================ */
 const T31_CSS = `
@@ -517,29 +494,6 @@ function buildT42(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
-   T43 — QUOTE CARD (Warm dark, serif, 432×768)
-   ============================================================ */
-const T43_CSS = `
-.t43{background:#161210;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;}
-.t43 .big-q{font-family:Georgia,'Times New Roman',serif;font-size:40px;color:rgba(196,164,112,0.1);margin-bottom:12px;line-height:0.6;}
-.t43 .quote{font-family:Georgia,'Times New Roman',serif;font-size:8px;font-style:italic;color:#E8DFD0;line-height:1.55;max-width:320px;margin-bottom:16px;}
-.t43 .gold-rule{width:24px;height:1px;background:rgba(196,164,112,0.25);margin-bottom:12px;}
-.t43 .attr{font-size:4px;color:rgba(196,164,112,0.5);letter-spacing:0.08em;margin-bottom:2px;}
-.t43 .role{font-size:4px;color:rgba(196,164,112,0.25);}
-`;
-
-function buildT43(c: TemplateContent, w: number, h: number): string {
-  return wrapTT("t43", T43_CSS, `
-    <div class="big-q">"</div>
-    <div class="quote">${esc(c.headline)}</div>
-    <div class="gold-rule"></div>
-    <div class="attr">${esc(c.subheadline || "")}</div>
-    <div class="role">${esc(c.body || "")}</div>
-    ${watermark()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
    T44 — METRIC DASHBOARD (Dark, SaaS grid, 432×768)
    ============================================================ */
 const T44_CSS = `
@@ -624,31 +578,6 @@ function buildT50(c: TemplateContent, w: number, h: number): string {
       </div>
       <div class="prompt"><span class="user">→</span><span class="cursor"></span></div>
     </div>
-    ${watermark()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
-   T51 — GRADIENT MESH (Layered radial gradients, 432×768)
-   ============================================================ */
-const T51_CSS = `
-.t51{background:#0C0C16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;position:relative;}
-.t51::before{content:'';position:absolute;top:20%;right:5%;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,#6366F1 0%,transparent 70%);opacity:0.15;}
-.t51::after{content:'';position:absolute;bottom:25%;left:10%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,#A78BFA 0%,transparent 70%);opacity:0.12;}
-.t51 .eyebrow{font-size:4px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:20px;position:relative;z-index:1;}
-.t51 .headline{font-size:12px;font-weight:800;color:#fff;line-height:1.3;max-width:340px;margin-bottom:10px;position:relative;z-index:1;}
-.t51 .thin-rule{width:32px;height:1px;background:rgba(255,255,255,0.15);margin-bottom:10px;position:relative;z-index:1;}
-.t51 .sub{font-size:5px;color:rgba(255,255,255,0.4);max-width:300px;line-height:1.5;margin-bottom:20px;position:relative;z-index:1;}
-.t51 .cta-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:6px 16px;font-size:4px;font-weight:600;color:#fff;backdrop-filter:blur(8px);position:relative;z-index:1;}
-`;
-
-function buildT51(c: TemplateContent, w: number, h: number): string {
-  return wrapTT("t51", T51_CSS, `
-    <div class="eyebrow">${esc(c.eyebrow || "")}</div>
-    <div class="headline">${esc(c.headline)}</div>
-    <div class="thin-rule"></div>
-    ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
-    ${c.cta ? `<div class="cta-btn">${esc(c.cta)}</div>` : ""}
     ${watermark()}
   `, 432, 768, w, h);
 }
@@ -853,43 +782,6 @@ function buildT86(c: TemplateContent, w: number, h: number): string {
     </div>
     <div class="vs">VS</div>
     <div class="cta">${esc(c.cta || "Comment your answer ↓")}</div>
-    ${watermark()}
-  `, 432, 768, w, h);
-}
-
-/* ============================================================
-   T87 — RECRUITER DM (Chat UI variant, 432×768)
-   ============================================================ */
-const T87_CSS = `
-.t87{background:#0A0A0A;display:flex;flex-direction:column;}
-.t87 .top-bar{background:#1C1C1E;padding:18px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #2C2C2E;}
-.t87 .notif{width:7px;height:7px;border-radius:50%;background:#FF3B30;flex-shrink:0;}
-.t87 .top-title{font-size:9px;font-weight:600;color:rgba(255,255,255,0.8);}
-.t87 .top-badge{font-size:7px;font-weight:700;color:#0A84FF;margin-left:auto;}
-.t87 .msgs{flex:1;padding:16px 16px;display:flex;flex-direction:column;gap:12px;overflow:hidden;}
-.t87 .dm{padding:12px 14px;border-radius:12px;max-width:82%;font-size:8px;line-height:1.5;}
-.t87 .dm-recruiter{background:#1C1C1E;color:rgba(255,255,255,0.85);align-self:flex-start;border-bottom-left-radius:2px;}
-.t87 .dm-you{background:#6366F1;color:#fff;align-self:flex-end;border-bottom-right-radius:2px;}
-.t87 .dm-label{font-size:6px;font-weight:600;color:rgba(255,255,255,0.3);margin-bottom:4px;}
-.t87 .dm-bold{font-weight:700;color:#fff;}
-.t87 .reaction{font-size:7px;margin-top:12px;text-align:center;color:rgba(255,255,255,0.25);}
-`;
-
-function buildT87(c: TemplateContent, w: number, h: number): string {
-  const tips = c.tips || [];
-  return wrapTT("t87", T87_CSS, `
-    <div class="top-bar">
-      <div class="notif"></div>
-      <div class="top-title">${esc(c.headline || "LinkedIn DMs")}</div>
-      <div class="top-badge">NEW</div>
-    </div>
-    <div class="msgs">
-      ${tips.map((t, i) => `<div>
-        <div class="dm-label">${i % 2 === 0 ? "Recruiter" : "You"}</div>
-        <div class="dm ${i % 2 === 0 ? "dm-recruiter" : "dm-you"}">${esc(i % 2 === 0 ? t.title : t.description)}</div>
-      </div>`).join("")}
-    </div>
-    <div class="reaction">${esc(c.cta || "What would YOU reply? Comment ↓")}</div>
     ${watermark()}
   `, 432, 768, w, h);
 }
@@ -1523,18 +1415,15 @@ export function buildTikTokTemplate(
     case "t21": return buildT21(content, width, height);
     case "t28": return buildT28(content, width, height);
     case "t29": return buildT29(content, width, height);
-    case "t30": return buildT30(content, width, height);
     case "t31": return buildT31(content, width, height);
     case "t32": return buildT32(content, width, height);
 
     case "t40": return buildT40(content, width, height);
     case "t41": return buildT41(content, width, height);
     case "t42": return buildT42(content, width, height);
-    case "t43": return buildT43(content, width, height);
     case "t44": return buildT44(content, width, height);
 
     case "t50": return buildT50(content, width, height);
-    case "t51": return buildT51(content, width, height);
     case "t52": return buildT52(content, width, height);
 
     case "t82": return buildT82(content, width, height);
@@ -1542,7 +1431,6 @@ export function buildTikTokTemplate(
     case "t84": return buildT84(content, width, height);
     case "t85": return buildT85(content, width, height);
     case "t86": return buildT86(content, width, height);
-    case "t87": return buildT87(content, width, height);
     case "t88": return buildT88(content, width, height);
     // # Premium templates
 
