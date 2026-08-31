@@ -433,6 +433,24 @@ ${isSingleImage
 
 Choose a layout type for each slide from: hero, stat_card, tip, quote, list, cta, before_after, comparison, numbered_steps, gradient_text, highlight_box.
 
+CAPTION RULES (for the "caption" field in your JSON response):
+Write a HIGH-QUALITY social media caption. Length: ${platform === 'linkedin' ? '150-400 words' : platform === 'twitter' ? '50-180 words' : '80-250 words'}.
+Structure for ${platform === 'linkedin' ? 'LinkedIn' : platform === 'twitter' ? 'Twitter' : 'Instagram'}:
+- Line 1: A HOOK that makes people stop scrolling. Use a surprising stat, contrarian take, personal confession, or bold claim. Never start with 'Did you know' or 'Here are X tips'.
+- Lines 2-4: The MEAT — expand on the hook with a specific story, real example, or data-backed insight. Write like you are talking to a friend, not writing an essay.
+- Last 2 lines: A QUESTION or CTA that invites comments. Ask something specific and debatable, not generic like 'What do you think?'
+${platform === 'linkedin' ? '- Use line breaks between paragraphs (use \\n). No emoji.' : ''}
+${platform === 'instagram' ? '- Add 5-10 relevant hashtags at the end (mix of broad + niche). No emoji in the main text.' : ''}
+${platform === 'twitter' ? '- Punchy and direct. No hashtags unless truly relevant.' : ''}
+- Do NOT repeat or summarize what the image already says. The caption should ADD new context, a personal angle, or a deeper insight.
+- Write in first person ('I', 'we') — not third person brand voice.
+- Include at least ONE specific number, stat, or real example.
+- Sound like a thoughtful human, not a corporate brand. No buzzwords like 'leverage', 'unlock', 'game-changer', 'empower'.
+- No emoji anywhere in the caption.
+- End with a specific question that invites real debate, not a yes/no question.
+BAD CAPTION: 'Your resume matters! Here are some tips to improve it. Check out JobPilot AI for more. What do you think?'
+GOOD CAPTION: 'I reviewed 200+ resumes last month. The #1 reason people get ghosted after applying? Their resume passes ATS but fails the 6-second human scan.\\nRecruiters spend an average of 6.2 seconds on each resume. In that window, they are looking for exactly 3 things...\\nWhat is the one change you made to your resume that actually got results?'
+
 Return a JSON object:
 {
   "slides": [
@@ -453,28 +471,7 @@ Return a JSON object:
       "cta": "call to action text"
     }
   ],
-  "caption": "Write a HIGH-QUALITY social media caption following these rules:
-
-    LENGTH: ${platform === 'linkedin' ? '150-400 words' : platform === 'twitter' ? '50-180 words' : '80-250 words'}.
-
-    STRUCTURE (${platform === 'linkedin' ? 'LinkedIn' : platform === 'twitter' ? 'Twitter' : 'Instagram'}):
-    - Line 1: A HOOK that makes people stop scrolling. Use a surprising stat, contrarian take, personal confession, or bold claim. Never start with 'Did you know' or 'Here are X tips'.
-    - Lines 2-4: The MEAT — expand on the hook with a specific story, real example, or data-backed insight. Write like you are talking to a friend, not writing an essay.
-    - Last 2 lines: A QUESTION or CTA that invites comments. Ask something specific and debatable, not generic like 'What do you think?'
-    ${platform === 'linkedin' ? '- Use line breaks between paragraphs for readability. No emoji.' : ''}
-    ${platform === 'instagram' ? '- Add 5-10 relevant hashtags at the end (mix of broad + niche). No emoji in the main text.' : ''}
-    ${platform === 'twitter' ? '- Punchy and direct. No hashtags unless truly relevant.' : ''}
-
-    QUALITY RULES:
-    - Do NOT repeat or summarize what the image already says. The caption should ADD new context, a personal angle, or a deeper insight.
-    - Write in first person ('I', 'we') — not third person brand voice.
-    - Include at least ONE specific number, stat, or real example.
-    - Sound like a thoughtful human, not a corporate brand. No buzzwords like 'leverage', 'unlock', 'game-changer', 'empower'.
-    - No emoji anywhere in the caption.
-    - End with a specific question that invites real debate, not a yes/no question.
-
-    BAD CAPTION: 'Your resume matters! Here are some tips to improve it. Check out JobPilot AI for more. What do you think?'
-    GOOD CAPTION: 'I reviewed 200+ resumes last month. The #1 reason people get ghosted after applying? Their resume passes ATS but fails the 6-second human scan.\n\nRecruiters spend an average of 6.2 seconds on each resume. In that window, they are looking for exactly 3 things...\n\nWhat is the one change you made to your resume that actually got results?'"
+  "caption": "Your high-quality caption here following the CAPTION RULES above"
 }
 
 Return ONLY valid JSON.`;
