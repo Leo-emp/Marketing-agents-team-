@@ -1,7 +1,7 @@
 /* ============================================================
    TEMPLATE INTELLIGENCE — AI-Powered Template Selection
    ============================================================
-   # Picks the optimal HTML template (t1-t214) for each content
+   # Picks the optimal HTML template (t1-t220) for each content
    # piece based on: platform, content style, mood, data fields,
    # past performance, and variety enforcement.
    #
@@ -264,6 +264,14 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t212", platform: "linkedin", name: "The Versus", style: "light", mood: "provocative", bestFor: ["versus", "head_to_head", "old_vs_new", "manual_vs_ai", "comparison_table", "side_by_side"], requiredFields: ["headline"], optionalFields: ["tips", "beforeText", "afterText", "subheadline", "eyebrow"], format: "feed" },
   { id: "t213", platform: "linkedin", name: "The Cheat Sheet", style: "light", mood: "educational", bestFor: ["cheat_sheet", "reference_card", "quick_guide", "rules", "dos_and_donts", "checklist_reference"], requiredFields: ["headline"], optionalFields: ["tips", "tags", "bullets", "subheadline", "eyebrow", "cta"], format: "feed" },
   { id: "t214", platform: "linkedin", name: "The Dashboard", style: "dark", mood: "data_driven", bestFor: ["dashboard", "metrics", "kpi", "analytics", "performance_report", "weekly_stats"], requiredFields: ["headline"], optionalFields: ["items", "bars", "subheadline", "eyebrow", "cta"], format: "feed" },
+
+  // # Designer Set 6 — T215-T220 (LinkedIn text-only, no numbers/percentages)
+  { id: "t215", platform: "linkedin", name: "The Manifesto", style: "warm", mood: "provocative", bestFor: ["manifesto", "hot_take", "philosophy", "career_advice", "mindset", "bold_statement"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t216", platform: "linkedin", name: "The Framework", style: "light", mood: "educational", bestFor: ["framework", "method", "pillars", "strategy", "system", "approach"], requiredFields: ["headline"], optionalFields: ["tips", "body", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t217", platform: "linkedin", name: "The Letter", style: "light", mood: "storytelling", bestFor: ["open_letter", "empathy", "motivation", "encouragement", "personal_message", "vulnerability"], requiredFields: ["headline"], optionalFields: ["bullets", "subheadline", "eyebrow", "afterText", "cta"], format: "feed" },
+  { id: "t218", platform: "linkedin", name: "The Glossary", style: "dark", mood: "educational", bestFor: ["glossary", "definitions", "terminology", "jargon_buster", "explainer", "vocabulary"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t219", platform: "linkedin", name: "The Unpacked", style: "gradient", mood: "educational", bestFor: ["concept_breakdown", "explainer", "deep_dive", "what_why_how", "unpacked", "demystified"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t220", platform: "linkedin", name: "The Dialogue", style: "light", mood: "educational", bestFor: ["qa", "faq", "questions_answered", "honest_answers", "ask_me_anything", "interview_qa"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
 ];
 
 /* ---- Performance Cache ---- */

@@ -271,7 +271,9 @@ export type TemplateId =
   | "t203" | "t204" | "t205"
   | "t206" | "t207" | "t208"
   // # Designer LinkedIn Set 5 (T209-T214)
-  | "t209" | "t210" | "t211" | "t212" | "t213" | "t214";
+  | "t209" | "t210" | "t211" | "t212" | "t213" | "t214"
+  // # Designer LinkedIn Set 6 — text-only (T215-T220)
+  | "t215" | "t216" | "t217" | "t218" | "t219" | "t220";
 
 // # Carousel template IDs — 12 carousels (4 per platform)
 export type CarouselId =

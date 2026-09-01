@@ -1,10 +1,11 @@
 /* ============================================================
-   DESIGNER TEMPLATES — 25 premium multi-platform designs
+   DESIGNER TEMPLATES — 31 premium multi-platform designs
    ============================================================
    # T187-T193, T194, T198-T202: Designer LinkedIn (4:5 — 1080×1350)
    # T203-T205: Designer TikTok (9:16 — 1080×1920)
    # T206-T208: Designer Instagram (4:5 — 1080×1350)
    # T209-T214: Designer LinkedIn Set 5 (4:5 — 1080×1350)
+   # T215-T220: Designer LinkedIn Set 6 — text-only (4:5 — 1080×1350)
    #
    # These are high-polish, content-rich marketing templates
    # using Bricolage Grotesque / DM Sans / JetBrains Mono fonts
@@ -35,6 +36,12 @@
    # T212: The Versus — White red/green comparison
    # T213: The Cheat Sheet — Lavender reference card
    # T214: The Dashboard — Navy blue KPI metrics
+   # T215: The Manifesto — Warm amber, bold statement + supporting paragraphs
+   # T216: The Framework — Clean white + emerald, named pillars with text
+   # T217: The Letter — Soft rose, open letter format with signature
+   # T218: The Glossary — Deep forest green, term definitions in cards
+   # T219: The Unpacked — Sky blue gradient, concept broken into parts
+   # T220: The Dialogue — Warm stone, Q&A conversational format
    #
    # LinkedIn/Instagram preview at 540×675 → scale 2× to 1080×1350
    # TikTok preview at 540×960 → scale 2× to 1080×1920
@@ -50,6 +57,7 @@ export const DESIGNER_IDS: TemplateId[] = [
   "t203","t204","t205",
   "t206","t207","t208",
   "t209","t210","t211","t212","t213","t214",
+  "t215","t216","t217","t218","t219","t220",
 ];
 
 // # Preview dimensions for LinkedIn/Instagram 4:5 → 2× scale
@@ -1923,6 +1931,322 @@ function t214(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
+   T215 — THE MANIFESTO (Warm amber gradient, bold statement)
+   # LinkedIn 4:5 — rich amber/gold gradient, big opening statement
+   # with supporting paragraph blocks and strong closing line.
+   # Pure text — no numbers, no percentages.
+   ============================================================ */
+function t215(c: TemplateContent, w: number, h: number): string {
+  // # Supporting paragraphs
+  const tips = c.tips || [
+    { title: "Stop optimizing for algorithms", description: "The best resumes are written for humans first. A real person reads the top third before anything else." },
+    { title: "Skills decay faster than you think", description: "What made you competitive two years ago is table stakes today. Continuous reinvention is the only moat." },
+    { title: "Your network is not your safety net", description: "Connections only convert when you have given before you needed. Start building equity now, not when you are desperate." },
+  ];
+
+  const css = `
+.d215{width:${PW}px;height:${PH}px;background:linear-gradient(155deg,#92400E,#B45309 35%,#D97706 70%,#F59E0B);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d215::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none;}
+.d215::after{content:'';position:absolute;bottom:-40px;left:30%;width:200px;height:200px;background:radial-gradient(circle,rgba(0,0,0,.06),transparent 70%);pointer-events:none;}
+.d215 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d215-tt{font-family:${DISP};font-size:26px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.08;margin-bottom:6px;text-shadow:0 2px 4px rgba(0,0,0,.12);}
+.d215-sub{font-size:10px;color:rgba(255,255,255,.55);margin-bottom:18px;line-height:1.5;}
+.d215-divider{width:32px;height:2px;background:rgba(255,255,255,.35);border-radius:1px;margin-bottom:16px;}
+.d215-blocks{display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center;}
+.d215-block{border-left:3px solid rgba(255,255,255,.3);padding-left:14px;}
+.d215-block-title{font-family:${DISP};font-size:11px;font-weight:700;color:#fff;margin-bottom:3px;letter-spacing:-.01em;}
+.d215-block-body{font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.6);}
+.d215-closer{font-family:${DISP};font-size:12px;font-weight:700;color:#fff;text-align:center;margin-top:auto;padding-top:12px;letter-spacing:-.01em;text-shadow:0 1px 2px rgba(0,0,0,.1);}`;
+
+  // # Build paragraph blocks
+  const blocksHtml = tips.slice(0, 4).map(tip =>
+    `<div class="d215-block">
+      <div class="d215-block-title">${esc(tip.title)}</div>
+      <div class="d215-block-body">${esc(tip.description)}</div>
+    </div>`
+  ).join("");
+
+  const body = `<div class="d215">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Career Manifesto", "rgba(255,255,255,.45)")}
+      <h2 class="d215-tt">${esc(c.headline || "Everything You Think You Know About Job Searching Is Wrong")}</h2>
+      <p class="d215-sub">${esc(c.subheadline || "A few uncomfortable truths that changed how I approach career moves")}</p>
+      <div class="d215-divider"></div>
+      <div class="d215-blocks">${blocksHtml}</div>
+      <div class="d215-closer">${esc(c.cta || "The job market rewards clarity over conformity")}</div>
+    </div>
+    ${footer("dark")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T216 — THE FRAMEWORK (Clean white + emerald, named pillars)
+   # LinkedIn 4:5 — crisp white background with emerald/green accents,
+   # named framework with pillar cards described in pure text.
+   # No numbers — concept-driven.
+   ============================================================ */
+function t216(c: TemplateContent, w: number, h: number): string {
+  // # Framework pillars
+  const tips = c.tips || [
+    { title: "Clarity", description: "Know what role you want, what you bring, and what you will not compromise on. Vague goals produce vague results." },
+    { title: "Proof", description: "Every claim on your resume needs a story behind it. If you cannot explain the impact in one sentence, rewrite it." },
+    { title: "Reach", description: "Apply to fewer roles, but invest more in each one. A tailored application beats ten generic ones every time." },
+    { title: "Timing", description: "The best opportunities surface before they are posted. Build relationships early, and you get the call first." },
+  ];
+
+  const css = `
+.d216{width:${PW}px;height:${PH}px;background:#FAFAF9;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d216::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(5,150,105,.06),transparent 70%);pointer-events:none;}
+.d216 .bd{display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;position:relative;z-index:1;}
+.d216-tt{font-family:${DISP};font-size:22px;font-weight:800;color:#1C1917;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d216-sub{font-size:9.5px;color:#6B7280;margin-bottom:14px;line-height:1.5;}
+.d216-name{display:inline-flex;align-items:center;gap:5px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:5px;padding:4px 10px;font-family:${DISP};font-size:9px;font-weight:700;color:#059669;letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;}
+.d216-pillars{display:flex;flex-direction:column;gap:6px;flex:1;justify-content:center;}
+.d216-pillar{background:#fff;border:1px solid #D1FAE5;border-radius:8px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 1px 3px rgba(5,150,105,.04);}
+.d216-pip{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.d216-pillar-content{flex:1;}
+.d216-pillar-title{font-family:${DISP};font-size:12px;font-weight:700;color:#1C1917;margin-bottom:3px;letter-spacing:-.01em;}
+.d216-pillar-desc{font-size:11px;line-height:1.5;color:#6B7280;}
+.d216-bottom{font-size:9px;font-weight:600;color:#059669;text-align:center;margin-top:auto;padding-top:10px;}`;
+
+  // # Emerald shade variations for each pillar dot
+  const dotColors = ["#059669", "#10B981", "#34D399", "#6EE7B7"];
+
+  const pillarsHtml = tips.slice(0, 4).map((tip, i) =>
+    `<div class="d216-pillar">
+      <div class="d216-pip" style="background:${dotColors[i % dotColors.length]};"></div>
+      <div class="d216-pillar-content">
+        <div class="d216-pillar-title">${esc(tip.title)}</div>
+        <div class="d216-pillar-desc">${esc(tip.description)}</div>
+      </div>
+    </div>`
+  ).join("");
+
+  const body = `<div class="d216">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Framework", "#6366F1")}
+      <h2 class="d216-tt">${esc(c.headline || "The CPRT Framework for Landing Your Next Role")}</h2>
+      <p class="d216-sub">${esc(c.subheadline || "Four pillars that separate strategic job seekers from everyone else")}</p>
+      <div class="d216-name">${esc(c.body || "CPRT Method")}</div>
+      <div class="d216-pillars">${pillarsHtml}</div>
+      <div class="d216-bottom">${esc(c.cta || "Strategy beats volume. Always.")}</div>
+    </div>
+    ${footer("light")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T217 — THE LETTER (Soft rose gradient, open letter format)
+   # LinkedIn 4:5 — gentle rose/blush gradient, handwritten-feel
+   # open letter with greeting, flowing paragraphs, and signature.
+   # Pure prose — no lists, no data, no numbers.
+   ============================================================ */
+function t217(c: TemplateContent, w: number, h: number): string {
+  // # Letter paragraphs
+  const paragraphs = c.bullets || [
+    "I know you are tired. Tired of tailoring. Tired of waiting. Tired of the silence that follows every application.",
+    "But here is what I have learned after watching thousands of job searches: the people who land are not the most qualified. They are the most intentional.",
+    "One focused application, one real connection, one genuine conversation will always outperform a hundred copy-pasted tries.",
+    "You are closer than you think. Keep going.",
+  ];
+
+  const css = `
+.d217{width:${PW}px;height:${PH}px;background:linear-gradient(165deg,#FDF2F8,#FCE7F3 40%,#FBCFE8 85%,#F9A8D4);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d217::before{content:'';position:absolute;top:-30px;left:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(244,63,94,.06),transparent 70%);pointer-events:none;}
+.d217::after{content:'';position:absolute;bottom:-40px;right:-20px;width:160px;height:160px;background:radial-gradient(circle,rgba(236,72,153,.08),transparent 70%);pointer-events:none;}
+.d217 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 20px 8px;flex:1;}
+.d217-tt{font-family:${DISP};font-size:22px;font-weight:800;color:#831843;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d217-greeting{font-family:${DISP};font-size:13px;font-weight:700;color:#9D174D;margin-bottom:14px;margin-top:4px;}
+.d217-letter{flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center;padding:14px 16px;background:rgba(255,255,255,.45);border-radius:10px;border:1px solid rgba(244,63,94,.1);}
+.d217-para{font-size:12px;line-height:1.6;color:#6B2142;}
+.d217-sig{display:flex;flex-direction:column;align-items:flex-end;margin-top:12px;padding-top:8px;border-top:1px solid rgba(157,23,77,.1);}
+.d217-sig-name{font-family:${DISP};font-size:11px;font-weight:700;color:#9D174D;letter-spacing:-.01em;}
+.d217-sig-role{font-size:8px;color:rgba(107,33,66,.5);margin-top:1px;}`;
+
+  // # Build letter paragraphs
+  const parasHtml = paragraphs.slice(0, 5).map(p =>
+    `<p class="d217-para">${esc(p)}</p>`
+  ).join("");
+
+  const body = `<div class="d217">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Open Letter", "#BE185D")}
+      <h2 class="d217-tt">${esc(c.headline || "A Note to Every Job Seeker Running on Empty")}</h2>
+      <div class="d217-greeting">${esc(c.subheadline || "Dear exhausted applicant,")}</div>
+      <div class="d217-letter">
+        ${parasHtml}
+        <div class="d217-sig">
+          <div class="d217-sig-name">${esc(c.afterText || "The JobPilot Team")}</div>
+          <div class="d217-sig-role">${esc(c.cta || "We built this for you")}</div>
+        </div>
+      </div>
+    </div>
+    ${footer("light")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T218 — THE GLOSSARY (Deep forest green, term definitions)
+   # LinkedIn 4:5 — rich dark green gradient, stacked definition
+   # cards with terms and explanations. Dictionary-style layout.
+   # Pure text definitions — no metrics, no charts.
+   ============================================================ */
+function t218(c: TemplateContent, w: number, h: number): string {
+  // # Term definitions
+  const tips = c.tips || [
+    { title: "ATS", description: "The automated gatekeeper that scans your resume before a human ever sees it. If it cannot parse your format, you are invisible." },
+    { title: "Keyword Stuffing", description: "Cramming buzzwords into your resume hoping the system picks them up. It backfires. Modern ATS measures context and relevance, not frequency." },
+    { title: "Tailoring", description: "Rewriting your resume for each role so the language mirrors the job description. Not optional. This is the difference between getting seen and getting filtered." },
+    { title: "Hidden Job Market", description: "Roles filled through referrals and internal moves before they are ever posted publicly. This is where most senior hires happen." },
+  ];
+
+  const css = `
+.d218{width:${PW}px;height:${PH}px;background:linear-gradient(160deg,#064E3B,#065F46 50%,#047857);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d218::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(52,211,153,.08),transparent 70%);pointer-events:none;}
+.d218::after{content:'';position:absolute;bottom:-30px;left:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(6,95,70,.3),transparent 70%);pointer-events:none;}
+.d218 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d218-tt{font-family:${DISP};font-size:22px;font-weight:800;color:#ECFDF5;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;text-shadow:0 1px 3px rgba(0,0,0,.15);}
+.d218-sub{font-size:9.5px;color:rgba(167,243,208,.5);margin-bottom:14px;line-height:1.5;}
+.d218-entries{display:flex;flex-direction:column;gap:6px;flex:1;justify-content:center;}
+.d218-entry{background:rgba(255,255,255,.07);border:1px solid rgba(167,243,208,.12);border-radius:8px;padding:12px 14px;backdrop-filter:blur(4px);}
+.d218-term{font-family:${DISP};font-size:13px;font-weight:800;color:#6EE7B7;margin-bottom:4px;letter-spacing:-.01em;}
+.d218-def{font-size:11.5px;line-height:1.5;color:rgba(236,253,245,.55);}
+.d218-accent{display:inline-block;width:3px;height:3px;border-radius:50%;background:#34D399;margin-right:6px;vertical-align:middle;}
+.d218-footer-text{font-size:8.5px;font-weight:500;color:rgba(167,243,208,.35);text-align:center;margin-top:auto;padding-top:8px;}`;
+
+  // # Build definition entries
+  const entriesHtml = tips.slice(0, 5).map(tip =>
+    `<div class="d218-entry">
+      <div class="d218-term"><span class="d218-accent"></span>${esc(tip.title)}</div>
+      <div class="d218-def">${esc(tip.description)}</div>
+    </div>`
+  ).join("");
+
+  const body = `<div class="d218">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Glossary", "rgba(110,231,183,.4)")}
+      <h2 class="d218-tt">${esc(c.headline || "Job Search Terms You Should Actually Understand")}</h2>
+      <p class="d218-sub">${esc(c.subheadline || "The vocabulary that separates informed candidates from confused ones")}</p>
+      <div class="d218-entries">${entriesHtml}</div>
+      <div class="d218-footer-text">${esc(c.cta || "Know the language. Play the game.")}</div>
+    </div>
+    ${footer("dark")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T219 — THE UNPACKED (Bright sky blue gradient, concept breakdown)
+   # LinkedIn 4:5 — vivid sky blue gradient, takes one concept
+   # and breaks it into "What / Why / How" text sections.
+   # No numbers — pure explanatory prose.
+   ============================================================ */
+function t219(c: TemplateContent, w: number, h: number): string {
+  // # Three sections: What, Why, How
+  const sections = c.tips || [
+    { title: "What it is", description: "Resume tailoring means rewriting parts of your resume so it mirrors the exact language, priorities, and keywords in a specific job description." },
+    { title: "Why it matters", description: "Hiring managers and ATS systems both scan for pattern matches. A generic resume forces them to guess whether you fit. A tailored one makes the answer obvious." },
+    { title: "How to do it", description: "Read the job posting three times. Highlight the recurring phrases. Rewrite your bullet points using those same words, backed by your real experience. It takes ten minutes and changes everything." },
+  ];
+
+  const css = `
+.d219{width:${PW}px;height:${PH}px;background:linear-gradient(155deg,#0369A1,#0284C7 30%,#0EA5E9 65%,#38BDF8);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d219::before{content:'';position:absolute;top:-50px;left:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.07),transparent 70%);pointer-events:none;}
+.d219::after{content:'';position:absolute;bottom:-30px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(2,132,199,.3),transparent 70%);pointer-events:none;}
+.d219 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d219-tt{font-family:${DISP};font-size:24px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.08;margin-bottom:4px;text-shadow:0 2px 4px rgba(0,0,0,.1);}
+.d219-sub{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.5;}
+.d219-sections{display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center;}
+.d219-sec{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:14px 16px;backdrop-filter:blur(6px);}
+.d219-sec-label{font-family:${MONO};font-size:7.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:5px;}
+.d219-sec-title{font-family:${DISP};font-size:12px;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-.01em;}
+.d219-sec-body{font-size:11.5px;line-height:1.5;color:rgba(255,255,255,.6);}
+.d219-takeaway{font-size:9.5px;font-weight:600;color:#fff;text-align:center;margin-top:auto;padding-top:10px;text-shadow:0 1px 2px rgba(0,0,0,.1);}`;
+
+  // # Section labels
+  const labels = ["01 —", "02 —", "03 —", "04 —"];
+
+  const secsHtml = sections.slice(0, 4).map((sec, i) =>
+    `<div class="d219-sec">
+      <div class="d219-sec-label">${labels[i] || ""} ${esc(sec.title)}</div>
+      <div class="d219-sec-body">${esc(sec.description)}</div>
+    </div>`
+  ).join("");
+
+  const body = `<div class="d219">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Unpacked", "rgba(255,255,255,.4)")}
+      <h2 class="d219-tt">${esc(c.headline || "Resume Tailoring, Explained in Plain English")}</h2>
+      <p class="d219-sub">${esc(c.subheadline || "One concept. Three angles. Everything you need to know.")}</p>
+      <div class="d219-sections">${secsHtml}</div>
+      <div class="d219-takeaway">${esc(c.cta || "Simple concept. Life-changing habit.")}</div>
+    </div>
+    ${footer("dark")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T220 — THE DIALOGUE (Warm stone/sand, Q&A format)
+   # LinkedIn 4:5 — warm neutral stone background, alternating
+   # question/answer pairs in conversational speech-bubble style.
+   # Pure text — no data, no visuals.
+   ============================================================ */
+function t220(c: TemplateContent, w: number, h: number): string {
+  // # Q&A pairs stored as tips (title=question, description=answer)
+  const pairs = c.tips || [
+    { title: "Should I use a skills-based or chronological resume?", description: "Chronological. Always. Hiring managers want to see your career story, not a skills list they cannot verify. The only exception is a genuine career pivot." },
+    { title: "How long should my resume be?", description: "One page if you have fewer than ten years of experience. Two pages if you have more. Zero exceptions. Everything else is noise." },
+    { title: "Do cover letters still matter?", description: "For the roles where they are optional, no one reads them. For the roles where they are required, everyone reads them. Match the effort to the ask." },
+  ];
+
+  const css = `
+.d220{width:${PW}px;height:${PH}px;background:#F5F0EB;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d220::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(180,83,9,.04),transparent 70%);pointer-events:none;}
+.d220 .bd{display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;position:relative;z-index:1;}
+.d220-tt{font-family:${DISP};font-size:22px;font-weight:800;color:#292524;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d220-sub{font-size:9.5px;color:#78716C;margin-bottom:14px;line-height:1.5;}
+.d220-pairs{display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center;}
+.d220-pair{display:flex;flex-direction:column;gap:4px;}
+.d220-q{background:#fff;border:1px solid #E7E5E4;border-radius:8px 8px 8px 2px;padding:10px 14px;position:relative;}
+.d220-q::before{content:'Q';position:absolute;top:8px;left:-18px;width:14px;height:14px;background:#D97706;border-radius:3px;font-family:${MONO};font-size:7px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;}
+.d220-q-text{font-family:${DISP};font-size:12px;font-weight:700;color:#292524;line-height:1.35;letter-spacing:-.01em;}
+.d220-a{background:#292524;border-radius:8px 8px 2px 8px;padding:10px 14px;margin-left:20px;position:relative;}
+.d220-a::before{content:'A';position:absolute;top:8px;right:-18px;width:14px;height:14px;background:#059669;border-radius:3px;font-family:${MONO};font-size:7px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;}
+.d220-a-text{font-size:11.5px;line-height:1.5;color:rgba(245,240,235,.7);}
+.d220-bottom{font-size:9px;font-weight:600;color:#78716C;text-align:center;margin-top:auto;padding-top:10px;}`;
+
+  // # Build Q&A pairs
+  const pairsHtml = pairs.slice(0, 4).map(pair =>
+    `<div class="d220-pair">
+      <div class="d220-q"><div class="d220-q-text">${esc(pair.title)}</div></div>
+      <div class="d220-a"><div class="d220-a-text">${esc(pair.description)}</div></div>
+    </div>`
+  ).join("");
+
+  const body = `<div class="d220">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Honest Answers", "#D97706")}
+      <h2 class="d220-tt">${esc(c.headline || "Questions Everyone Asks But Nobody Answers Straight")}</h2>
+      <p class="d220-sub">${esc(c.subheadline || "No fluff. No hedge. Just the real answer.")}</p>
+      <div class="d220-pairs">${pairsHtml}</div>
+      <div class="d220-bottom">${esc(c.cta || "Ask better questions. Get better results.")}</div>
+    </div>
+    ${footer("light")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
    BUILDER MAP + EXPORT
    ============================================================ */
 const BUILDERS: Record<string, (c: TemplateContent, w: number, h: number) => string> = {
@@ -1931,6 +2255,7 @@ const BUILDERS: Record<string, (c: TemplateContent, w: number, h: number) => str
   t203, t204, t205,    // # TikTok set 4
   t206, t207, t208,    // # Instagram set 4
   t209, t210, t211, t212, t213, t214,  // # LinkedIn set 5
+  t215, t216, t217, t218, t219, t220,  // # LinkedIn set 6 — text-only
 };
 
 // # Build a designer template HTML page
