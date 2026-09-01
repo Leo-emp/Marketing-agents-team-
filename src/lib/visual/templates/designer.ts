@@ -1,9 +1,10 @@
 /* ============================================================
-   DESIGNER TEMPLATES — 19 premium multi-platform designs
+   DESIGNER TEMPLATES — 25 premium multi-platform designs
    ============================================================
    # T187-T193, T194, T198-T202: Designer LinkedIn (4:5 — 1080×1350)
    # T203-T205: Designer TikTok (9:16 — 1080×1920)
    # T206-T208: Designer Instagram (4:5 — 1080×1350)
+   # T209-T214: Designer LinkedIn Set 5 (4:5 — 1080×1350)
    #
    # These are high-polish, content-rich marketing templates
    # using Bricolage Grotesque / DM Sans / JetBrains Mono fonts
@@ -28,6 +29,12 @@
    # T206: The Meter — Speedometer gauge (Instagram)
    # T207: The Notification — Phone notification stack (Instagram)
    # T208: The Label — Nutrition label style (Instagram)
+   # T209: The Stack Rank — Teal ranked comparison bars
+   # T210: The Scorecard — Warm cream assessment card
+   # T211: The Timeline — Indigo gradient event cards
+   # T212: The Versus — White red/green comparison
+   # T213: The Cheat Sheet — Lavender reference card
+   # T214: The Dashboard — Navy blue KPI metrics
    #
    # LinkedIn/Instagram preview at 540×675 → scale 2× to 1080×1350
    # TikTok preview at 540×960 → scale 2× to 1080×1920
@@ -36,12 +43,13 @@
 import type { TemplateContent, TemplateId } from "./shared";
 import { LOGO_DATA_URI, FONT_STACK, MONO_STACK, esc } from "./shared";
 
-// # All designer template IDs — LinkedIn (T187-T202), TikTok (T203-T205), Instagram (T206-T208)
+// # All designer template IDs — LinkedIn (T187-T202, T209-T214), TikTok (T203-T205), Instagram (T206-T208)
 export const DESIGNER_IDS: TemplateId[] = [
   "t187","t188","t189","t190","t191","t192","t193",
   "t194","t198","t199","t200","t201","t202",
   "t203","t204","t205",
   "t206","t207","t208",
+  "t209","t210","t211","t212","t213","t214",
 ];
 
 // # Preview dimensions for LinkedIn/Instagram 4:5 → 2× scale
@@ -1427,13 +1435,502 @@ function t208(c: TemplateContent, w: number, h: number): string {
 }
 
 /* ============================================================
+   T209 — THE STACK RANK (Bold teal, ranked comparison bars)
+   # LinkedIn 4:5 — vibrant teal background with white/cream content,
+   # stacked bars ranking items best-to-worst with score badges
+   ============================================================ */
+function t209(c: TemplateContent, w: number, h: number): string {
+  // # 5 ranked items with scores
+  const items = c.items || [
+    { text: "Tailored resume per role", value: "94", highlighted: true },
+    { text: "LinkedIn with custom headline", value: "87" },
+    { text: "Generic resume, strong skills", value: "62" },
+    { text: "Cold applying without research", value: "38" },
+    { text: "Mass-apply with one resume", value: "12" },
+  ];
+
+  const css = `
+.d209{width:${PW}px;height:${PH}px;background:linear-gradient(155deg,#0D9488,#14B8A6 40%,#2DD4BF);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d209::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);pointer-events:none;}
+.d209::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(0,0,0,.08),transparent 70%);pointer-events:none;}
+.d209 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d209-tt{font-family:${DISP};font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,.1);}
+.d209-sub{font-size:9.5px;color:rgba(255,255,255,.6);margin-bottom:16px;}
+.d209-list{display:flex;flex-direction:column;gap:6px;flex:1;justify-content:center;}
+.d209-row{display:flex;align-items:center;gap:8px;}
+.d209-rank{font-family:${MONO};font-size:9px;font-weight:600;color:rgba(255,255,255,.4);width:16px;text-align:center;}
+.d209-rank.top{color:#fff;}
+.d209-track{flex:1;height:34px;background:rgba(0,0,0,.12);border-radius:6px;position:relative;overflow:hidden;}
+.d209-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;gap:6px;}
+.d209-fill.top{background:rgba(255,255,255,.95);}
+.d209-fill.top .d209-label{color:#0D9488;}
+.d209-fill.top .d209-score{color:#0D9488;}
+.d209-fill.mid{background:rgba(255,255,255,.35);}
+.d209-fill.low{background:rgba(255,255,255,.15);}
+.d209-label{font-size:8.5px;font-weight:600;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.d209-score{font-family:${MONO};font-size:10px;font-weight:700;color:#fff;margin-left:auto;white-space:nowrap;}
+.d209-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(13,148,136,.3);border:1px solid rgba(13,148,136,.5);border-radius:4px;padding:1px 5px;font-family:${MONO};font-size:7px;font-weight:600;color:#0D9488;margin-left:6px;}
+.d209-insight{font-size:9px;font-weight:600;color:#fff;text-align:center;margin-top:auto;padding-top:8px;text-shadow:0 1px 2px rgba(0,0,0,.1);}`;
+
+  const rowsHtml = items.slice(0, 6).map((item, i) => {
+    // # Calculate bar width as percentage of max value
+    const val = parseInt(String(item.value || "0"));
+    const barWidth = Math.max(20, val);
+    const isTop = i === 0 || item.highlighted;
+    const tierClass = isTop ? "top" : val > 50 ? "mid" : "low";
+    const rankClass = isTop ? "top" : "";
+    const badge = isTop ? `<span class="d209-badge">BEST</span>` : "";
+
+    return `<div class="d209-row">
+      <div class="d209-rank ${rankClass}">#${i + 1}</div>
+      <div class="d209-track">
+        <div class="d209-fill ${tierClass}" style="width:${barWidth}%;">
+          <span class="d209-label">${esc(item.text)}${badge}</span>
+          <span class="d209-score">${esc(String(item.value || ""))}%</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const body = `<div class="d209">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Strategy Ranking", "rgba(99,102,241,.45)")}
+      <h2 class="d209-tt">${esc(c.headline || "Job Search Strategies Ranked by Interview Rate")}</h2>
+      <p class="d209-sub">${esc(c.subheadline || "Based on outcomes from 5,200+ job seekers tracked over 6 months")}</p>
+      <div class="d209-list">${rowsHtml}</div>
+      <div class="d209-insight">${esc(c.cta || "Tailoring beats volume every single time")}</div>
+    </div>
+    ${footer("dark")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T210 — THE SCORECARD (Warm cream + coral accents, assessment card)
+   # LinkedIn 4:5 — warm cream background with coral/amber accents,
+   # progress ring, category bars, pass/fail verdict
+   ============================================================ */
+function t210(c: TemplateContent, w: number, h: number): string {
+  // # Overall score
+  const score = c.score || 72;
+  // # Category breakdowns
+  const categories = c.bars || [
+    { label: "Keywords & ATS Match", value: 85 },
+    { label: "Formatting & Layout", value: 78 },
+    { label: "Impact Statements", value: 64 },
+    { label: "Skills Alignment", value: 71 },
+    { label: "Summary Strength", value: 58 },
+  ];
+  // # Verdict based on score
+  const isPassing = score >= 70;
+
+  const css = `
+.d210{width:${PW}px;height:${PH}px;background:#FFF7ED;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d210::before{content:'';position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(251,146,60,.1),transparent 70%);pointer-events:none;}
+.d210 .bd{display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;position:relative;z-index:1;}
+.d210-tt{font-family:${DISP};font-size:21px;font-weight:800;color:#1C1917;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d210-sub{font-size:9.5px;color:#A8A29E;margin-bottom:14px;}
+.d210-card{background:#fff;border:1px solid #FED7AA;border-radius:10px;padding:16px;flex:1;display:flex;flex-direction:column;box-shadow:0 2px 8px rgba(251,146,60,.06);}
+.d210-top{display:flex;align-items:center;gap:14px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #FEF3C7;}
+.d210-ring{position:relative;width:60px;height:60px;flex-shrink:0;}
+.d210-ring svg{transform:rotate(-90deg);}
+.d210-ring-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:${DISP};font-size:18px;font-weight:800;color:#1C1917;}
+.d210-verdict{flex:1;}
+.d210-verdict-label{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.d210-verdict-text{font-family:${DISP};font-size:13px;font-weight:700;color:#1C1917;margin-top:2px;}
+.d210-cats{display:flex;flex-direction:column;gap:7px;flex:1;justify-content:center;}
+.d210-cat{display:flex;align-items:center;gap:8px;}
+.d210-cat-label{font-size:9px;font-weight:600;color:#78716C;width:130px;flex-shrink:0;}
+.d210-cat-track{flex:1;height:8px;background:#FEF3C7;border-radius:4px;overflow:hidden;}
+.d210-cat-fill{height:100%;border-radius:4px;}
+.d210-cat-val{font-family:${MONO};font-size:9px;font-weight:700;width:28px;text-align:right;}`;
+
+  // # SVG progress ring
+  const circumference = 2 * Math.PI * 24;
+  const offset = circumference - (score / 100) * circumference;
+  const ringColor = isPassing ? "#F97316" : "#EF4444";
+  const verdictColor = isPassing ? "#EA580C" : "#DC2626";
+  const verdictBg = isPassing ? "#FFF7ED" : "#FEF2F2";
+  const verdictText = isPassing ? "PASSING" : "NEEDS WORK";
+
+  const ringHtml = `<div class="d210-ring">
+    <svg width="60" height="60" viewBox="0 0 60 60">
+      <circle cx="30" cy="30" r="24" fill="none" stroke="#F0EEEA" stroke-width="5"/>
+      <circle cx="30" cy="30" r="24" fill="none" stroke="${ringColor}" stroke-width="5"
+        stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+    </svg>
+    <div class="d210-ring-val">${score}</div>
+  </div>`;
+
+  const catsHtml = categories.slice(0, 6).map(cat => {
+    const barColor = cat.value >= 75 ? "#F97316" : cat.value >= 50 ? "#FBBF24" : "#EF4444";
+    const valColor = cat.value >= 75 ? "#EA580C" : cat.value >= 50 ? "#D97706" : "#DC2626";
+    return `<div class="d210-cat">
+      <span class="d210-cat-label">${esc(cat.label)}</span>
+      <div class="d210-cat-track"><div class="d210-cat-fill" style="width:${cat.value}%;background:${barColor};"></div></div>
+      <span class="d210-cat-val" style="color:${valColor};">${cat.value}%</span>
+    </div>`;
+  }).join("");
+
+  const body = `<div class="d210">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Resume Analysis", "#6366F1")}
+      <h2 class="d210-tt">${esc(c.headline || "Your Resume Scorecard")}</h2>
+      <p class="d210-sub">${esc(c.subheadline || "AI analysis across 5 critical dimensions")}</p>
+      <div class="d210-card">
+        <div class="d210-top">
+          ${ringHtml}
+          <div class="d210-verdict">
+            <div class="d210-verdict-label" style="color:${verdictColor};">${verdictText}</div>
+            <div class="d210-verdict-text">${esc(c.body || "Strong foundation with 2 areas to improve before applying")}</div>
+            <div style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:3px;background:${verdictBg};font-size:7.5px;font-weight:700;color:${verdictColor};">${score}/100 Overall</div>
+          </div>
+        </div>
+        <div class="d210-cats">${catsHtml}</div>
+      </div>
+    </div>
+    ${footer("light")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T211 — THE TIMELINE (Rich indigo gradient, event cards)
+   # LinkedIn 4:5 — bold indigo-to-violet gradient background,
+   # vertical timeline rail with frosted glass event cards
+   ============================================================ */
+function t211(c: TemplateContent, w: number, h: number): string {
+  // # Timeline events
+  const events = c.steps || [
+    { label: "Week 1", title: "Resume Overhaul", description: "Rewrite with ATS keywords, quantified impact, clean format" },
+    { label: "Week 2", title: "LinkedIn Optimization", description: "Custom headline, About section, featured posts, 500+ connections" },
+    { label: "Week 3", title: "Targeted Applications", description: "20 tailored apps to dream companies, tracked in spreadsheet" },
+    { label: "Week 4", title: "Interview Sprint", description: "Mock interviews, STAR stories, salary research, offer negotiation" },
+  ];
+
+  const css = `
+.d211{width:${PW}px;height:${PH}px;background:linear-gradient(160deg,#312E81,#4338CA 40%,#6366F1 80%,#818CF8);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d211::before{content:'';position:absolute;top:-40px;left:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none;}
+.d211::after{content:'';position:absolute;bottom:-50px;right:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(167,139,250,.15),transparent 70%);pointer-events:none;}
+.d211 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d211-tt{font-family:${DISP};font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;text-shadow:0 1px 3px rgba(0,0,0,.15);}
+.d211-sub{font-size:9.5px;color:rgba(255,255,255,.55);margin-bottom:14px;}
+.d211-rail{display:flex;flex-direction:column;gap:0;flex:1;justify-content:center;position:relative;padding-left:24px;}
+.d211-rail::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.2));border-radius:1px;}
+.d211-ev{display:flex;gap:12px;position:relative;padding:6px 0;}
+.d211-dot{position:absolute;left:-21px;top:10px;width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(99,102,241,.6);z-index:2;}
+.d211-dot.active{background:#fff;border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,.3);}
+.d211-card{background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;flex:1;}
+.d211-card.active{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.2);}
+.d211-label{font-family:${MONO};font-size:7.5px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}
+.d211-label.active{color:rgba(255,255,255,.8);}
+.d211-card-title{font-family:${DISP};font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
+.d211-card-desc{font-size:8.5px;line-height:1.45;color:rgba(255,255,255,.5);}
+.d211-cta{font-size:9px;font-weight:600;color:#fff;text-align:center;margin-top:auto;padding-top:8px;text-shadow:0 1px 2px rgba(0,0,0,.1);}`;
+
+  const eventsHtml = events.slice(0, 5).map((ev, i) => {
+    const isActive = i === 0;
+    const dotClass = isActive ? "d211-dot active" : "d211-dot";
+    const cardClass = isActive ? "d211-card active" : "d211-card";
+    const labelClass = isActive ? "d211-label active" : "d211-label";
+    return `<div class="d211-ev">
+      <div class="${dotClass}"></div>
+      <div class="${cardClass}">
+        <div class="${labelClass}">${esc(ev.label || `Step ${i + 1}`)}</div>
+        <div class="d211-card-title">${esc(ev.title)}</div>
+        <div class="d211-card-desc">${esc(ev.description || "")}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const body = `<div class="d211">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Career Plan", "rgba(99,102,241,.45)")}
+      <h2 class="d211-tt">${esc(c.headline || "The 4-Week Job Search Sprint")}</h2>
+      <p class="d211-sub">${esc(c.subheadline || "A proven week-by-week system for landing interviews faster")}</p>
+      <div class="d211-rail">${eventsHtml}</div>
+      <div class="d211-cta">${esc(c.cta || "Start your sprint at jobpilotai.co")}</div>
+    </div>
+    ${footer("dark")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T212 — THE VERSUS (Clean white + bold red/green, comparison)
+   # LinkedIn 4:5 — bright white card with vivid red vs green columns,
+   # head-to-head comparison with check/cross markers
+   ============================================================ */
+function t212(c: TemplateContent, w: number, h: number): string {
+  // # Comparison items (left = option A, right = option B)
+  const optionA = c.beforeText || "Manual Approach";
+  const optionB = c.afterText || "With JobPilot AI";
+  const rows = c.tips || [
+    { title: "Resume tailoring", description: "2-3 hours per application vs 30 seconds" },
+    { title: "ATS keyword matching", description: "Guesswork vs AI-powered analysis" },
+    { title: "Cover letter writing", description: "Copy-paste template vs role-specific generation" },
+    { title: "Interview preparation", description: "Generic Googling vs company-specific Q&A" },
+    { title: "Application tracking", description: "Spreadsheet chaos vs built-in pipeline" },
+  ];
+
+  const css = `
+.d212{width:${PW}px;height:${PH}px;background:#FAFAF9;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d212 .bd{display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d212-tt{font-family:${DISP};font-size:21px;font-weight:800;color:#1C1917;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d212-sub{font-size:9.5px;color:#A8A29E;margin-bottom:14px;}
+.d212-table{flex:1;display:flex;flex-direction:column;justify-content:center;}
+.d212-header{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;}
+.d212-colA{background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:8px 10px;text-align:center;}
+.d212-colB{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:8px 10px;text-align:center;}
+.d212-col-name{font-family:${DISP};font-size:10px;font-weight:700;}
+.d212-colA .d212-col-name{color:#DC2626;}
+.d212-colB .d212-col-name{color:#16A34A;}
+.d212-rows{display:flex;flex-direction:column;gap:4px;}
+.d212-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.d212-cellA{background:#fff;border:1px solid #FEE2E2;border-radius:6px;padding:8px 10px;display:flex;align-items:flex-start;gap:6px;}
+.d212-cellB{background:#fff;border:1px solid #D1FAE5;border-radius:6px;padding:8px 10px;display:flex;align-items:flex-start;gap:6px;}
+.d212-icon{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.d212-icon.bad{background:#FEE2E2;color:#DC2626;}
+.d212-icon.good{background:#D1FAE5;color:#16A34A;}
+.d212-cell-title{font-size:8.5px;font-weight:700;color:#1C1917;margin-bottom:1px;}
+.d212-cell-desc{font-size:7.5px;color:#78716C;line-height:1.35;}
+.d212-winner{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:auto;padding-top:8px;}
+.d212-winner-badge{background:linear-gradient(135deg,#16A34A,#22C55E);border-radius:4px;padding:3px 8px;font-size:8px;font-weight:700;color:#fff;letter-spacing:.04em;}`;
+
+  const rowsHtml = rows.slice(0, 6).map(row => {
+    // # Split description by "vs" to get A and B sides
+    const parts = (row.description || "").split(/\s+vs\.?\s+/i);
+    const descA = parts[0] || row.description || "";
+    const descB = parts[1] || "";
+
+    return `<div class="d212-row">
+      <div class="d212-cellA">
+        <div class="d212-icon bad">x</div>
+        <div><div class="d212-cell-title">${esc(row.title)}</div><div class="d212-cell-desc">${esc(descA)}</div></div>
+      </div>
+      <div class="d212-cellB">
+        <div class="d212-icon good">&#10003;</div>
+        <div><div class="d212-cell-title">${esc(row.title)}</div><div class="d212-cell-desc">${esc(descB || descA)}</div></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const body = `<div class="d212">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Comparison", "rgba(99,102,241,.45)")}
+      <h2 class="d212-tt">${esc(c.headline || "Manual Job Search vs AI-Powered")}</h2>
+      <p class="d212-sub">${esc(c.subheadline || "Side-by-side breakdown of time, effort, and results")}</p>
+      <div class="d212-table">
+        <div class="d212-header">
+          <div class="d212-colA"><div class="d212-col-name">${esc(optionA)}</div></div>
+          <div class="d212-colB"><div class="d212-col-name">${esc(optionB)}</div></div>
+        </div>
+        <div class="d212-rows">${rowsHtml}</div>
+      </div>
+      <div class="d212-winner">
+        <span class="d212-winner-badge">CLEAR WINNER</span>
+        <span style="font-size:9px;font-weight:600;color:#16A34A;">${esc(optionB)}</span>
+      </div>
+    </div>
+    ${footer("light")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T213 — THE CHEAT SHEET (Soft lavender, dense reference card)
+   # LinkedIn 4:5 — lavender background with white content cards,
+   # organized reference sections, maximum information density.
+   ============================================================ */
+function t213(c: TemplateContent, w: number, h: number): string {
+  // # Sections with items
+  const tips = c.tips || [
+    { title: "Power Verbs", description: "Led, Increased, Reduced, Launched, Negotiated, Automated" },
+    { title: "Quantify Everything", description: "Revenue +34%, Team of 12, 50K users, Saved $200K annually" },
+    { title: "ATS Keywords", description: "Mirror exact phrases from job posting, not synonyms" },
+  ];
+  const tags = c.tags || ["Google Docs", "Single Column", "Standard Fonts", "No Headers/Footers", "PDF Export"];
+  const bullets = c.bullets || [
+    "Remove graduation dates if 10+ years ago",
+    "Delete 'References available upon request'",
+    "Cut any role older than 15 years",
+  ];
+
+  const css = `
+.d213{width:${PW}px;height:${PH}px;background:linear-gradient(170deg,#EDE9FE,#F5F3FF 40%,#FAF5FF);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d213::before{content:'';position:absolute;bottom:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(139,92,246,.08),transparent 70%);pointer-events:none;}
+.d213 .bd{display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;position:relative;z-index:1;}
+.d213-tt{font-family:${DISP};font-size:21px;font-weight:800;color:#1E1B4B;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d213-sub{font-size:9.5px;color:#7C3AED;margin-bottom:12px;font-weight:500;}
+.d213-sections{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center;}
+.d213-sec{background:#fff;border:1px solid #DDD6FE;border-radius:8px;padding:10px 12px;box-shadow:0 1px 4px rgba(139,92,246,.05);}
+.d213-sec-head{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.d213-sec-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.d213-sec-title{font-family:${DISP};font-size:10px;font-weight:700;color:#1E1B4B;letter-spacing:-.01em;}
+.d213-sec-body{font-size:8.5px;line-height:1.5;color:#6B7280;}
+.d213-sec-body strong{color:#1E1B4B;font-weight:700;}
+.d213-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.d213-tag{font-family:${MONO};font-size:7.5px;font-weight:500;color:#7C3AED;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:3px;padding:2px 6px;}
+.d213-removes{background:#fff;border:1px solid #DDD6FE;border-radius:8px;padding:10px 12px;box-shadow:0 1px 4px rgba(139,92,246,.05);}
+.d213-rem-title{font-family:${DISP};font-size:10px;font-weight:700;color:#DC2626;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.d213-rem-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:3px;}
+.d213-rem-item{font-size:8.5px;color:#6B7280;display:flex;align-items:center;gap:5px;}
+.d213-rem-item::before{content:'x';font-size:7px;font-weight:700;color:#EF4444;background:rgba(239,68,68,.08);border-radius:50%;width:12px;height:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.d213-save{text-align:center;font-size:8.5px;font-weight:600;color:#7C3AED;margin-top:auto;padding-top:8px;}`;
+
+  const secColors = ["#7C3AED", "#A78BFA", "#C084FC"];
+  const tipsHtml = tips.slice(0, 4).map((tip, i) => {
+    const color = secColors[i % secColors.length];
+    return `<div class="d213-sec">
+      <div class="d213-sec-head">
+        <div class="d213-sec-dot" style="background:${color};"></div>
+        <div class="d213-sec-title">${esc(tip.title)}</div>
+      </div>
+      <div class="d213-sec-body">${esc(tip.description)}</div>
+    </div>`;
+  }).join("");
+
+  const tagsHtml = tags.slice(0, 6).map(t => `<span class="d213-tag">${esc(t)}</span>`).join("");
+
+  const removesHtml = bullets.slice(0, 4).map(b => `<li class="d213-rem-item">${esc(b)}</li>`).join("");
+
+  const body = `<div class="d213">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Reference Card", "#6366F1")}
+      <h2 class="d213-tt">${esc(c.headline || "The Resume Cheat Sheet")}</h2>
+      <p class="d213-sub">${esc(c.subheadline || "Everything you need on one card. Save this.")}</p>
+      <div class="d213-sections">
+        ${tipsHtml}
+        <div class="d213-sec">
+          <div class="d213-sec-head">
+            <div class="d213-sec-dot" style="background:#818CF8;"></div>
+            <div class="d213-sec-title">Format Rules</div>
+          </div>
+          <div class="d213-tags">${tagsHtml}</div>
+        </div>
+        <div class="d213-removes">
+          <div class="d213-rem-title">Remove These</div>
+          <ul class="d213-rem-list">${removesHtml}</ul>
+        </div>
+      </div>
+      <div class="d213-save">${esc(c.cta || "Bookmark this for your next application")}</div>
+    </div>
+    ${footer("light")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
+   T214 — THE DASHBOARD (Bold navy + bright accents, KPI cards)
+   # LinkedIn 4:5 — deep navy background with bright cyan/green/amber
+   # KPI cards, bar chart, and trend indicators
+   ============================================================ */
+function t214(c: TemplateContent, w: number, h: number): string {
+  // # KPI cards
+  const kpis = c.items || [
+    { text: "Applications Sent", value: "142", highlighted: false },
+    { text: "Response Rate", value: "23%", highlighted: true },
+    { text: "Interviews Booked", value: "18", highlighted: false },
+    { text: "Avg. Days to Reply", value: "4.2", highlighted: false },
+  ];
+  // # Trend bars (weekly data)
+  const bars = c.bars || [
+    { label: "W1", value: 12 },
+    { label: "W2", value: 18 },
+    { label: "W3", value: 24 },
+    { label: "W4", value: 31 },
+    { label: "W5", value: 28 },
+    { label: "W6", value: 37 },
+    { label: "W7", value: 42 },
+    { label: "W8", value: 48 },
+  ];
+
+  const maxBar = Math.max(...bars.map(b => b.value), 1);
+
+  const css = `
+.d214{width:${PW}px;height:${PH}px;background:linear-gradient(165deg,#0F172A,#1E293B 60%,#334155);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.d214::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(6,182,212,.1),transparent 70%);pointer-events:none;}
+.d214::after{content:'';position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(250,204,21,.06),transparent 70%);pointer-events:none;}
+.d214 .bd{position:relative;z-index:1;display:flex;flex-direction:column;padding:22px 18px 8px;flex:1;}
+.d214-tt{font-family:${DISP};font-size:21px;font-weight:800;color:#F1F5F9;letter-spacing:-.03em;line-height:1.12;margin-bottom:4px;}
+.d214-sub{font-size:9.5px;color:rgba(148,163,184,.6);margin-bottom:14px;}
+.d214-kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.d214-kpi{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;}
+.d214-kpi.hl{border-color:rgba(6,182,212,.3);background:rgba(6,182,212,.08);}
+.d214-kpi-val{font-family:${DISP};font-size:22px;font-weight:800;color:#F1F5F9;font-variant-numeric:tabular-nums;}
+.d214-kpi.hl .d214-kpi-val{color:#22D3EE;}
+.d214-kpi-label{font-size:8px;color:rgba(148,163,184,.4);margin-top:2px;}
+.d214-kpi-trend{font-family:${MONO};font-size:7px;font-weight:600;margin-top:3px;}
+.d214-chart{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;flex:1;display:flex;flex-direction:column;}
+.d214-chart-title{font-size:9px;font-weight:700;color:rgba(148,163,184,.5);margin-bottom:8px;}
+.d214-bars{display:flex;align-items:flex-end;gap:4px;flex:1;}
+.d214-bar-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+.d214-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:4px;}
+.d214-bar-label{font-family:${MONO};font-size:6.5px;color:rgba(148,163,184,.3);}
+.d214-bar-val{font-family:${MONO};font-size:7px;font-weight:600;color:rgba(148,163,184,.5);}
+.d214-insight{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:auto;padding-top:8px;}
+.d214-insight-badge{font-family:${MONO};font-size:7px;font-weight:600;color:#34D399;background:rgba(52,211,153,.12);border-radius:3px;padding:2px 5px;}`;
+
+  const kpisHtml = kpis.slice(0, 4).map((kpi, i) => {
+    const hlClass = kpi.highlighted ? " hl" : "";
+    // # Generate a fake trend for visual interest
+    const trends = ["+12%", "+23%", "+8%", "-1.3d"];
+    const trendColor = trends[i]?.startsWith("+") ? "#22D3EE" : "#FB923C";
+    return `<div class="d214-kpi${hlClass}">
+      <div class="d214-kpi-val">${esc(String(kpi.value || ""))}</div>
+      <div class="d214-kpi-label">${esc(kpi.text)}</div>
+      <div class="d214-kpi-trend" style="color:${trendColor};">${trends[i] || ""} vs last month</div>
+    </div>`;
+  }).join("");
+
+  const barsHtml = bars.slice(0, 10).map((bar, i) => {
+    const height = Math.round((bar.value / maxBar) * 100);
+    const isLast = i === bars.length - 1;
+    const barBg = isLast
+      ? "linear-gradient(180deg,#22D3EE,#06B6D4)"
+      : `rgba(6,182,212,${0.15 + (i / bars.length) * 0.35})`;
+    return `<div class="d214-bar-col">
+      <div class="d214-bar-val">${bar.value}</div>
+      <div class="d214-bar-fill" style="height:${height}%;background:${barBg};"></div>
+      <div class="d214-bar-label">${esc(bar.label)}</div>
+    </div>`;
+  }).join("");
+
+  const body = `<div class="d214">
+    <div class="bd">
+      ${eyebrow(c.eyebrow || "Analytics", "rgba(99,102,241,.45)")}
+      <h2 class="d214-tt">${esc(c.headline || "Your Job Search Dashboard This Month")}</h2>
+      <p class="d214-sub">${esc(c.subheadline || "Real-time metrics from your application pipeline")}</p>
+      <div class="d214-kpis">${kpisHtml}</div>
+      <div class="d214-chart">
+        <div class="d214-chart-title">Weekly Application Volume</div>
+        <div class="d214-bars">${barsHtml}</div>
+      </div>
+      <div class="d214-insight">
+        <span class="d214-insight-badge">+42% MoM</span>
+        <span style="font-size:8.5px;color:rgba(148,163,184,.5);">${esc(c.cta || "Response rate trending up since resume optimization")}</span>
+      </div>
+    </div>
+    ${footer("dark")}
+  </div>`;
+
+  return wrap(css, body, w, h);
+}
+
+/* ============================================================
    BUILDER MAP + EXPORT
    ============================================================ */
 const BUILDERS: Record<string, (c: TemplateContent, w: number, h: number) => string> = {
   t187, t188, t189, t190, t191, t192, t193, t194, t198, t199,
-  t200, t201, t202,    // # LinkedIn new
-  t203, t204, t205,    // # TikTok new
-  t206, t207, t208,    // # Instagram new
+  t200, t201, t202,    // # LinkedIn set 4
+  t203, t204, t205,    // # TikTok set 4
+  t206, t207, t208,    // # Instagram set 4
+  t209, t210, t211, t212, t213, t214,  // # LinkedIn set 5
 };
 
 // # Build a designer template HTML page

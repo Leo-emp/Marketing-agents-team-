@@ -269,7 +269,9 @@ export type TemplateId =
   // # Designer TikTok (T203-T205), Instagram (T206-T208), LinkedIn (T200-T202)
   | "t200" | "t201" | "t202"
   | "t203" | "t204" | "t205"
-  | "t206" | "t207" | "t208";
+  | "t206" | "t207" | "t208"
+  // # Designer LinkedIn Set 5 (T209-T214)
+  | "t209" | "t210" | "t211" | "t212" | "t213" | "t214";
 
 // # Carousel template IDs — 12 carousels (4 per platform)
 export type CarouselId =

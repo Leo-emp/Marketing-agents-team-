@@ -1,7 +1,7 @@
 /* ============================================================
    TEMPLATE INTELLIGENCE — AI-Powered Template Selection
    ============================================================
-   # Picks the optimal HTML template (t1-t208) for each content
+   # Picks the optimal HTML template (t1-t214) for each content
    # piece based on: platform, content style, mood, data fields,
    # past performance, and variety enforcement.
    #
@@ -256,6 +256,14 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t206", platform: "instagram", name: "The Meter", style: "dark", mood: "data_driven", bestFor: ["readiness", "gauge", "score_check", "speedometer", "assessment", "preparation"], requiredFields: ["headline", "stat"], optionalFields: ["items", "eyebrow", "subheadline", "cta"], format: "feed" },
   { id: "t207", platform: "instagram", name: "The Notification", style: "light", mood: "storytelling", bestFor: ["notification_stack", "alerts", "real_time", "product_demo", "ai_updates", "user_experience"], requiredFields: ["headline"], optionalFields: ["tips", "eyebrow", "subheadline", "cta"], format: "feed" },
   { id: "t208", platform: "instagram", name: "The Label", style: "light", mood: "educational", bestFor: ["ingredients", "composition", "nutrition_facts", "breakdown", "what_makes", "recipe"], requiredFields: ["headline"], optionalFields: ["items", "stat", "body", "bodyBold", "eyebrow", "subheadline", "cta"], format: "feed" },
+
+  // # Designer Set 5 — T209-T214 (LinkedIn, vibrant color variety)
+  { id: "t209", platform: "linkedin", name: "The Stack Rank", style: "dark", mood: "data_driven", bestFor: ["ranking", "comparison", "leaderboard", "best_to_worst", "strategy_ranking", "method_comparison"], requiredFields: ["headline"], optionalFields: ["items", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t210", platform: "linkedin", name: "The Scorecard", style: "light", mood: "data_driven", bestFor: ["assessment", "score", "evaluation", "grade", "audit", "review_card"], requiredFields: ["headline"], optionalFields: ["score", "bars", "body", "subheadline", "eyebrow"], format: "feed" },
+  { id: "t211", platform: "linkedin", name: "The Timeline", style: "dark", mood: "storytelling", bestFor: ["timeline", "progression", "sprint", "weekly_plan", "phased_approach", "step_by_step"], requiredFields: ["headline"], optionalFields: ["steps", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t212", platform: "linkedin", name: "The Versus", style: "light", mood: "provocative", bestFor: ["versus", "head_to_head", "old_vs_new", "manual_vs_ai", "comparison_table", "side_by_side"], requiredFields: ["headline"], optionalFields: ["tips", "beforeText", "afterText", "subheadline", "eyebrow"], format: "feed" },
+  { id: "t213", platform: "linkedin", name: "The Cheat Sheet", style: "light", mood: "educational", bestFor: ["cheat_sheet", "reference_card", "quick_guide", "rules", "dos_and_donts", "checklist_reference"], requiredFields: ["headline"], optionalFields: ["tips", "tags", "bullets", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t214", platform: "linkedin", name: "The Dashboard", style: "dark", mood: "data_driven", bestFor: ["dashboard", "metrics", "kpi", "analytics", "performance_report", "weekly_stats"], requiredFields: ["headline"], optionalFields: ["items", "bars", "subheadline", "eyebrow", "cta"], format: "feed" },
 ];
 
 /* ---- Performance Cache ---- */

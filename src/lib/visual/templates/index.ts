@@ -100,7 +100,7 @@ export function isTemplateId(layout: string): layout is TemplateId {
   const match = layout.match(/^t(\d+)$/);
   if (!match) return false;
   const num = parseInt(match[1]);
-  return num >= 1 && num <= 208;
+  return num >= 1 && num <= 214;
 }
 
 // # Instagram templates that render at 1:1 (1080×1080)
