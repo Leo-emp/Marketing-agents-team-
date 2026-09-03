@@ -238,8 +238,14 @@ CONTENT QUALITY:
 11. Prefer COUNTERINTUITIVE angles over obvious advice. "Stop customizing your resume for every job" is more engaging than "Always customize your resume."
 12. USE REAL NUMBERS AND DATA when possible. Reference specific research findings from the research brief when provided. "Companies using ATS reject 75% of resumes before a human sees them" beats "Many resumes get rejected by ATS systems."
 
+HEADLINE-BODY COHERENCE (THE #1 CONTENT RULE):
+13. The body/tips/items MUST deliver EXACTLY what the headline promises. If the headline says "X vs Y", the body MUST show both X and Y with clear contrast. If it says "3 reasons", there must be exactly 3 distinct reasons. If it says "the hidden cost", the body must reveal that specific cost.
+14. Before finalizing content, re-read the headline and ask: "Does my body actually prove, answer, or show what the headline claims?" If not, rewrite the body to match — NEVER produce a headline that makes a specific promise while the body gives loosely related generic tips.
+15. BAD: Headline "AI Resumes: Generic Trap vs Strategic Edge" + Body: 3 generic tips about using AI tools (no trap shown, no edge shown, no contrast).
+    GOOD: Headline "AI Resumes: Generic Trap vs Strategic Edge" + Body: "TRAP: Paste resume into ChatGPT and say 'make this better'. EDGE: Feed it the JD, extract 5 keywords, prompt it to rewrite achievements around those keywords."
+
 VISUAL CONTENT RULE (for posts with images/carousels):
-13. CAPTION and IMAGE TEXT must COMPLEMENT each other — NEVER repeat the same content. The image delivers the key insight visually (short, punchy text). The caption expands with context, story, or additional detail. Together they tell a complete story. Separately they each add unique value.
+16. CAPTION and IMAGE TEXT must COMPLEMENT each other — NEVER repeat the same content. The image delivers the key insight visually (short, punchy text). The caption expands with context, story, or additional detail. Together they tell a complete story. Separately they each add unique value.
 `;
 
 /* ---- Brand Voice DNA (injected into every writing agent) ---- */
@@ -485,7 +491,7 @@ Choose the hook pattern that best fits the content framework you selected. Never
 ${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label (not shown to audience)","content":"the full post exactly as it should be posted — with proper line breaks, spacing, and formatting. For carousels: include [SLIDE N] markers and CAPTION: section","hashtags":"tag1, tag2, tag3, tag4, tag5","contentType":"post or carousel","mediaPrompt":"describe ideal visual companion — style, layout, key text for the image (or null for plain text)","hook":"the exact first line","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
+{"title":"internal label (not shown to audience)","content":"the full post exactly as it should be posted — with proper line breaks, spacing, and formatting. For carousels: include [SLIDE N] markers and CAPTION: section","hashtags":"tag1, tag2, tag3, tag4, tag5","contentType":"post or carousel","mediaPrompt":"MUST include: (1) the exact headline text for the image, (2) the specific content points/tips/data that should appear ON the image — not vague descriptions, but the actual text. The image headline and body must be coherent — if the headline promises 'X vs Y', the image content must show both X and Y. (3) visual style direction. Never write 'career-related imagery' — write the specific content.","hook":"the exact first line","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 
   twitter: {
@@ -545,7 +551,7 @@ STOP DOING X: Call out a common behavior and challenge it.
 ${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label","content":"tweet text (for threads: ---TWEET--- separator, for carousels: [SLIDE N] markers + CAPTION: section)","contentType":"post or thread or carousel or plain_text","hashtags":null,"mediaPrompt":"describe visual style and key text for the image (or null for plain_text)","hook":"the exact first line/tweet","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
+{"title":"internal label","content":"tweet text (for threads: ---TWEET--- separator, for carousels: [SLIDE N] markers + CAPTION: section)","contentType":"post or thread or carousel or plain_text","hashtags":null,"mediaPrompt":"MUST include: (1) exact headline for the image, (2) specific content points that appear ON the image — actual text, not descriptions. Headline and body must be coherent. (3) visual style. Or null for plain_text.","hook":"the exact first line/tweet","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 
   instagram: {
@@ -605,7 +611,7 @@ MYTH-BUSTER HOOK: Call out a widely believed myth and promise to debunk it.
 ${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label","content":"full content with slide/frame markers AND CAPTION: section as described above","contentType":"carousel or reel_script or single_image","hashtags":"15-20 tags comma-separated","mediaPrompt":"visual style direction — layout, key visual text, accent colors per slide","hook":"hook slide text or first 3 seconds of reel","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
+{"title":"internal label","content":"full content with slide/frame markers AND CAPTION: section as described above","contentType":"carousel or reel_script or single_image","hashtags":"15-20 tags comma-separated","mediaPrompt":"MUST include: (1) exact headline for the image, (2) specific content points ON the image — actual text, not descriptions. Headline and body must be coherent. (3) visual style and accent colors.","hook":"hook slide text or first 3 seconds of reel","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 
   tiktok: {
@@ -675,7 +681,7 @@ RESULTS HOOK: Lead with a specific before/after result.
 ${OUTPUT_QUALITY_GATE}
 
 OUTPUT FORMAT — JSON object:
-{"title":"internal label","content":"full content with timing/slide markers AND CAPTION: section","contentType":"reel_script or single_image or carousel","hashtags":"3-5 tags comma-separated","mediaPrompt":"visual setup: for reels — camera angles, B-roll; for images — layout, key text, style","hook":"exact text overlay + spoken words for first 3 seconds (reels) or hook slide text (carousel/image)","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
+{"title":"internal label","content":"full content with timing/slide markers AND CAPTION: section","contentType":"reel_script or single_image or carousel","hashtags":"3-5 tags comma-separated","mediaPrompt":"MUST include: (1) exact headline for the image, (2) specific content points ON the image — actual text, not descriptions. Headline and body must be coherent. (3) for reels: camera angles, B-roll; for images: layout, style.","hook":"exact text overlay + spoken words for first 3 seconds (reels) or hook slide text (carousel/image)","framework":"PAS|AIDA|CONTRARIAN_FLIP|DATA_STORY|BEFORE_AFTER"}`,
   },
 };
 
@@ -950,7 +956,10 @@ QUALITY CHECK BEFORE RESPONDING:
 - Is the formatting correct for ${agent.platform}? (line breaks, length, structure)
 - Are there ZERO emojis? Check again. Remove any emojis.
 - Does the content sound like a real professional sharing real experience? Not like AI output?
-${contentType !== "plain_text" ? "- For image/carousel posts: is the caption COMPLEMENTARY to the visual text (not repetitive)?" : ""}
+- HEADLINE-BODY COHERENCE: Re-read your headline/hook. Does the body ACTUALLY deliver what it promises? If the headline says "X vs Y", does the body show BOTH sides? If it makes a claim, does the body prove it with specifics? A mismatch here makes the entire post look amateur.
+- GENUINE VALUE TEST: Would a real career expert personally share this? Would they put their name on it? If the advice is generic enough to appear in any blog post from the last 5 years, rewrite it with a specific technique, surprising data point, or firsthand insight.
+- PROFESSIONAL POLISH: Read it aloud. Does it flow naturally? Does every sentence connect to the next? Does the ending land with weight, not trail off into a generic CTA?
+${contentType !== "plain_text" ? "- For image/carousel posts: is the caption COMPLEMENTARY to the visual text (not repetitive)? Does the mediaPrompt describe content that MATCHES your headline — not generic career imagery?" : ""}
 
 Return ONLY a valid JSON object matching the output format. No explanation outside the JSON.`;
 

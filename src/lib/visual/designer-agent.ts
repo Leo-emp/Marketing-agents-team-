@@ -235,6 +235,13 @@ GOOD ENRICHMENT:
 - bar: { label: "Python proficiency", value: 67 }
 - item: { text: "ATS-optimized formatting with single-column layout", value: "92%" }
 
+HEADLINE-BODY COHERENCE (CRITICAL):
+- Re-read the headline "${content.headline}" before generating ANY field.
+- Every field you generate MUST directly support, prove, or illustrate what the headline promises.
+- If the headline frames a comparison (vs, trap, myth), your content MUST show BOTH sides.
+- If the headline makes a claim, your content MUST back it up with specifics.
+- Do NOT generate generic tips loosely related to the topic — generate content that ANSWERS the headline.
+
 Make the content specific, actionable, and relevant to the headline "${content.headline}".
 ${platform ? `Platform: ${platform} — tailor content density and tone accordingly.` : ""}
 Use real-sounding data points and industry-specific language.
@@ -409,6 +416,23 @@ CONTENT QUALITY RULES (CRITICAL — follow these exactly):
 11. For roadmap/timeline content: use specific milestones with dates or durations, not vague phases.
 12. For receipt/cost content: use specific dollar amounts, time costs, or opportunity costs — make the reader feel the pain.
 13. For data visualizations (radar, meter, bars): use 4-6 dimensions with realistic asymmetric values that reveal a pattern.
+
+HEADLINE-BODY COHERENCE (THE #1 RULE — violating this makes the post look amateur):
+14. The body MUST deliver EXACTLY what the headline promises. If the headline says "X vs Y", the body MUST show both X and Y with a clear contrast. If the headline says "3 reasons", the body MUST contain exactly 3 distinct reasons.
+15. Before writing the body, re-read the headline and ask: "Does my body content actually answer/prove/show what the headline claims?" If the answer is no, rewrite the body — NEVER change the headline to match weak body content.
+16. If the headline frames a comparison (vs, trap, myth, before/after), each body item MUST show BOTH sides of the comparison — not just tips about one side.
+17. If the headline makes a bold claim ("The real reason X happens"), the body MUST reveal that specific reason — not generic advice loosely related to the topic.
+18. The headline and body must feel like ONE coherent argument, not a headline pasted on top of unrelated tips.
+
+BAD COHERENCE (never do this):
+- Headline: "AI Resumes: Generic Trap vs Strategic Edge" → Body: 3 generic tips about using AI (never shows the TRAP or the EDGE)
+- Headline: "Why 90% of Applications Fail" → Body: tips on networking (doesn't answer WHY they fail)
+- Headline: "The Hidden Cost of Job Hopping" → Body: steps to find a new job (ignores the COST entirely)
+
+GOOD COHERENCE (always do this):
+- Headline: "AI Resumes: Generic Trap vs Strategic Edge" → Body: "TRAP: Paste resume into ChatGPT and ask 'make this better'. EDGE: Feed it the JD first, extract 5 keywords, then prompt it to weave your real achievements around those keywords."
+- Headline: "Why 90% of Applications Fail" → Body: "42% fail ATS keyword matching. 31% are too generic for the role. 17% have formatting errors parsers cannot read."
+- Headline: "The Hidden Cost of Job Hopping" → Body: "Each switch costs 3-6 months of lost equity vesting. Hiring managers see 2+ jumps under 18 months as a pattern."
 
 BAD CONTENT (never do this):
 - "Keyword Alignment — Recommended" (vague label, no value)

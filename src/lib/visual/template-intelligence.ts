@@ -1,7 +1,7 @@
 /* ============================================================
    TEMPLATE INTELLIGENCE — AI-Powered Template Selection
    ============================================================
-   # Picks the optimal HTML template (t1-t220) for each content
+   # Picks the optimal HTML template (t1-t226) for each content
    # piece based on: platform, content style, mood, data fields,
    # past performance, and variety enforcement.
    #
@@ -272,6 +272,12 @@ const TEMPLATE_CATALOG: TemplateMeta[] = [
   { id: "t218", platform: "linkedin", name: "The Glossary", style: "dark", mood: "educational", bestFor: ["glossary", "definitions", "terminology", "jargon_buster", "explainer", "vocabulary"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
   { id: "t219", platform: "linkedin", name: "The Unpacked", style: "gradient", mood: "educational", bestFor: ["concept_breakdown", "explainer", "deep_dive", "what_why_how", "unpacked", "demystified"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
   { id: "t220", platform: "linkedin", name: "The Dialogue", style: "light", mood: "educational", bestFor: ["qa", "faq", "questions_answered", "honest_answers", "ask_me_anything", "interview_qa"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t221", platform: "linkedin", name: "The Compass", style: "dark", mood: "editorial", bestFor: ["direction", "career_advice", "self_reflection", "framework", "strategy", "guidance"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t222", platform: "linkedin", name: "The Journal", style: "light", mood: "storytelling", bestFor: ["reflection", "personal_story", "lessons_learned", "career_journal", "vulnerability", "wisdom"], requiredFields: ["headline"], optionalFields: ["bullets", "body", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t223", platform: "linkedin", name: "The Contrast", style: "light", mood: "provocative", bestFor: ["myth_vs_reality", "contrast", "misconceptions", "truth_bomb", "beliefs", "debunk"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t224", platform: "linkedin", name: "The Memo", style: "light", mood: "authoritative", bestFor: ["memo", "advice", "insider_tips", "professional_guidance", "executive_insight", "behind_scenes"], requiredFields: ["headline"], optionalFields: ["bullets", "body", "afterText", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t225", platform: "linkedin", name: "The Thread", style: "dark", mood: "storytelling", bestFor: ["thread", "connected_insights", "progressive_ideas", "career_truths", "wisdom_series", "lessons"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
+  { id: "t226", platform: "linkedin", name: "The Equation", style: "dark", mood: "authoritative", bestFor: ["problem_solution", "diagnosis", "root_cause", "action_plan", "fix", "troubleshoot"], requiredFields: ["headline"], optionalFields: ["tips", "subheadline", "eyebrow", "cta"], format: "feed" },
 ];
 
 /* ---- Performance Cache ---- */

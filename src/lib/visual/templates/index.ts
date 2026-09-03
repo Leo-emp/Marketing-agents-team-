@@ -100,7 +100,7 @@ export function isTemplateId(layout: string): layout is TemplateId {
   const match = layout.match(/^t(\d+)$/);
   if (!match) return false;
   const num = parseInt(match[1]);
-  return num >= 1 && num <= 220;
+  return num >= 1 && num <= 235;
 }
 
 // # Instagram templates that render at 1:1 (1080×1080)
@@ -157,7 +157,7 @@ export function getTemplateDimensions(templateId: string): { width: number; heig
   if (DESIGNER_IDS.includes(templateId as TemplateId)) {
     const num = parseInt(templateId.slice(1));
     // # T203-T205: TikTok 9:16
-    if (num >= 203 && num <= 205) return { width: 1080, height: 1920 };
+    if ((num >= 203 && num <= 205) || (num >= 230 && num <= 232)) return { width: 1080, height: 1920 };
     // # Everything else (LinkedIn T187-T202, Instagram T206-T208): 4:5 portrait
     return { width: 1080, height: 1350 };
   }

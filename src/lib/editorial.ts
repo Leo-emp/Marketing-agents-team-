@@ -23,6 +23,7 @@ export interface EditorialReview {
   specScore: number;        // # Specificity 1-10
   brandScore: number;       // # Brand alignment 1-10
   platformScore: number;    // # Platform fit 1-10
+  coherenceScore: number;   // # Headline-body coherence 1-10
 }
 
 /* # Main editorial review function — called after content generation */
@@ -79,6 +80,14 @@ EVALUATE AGAINST THESE CRITERIA (score each 1-10):
    - Does the caption repeat the visual text? It should NOT.
    - Caption should add context, story, or insight the image alone cannot convey.
 
+8. HEADLINE-BODY COHERENCE CHECK (coherenceScore)
+   - Re-read the hook/headline. Does the body ACTUALLY deliver what the headline promises?
+   - If the headline frames a comparison ("X vs Y", "trap vs edge", "myth vs reality"), does the body show BOTH sides?
+   - If the headline makes a bold claim ("the real reason", "why X fails"), does the body reveal that specific reason?
+   - If the headline promises a number ("3 reasons", "5 steps"), does the body contain exactly that many?
+   - A headline that promises something the body doesn't deliver makes the brand look amateurish. This is a CRITICAL check.
+   - Score 1-3 if headline and body are disconnected. Score 4-6 if loosely related. Score 7-10 if body directly delivers the headline's promise.
+
 TASK:
 1. Score the content 1-10 overall AND on each dimension (hookScore, specScore, brandScore, platformScore)
 2. List every specific issue found
@@ -92,6 +101,7 @@ Return a JSON object:
   "specScore": 8,
   "brandScore": 9,
   "platformScore": 8,
+  "coherenceScore": 9,
   "issues": ["Hook is generic — no specific number or scenario", "Third paragraph sounds AI-generated — too balanced"],
   "feedback": "Strengthened the hook with a specific stat, rewrote paragraph 3 with a more natural voice",
   "revisedContent": "the full revised content here",
@@ -113,7 +123,7 @@ Return ONLY a valid JSON object. No explanation outside the JSON.`;
 
     return {
       score: Math.min(10, Math.max(1, Number(parsed.score) || 5)),
-      passed: [parsed.hookScore, parsed.specScore, parsed.brandScore, parsed.platformScore]
+      passed: [parsed.hookScore, parsed.specScore, parsed.brandScore, parsed.platformScore, parsed.coherenceScore]
         .every((s) => (Number(s) || 5) >= 7),
       feedback: String(parsed.feedback || ""),
       revisedContent: String(parsed.revisedContent || content),
@@ -123,6 +133,7 @@ Return ONLY a valid JSON object. No explanation outside the JSON.`;
       specScore: Math.min(10, Math.max(1, Number(parsed.specScore) || 5)),
       brandScore: Math.min(10, Math.max(1, Number(parsed.brandScore) || 5)),
       platformScore: Math.min(10, Math.max(1, Number(parsed.platformScore) || 5)),
+      coherenceScore: Math.min(10, Math.max(1, Number(parsed.coherenceScore) || 5)),
     };
   } catch (e) {
     // # If editorial review fails, pass through the original content
@@ -144,5 +155,6 @@ function buildPassthrough(content: string, hook: string): EditorialReview {
     specScore: 0,
     brandScore: 0,
     platformScore: 0,
+    coherenceScore: 0,
   };
 }

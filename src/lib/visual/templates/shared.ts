@@ -273,7 +273,13 @@ export type TemplateId =
   // # Designer LinkedIn Set 5 (T209-T214)
   | "t209" | "t210" | "t211" | "t212" | "t213" | "t214"
   // # Designer LinkedIn Set 6 — text-only (T215-T220)
-  | "t215" | "t216" | "t217" | "t218" | "t219" | "t220";
+  | "t215" | "t216" | "t217" | "t218" | "t219" | "t220"
+  // # Designer LinkedIn Set 7 — text-only with footer (T221-T226)
+  | "t221" | "t222" | "t223" | "t224" | "t225" | "t226"
+  // # Designer LinkedIn Set 8 — fresh designs with footer (T228-T229)
+  | "t228" | "t229"
+  // # Designer TikTok Set 5 (T230-T232) + Instagram Set 5 (T233-T235)
+  | "t230" | "t231" | "t232" | "t233" | "t234" | "t235";
 
 // # Carousel template IDs — 12 carousels (4 per platform)
 export type CarouselId =
