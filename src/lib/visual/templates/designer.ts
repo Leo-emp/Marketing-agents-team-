@@ -115,8 +115,8 @@ function wrap(css: string, body: string, w: number, h: number): string {
 function footer(mode: "dark" | "light" | "gradient"): string {
   // # Dark/gradient: subtle light border + light text; Light: subtle dark border + dark text
   const borderC = mode === "light" ? "rgba(0,0,0,.06)" : "rgba(255,255,255,.08)";
-  const nameC = mode === "light" ? "#57534E" : "rgba(255,255,255,.55)";
-  const urlC = mode === "light" ? "#A8A29E" : "rgba(255,255,255,.3)";
+  const nameC = mode === "light" ? "#000" : "#fff";
+  const urlC = mode === "light" ? "#000" : "#fff";
   const logoBg = mode === "light" ? "rgba(99,102,241,.06)" : "rgba(99,102,241,.1)";
   return `<div style="display:flex;align-items:center;gap:8px;padding:10px 18px 12px;border-top:1px solid ${borderC};margin-top:auto;">
     <div style="width:20px;height:20px;border-radius:5px;background:${logoBg};display:flex;align-items:center;justify-content:center;overflow:hidden;">

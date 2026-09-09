@@ -118,9 +118,9 @@ const T1_CSS = `
 .t1 .context{position:relative;font-size:13px;color:#8B8A9A;line-height:1.5;margin-top:20px;max-width:340px;}
 .t1 .context strong{color:#E4E2DD;font-weight:600;}
 .t1 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
-.t1 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t1 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t1 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t1 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t1 .brand-strip .name span{font-weight:400;color:#fff;}
+.t1 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT1(c: TemplateContent, w: number, h: number): string {
@@ -153,9 +153,9 @@ const T3_CSS = `
 .t3 .tip-text{font-size:12px;color:#C7D2FE;line-height:1.45;padding-top:3px;}
 .t3 .tip-text strong{color:#FFF;font-weight:700;}
 .t3 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
-.t3 .brand-strip .name{font-size:11px;font-weight:700;color:#FFF;}
-.t3 .brand-strip .name span{font-weight:400;color:#6366F1;}
-.t3 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#6366F1;}
+.t3 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t3 .brand-strip .name span{font-weight:400;color:#fff;}
+.t3 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT3(c: TemplateContent, w: number, h: number): string {
@@ -195,8 +195,8 @@ const T65_CSS = `
 .t65 .sh-body strong{color:rgba(255,255,255,0.75);font-weight:600;}
 .t65 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
 .t65 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
-.t65 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);}
-.t65 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);}
+.t65 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t65 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 `;
 
 function buildT65(c: TemplateContent, w: number, h: number): string {
@@ -235,8 +235,8 @@ const T66_CSS = `
 .t66 .an-score-val{font-size:14px;font-weight:800;color:#6366F1;font-variant-numeric:tabular-nums;}
 .t66 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
 .t66 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
-.t66 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#999;}
-.t66 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#C0BDB5;}
+.t66 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#000;}
+.t66 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;}
 `;
 
 function buildT66(c: TemplateContent, w: number, h: number): string {
@@ -280,8 +280,8 @@ const T67_CSS = `
 .t67 .sr-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.3);font-variant-numeric:tabular-nums;}
 .t67 .sr-label.mid{color:#fff;font-weight:800;}
 .t67 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t67 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);}
-.t67 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);}
+.t67 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t67 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t67 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -329,8 +329,8 @@ const T68_CSS = `
 .t68 .qw-body{position:relative;z-index:2;font-size:15px;color:rgba(255,255,255,0.5);line-height:1.65;max-width:300px;}
 .t68 .qw-body strong{color:rgba(255,255,255,0.85);font-weight:600;}
 .t68 .brand-strip{position:relative;z-index:2;margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t68 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);}
-.t68 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);}
+.t68 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t68 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t68 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -371,8 +371,8 @@ const T69_CSS = `
 .t69 .rk-pct{font-size:13px;font-weight:800;color:rgba(255,255,255,0.2);font-variant-numeric:tabular-nums;}
 .t69 .rk-item.top .rk-pct{color:#A78BFA;}
 .t69 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t69 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);}
-.t69 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);}
+.t69 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t69 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t69 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -417,8 +417,8 @@ const T70_CSS = `
 .t70 .tn-desc{font-size:12px;color:#777;line-height:1.45;}
 .t70 .tn-cta{margin-top:20px;text-align:center;font-size:12px;font-weight:600;color:#6366F1;}
 .t70 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t70 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#999;}
-.t70 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#C0BDB5;}
+.t70 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#000;}
+.t70 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;}
 .t70 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -464,8 +464,8 @@ const T71_CSS = `
 .t71 .fw-step-head{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;}
 .t71 .fw-step-desc{font-size:11px;color:rgba(255,255,255,0.35);line-height:1.45;}
 .t71 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t71 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);}
-.t71 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);}
+.t71 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t71 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t71 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -513,8 +513,8 @@ const T72_CSS = `
 .t72 .bm-legend-dot.acc{background:#6366F1;}
 .t72 .bm-legend-dot.avg{background:#F59E0B;}
 .t72 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t72 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);}
-.t72 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);}
+.t72 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t72 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t72 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -570,9 +570,9 @@ const T2_CSS = `
 .t2 .skill-cross{width:16px;height:16px;border-radius:4px;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0;}
 .t2 .cta-btn{margin-top:auto;background:#6366F1;color:#fff;border:none;border-radius:6px;padding:10px;font-size:10px;font-weight:700;text-align:center;}
 .t2 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;}
-.t2 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t2 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t2 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t2 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t2 .brand-strip .name span{font-weight:400;color:#000;}
+.t2 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT2(c: TemplateContent, w: number, h: number): string {
@@ -631,9 +631,9 @@ const T4_CSS = `
 .t4 .score-good{color:#34D399;}
 .t4 .score-label{font-size:9px;color:#5A596E;}
 .t4 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
-.t4 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t4 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t4 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t4 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t4 .brand-strip .name span{font-weight:400;color:#fff;}
+.t4 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT4(c: TemplateContent, w: number, h: number): string {
@@ -676,9 +676,9 @@ const T5_CSS = `
 .t5 .stars{display:flex;gap:3px;margin-top:12px;}
 .t5 .star{width:16px;height:16px;color:#F59E0B;font-size:14px;}
 .t5 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;border-top:1px solid #E8E4DD;}
-.t5 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t5 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t5 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t5 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t5 .brand-strip .name span{font-weight:400;color:#000;}
+.t5 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT5(c: TemplateContent, w: number, h: number): string {
@@ -707,8 +707,8 @@ const T7_CSS = `
 .t7 .hook{font-size:14px;color:rgba(255,255,255,0.6);margin-top:110px;line-height:1.5;max-width:360px;}
 .t7 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
 .t7 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
-.t7 .brand-strip .name span{font-weight:400;color:rgba(255,255,255,0.4);}
-.t7 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.3);}
+.t7 .brand-strip .name span{font-weight:400;color:#fff;}
+.t7 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT7(c: TemplateContent, w: number, h: number): string {
@@ -744,9 +744,9 @@ const T8_CSS = `
 .t8 .label-good{color:#16A34A;}
 .t8 .block-text{font-size:12px;color:#4A4A4A;line-height:1.45;font-weight:500;}
 .t8 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
-.t8 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t8 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t8 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t8 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t8 .brand-strip .name span{font-weight:400;color:#000;}
+.t8 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT8(c: TemplateContent, w: number, h: number): string {
@@ -781,9 +781,9 @@ const T9_CSS = `
 .t9 .bar-pct{font-size:9px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
 .t9 .source{font-size:7px;color:#3A3A4A;margin-top:12px;}
 .t9 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
-.t9 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t9 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t9 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t9 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t9 .brand-strip .name span{font-weight:400;color:#fff;}
+.t9 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT9(c: TemplateContent, w: number, h: number): string {
@@ -820,8 +820,8 @@ const T10_CSS = `
 .t10 .feat-icon{width:22px;height:22px;border-radius:50%;background:rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 .t10 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;position:relative;z-index:2;}
 .t10 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
-.t10 .brand-strip .name span{font-weight:400;color:rgba(255,255,255,0.4);}
-.t10 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.3);}
+.t10 .brand-strip .name span{font-weight:400;color:#fff;}
+.t10 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT10(c: TemplateContent, w: number, h: number): string {
@@ -856,9 +856,9 @@ const T11_CSS = `
 .t11 .item-todo .text{color:#1A1A1A;font-weight:500;}
 .t11 .cta-line{font-size:10px;color:#6366F1;font-weight:600;margin-top:12px;}
 .t11 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
-.t11 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t11 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t11 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t11 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t11 .brand-strip .name span{font-weight:400;color:#000;}
+.t11 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT11(c: TemplateContent, w: number, h: number): string {
@@ -891,9 +891,9 @@ const T12_CSS = `
 .t12 .counter{font-size:14px;color:#8B8A9A;line-height:1.5;max-width:380px;}
 .t12 .counter strong{color:#E4E2DD;font-weight:700;}
 .t12 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;position:relative;}
-.t12 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t12 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t12 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t12 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t12 .brand-strip .name span{font-weight:400;color:#fff;}
+.t12 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT12(c: TemplateContent, w: number, h: number): string {
@@ -927,9 +927,9 @@ const T13_CSS = `
 .t13 .card-bar{height:4px;background:#E8E4DD;border-radius:2px;margin-top:8px;overflow:hidden;}
 .t13 .card-bar-fill{height:100%;background:#6366F1;border-radius:2px;}
 .t13 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
-.t13 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t13 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t13 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t13 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t13 .brand-strip .name span{font-weight:400;color:#000;}
+.t13 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT13(c: TemplateContent, w: number, h: number): string {
@@ -967,8 +967,8 @@ const T14_CSS = `
 .t14 .cta{font-size:10px;color:rgba(255,255,255,0.4);text-align:center;margin-top:16px;}
 .t14 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
 .t14 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
-.t14 .brand-strip .name span{font-weight:400;color:rgba(255,255,255,0.4);}
-.t14 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.3);}
+.t14 .brand-strip .name span{font-weight:400;color:#fff;}
+.t14 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT14(c: TemplateContent, w: number, h: number): string {
@@ -1006,9 +1006,9 @@ const T15_CSS = `
 .t15 .step-title{font-size:13px;font-weight:700;color:#E4E2DD;margin-bottom:3px;}
 .t15 .step-desc{font-size:10px;color:#5A596E;line-height:1.45;}
 .t15 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
-.t15 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t15 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t15 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t15 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t15 .brand-strip .name span{font-weight:400;color:#fff;}
+.t15 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT15(c: TemplateContent, w: number, h: number): string {
@@ -1044,9 +1044,9 @@ const T73_CSS = `
 .t73 .flag-icon{font-size:12px;flex-shrink:0;margin-top:1px;}
 .t73 .flag-text{font-size:11px;color:#E4E2DD;line-height:1.45;font-weight:500;}
 .t73 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
-.t73 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t73 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t73 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t73 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t73 .brand-strip .name span{font-weight:400;color:#fff;}
+.t73 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT73(c: TemplateContent, w: number, h: number): string {
@@ -1081,9 +1081,9 @@ const T74_CSS = `
 .t74 .star-off{width:10px;height:10px;border-radius:50%;background:#E2E0DB;}
 .t74 .tool-tag{font-size:7px;font-weight:600;color:#6366F1;margin-top:4px;}
 .t74 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
-.t74 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t74 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t74 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t74 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t74 .brand-strip .name span{font-weight:400;color:#000;}
+.t74 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT74(c: TemplateContent, w: number, h: number): string {
@@ -1125,9 +1125,9 @@ const T75_CSS = `
 .t75 .verdict{font-size:9px;color:#8B8A9A;margin-top:auto;padding-top:12px;border-top:1px solid #1E1F2E;}
 .t75 .verdict strong{color:#34D399;font-weight:700;}
 .t75 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
-.t75 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t75 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t75 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t75 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t75 .brand-strip .name span{font-weight:400;color:#fff;}
+.t75 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT75(c: TemplateContent, w: number, h: number): string {
@@ -1162,9 +1162,9 @@ const T76_CSS = `
 .t76 .insight-text strong{color:#1A1A1A;font-weight:700;}
 .t76 .source{font-size:8px;color:#8A8A8A;font-style:italic;margin-top:auto;padding-top:12px;}
 .t76 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
-.t76 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t76 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t76 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t76 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t76 .brand-strip .name span{font-weight:400;color:#000;}
+.t76 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT76(c: TemplateContent, w: number, h: number): string {
@@ -1204,8 +1204,8 @@ const T77_CSS = `
 .t77 .tip strong{color:#A78BFA;font-weight:600;}
 .t77 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;position:relative;z-index:1;}
 .t77 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
-.t77 .brand-strip .name span{font-weight:400;color:rgba(255,255,255,0.3);}
-.t77 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.2);}
+.t77 .brand-strip .name span{font-weight:400;color:#fff;}
+.t77 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT77(c: TemplateContent, w: number, h: number): string {
@@ -1247,9 +1247,9 @@ const T78_CSS = `
 .t78 .trend-up{color:#34D399;}
 .t78 .trend-down{color:#EF4444;}
 .t78 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
-.t78 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t78 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t78 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#5A596E;}
+.t78 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t78 .brand-strip .name span{font-weight:400;color:#fff;}
+.t78 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT78(c: TemplateContent, w: number, h: number): string {
@@ -1288,9 +1288,9 @@ const T79_CSS = `
 .t79 .slot-title{font-size:12px;font-weight:700;color:#1A1A1A;margin-bottom:2px;}
 .t79 .slot-desc{font-size:9px;color:#8A8A8A;line-height:1.4;}
 .t79 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
-.t79 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t79 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t79 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#8A8A8A;}
+.t79 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t79 .brand-strip .name span{font-weight:400;color:#000;}
+.t79 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT79(c: TemplateContent, w: number, h: number): string {
@@ -1345,8 +1345,8 @@ function buildT80(c: TemplateContent, w: number, h: number): string {
     <div class="spacer-b"></div>
     <div class="brand-strip">
       <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);">JobPilot AI</span>
-      <span style="font-size:8px;font-family:${MONO_STACK};color:rgba(255,255,255,0.3);margin-left:auto;">jobpilotai.co</span>
+      <span style="font-size:10px;font-weight:700;color:#fff;">JobPilot AI</span>
+      <span style="font-size:8px;font-family:${MONO_STACK};color:#fff;margin-left:auto;">jobpilotai.co</span>
     </div>
   `, 540, 675, w, h);
 }
@@ -1442,9 +1442,9 @@ const T98_CSS = `
 .t98 .node-title{font-size:13px;font-weight:700;color:#E4E2DD;margin-bottom:3px;}
 .t98 .node-desc{font-size:10px;color:#5A596E;line-height:1.45;}
 .t98 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
-.t98 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t98 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t98 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.12);}
+.t98 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t98 .brand-strip .name span{font-weight:400;color:#fff;}
+.t98 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT98(c: TemplateContent, w: number, h: number): string {
@@ -1492,9 +1492,9 @@ const T99_CSS = `
 .t99 .flat{color:#5A596E;}
 .t99 .source{font-size:7px;color:rgba(255,255,255,0.12);margin-top:12px;position:relative;}
 .t99 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
-.t99 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t99 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t99 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.12);}
+.t99 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t99 .brand-strip .name span{font-weight:400;color:#fff;}
+.t99 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT99(c: TemplateContent, w: number, h: number): string {
@@ -1543,8 +1543,8 @@ const T100_CSS = `
 .t100 .context{font-size:10px;color:rgba(255,255,255,0.3);text-align:center;margin-top:16px;line-height:1.5;position:relative;z-index:1;}
 .t100 .brand-strip{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t100 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
-.t100 .brand-strip .name span{font-weight:400;color:rgba(255,255,255,0.3);}
-.t100 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.2);}
+.t100 .brand-strip .name span{font-weight:400;color:#fff;}
+.t100 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT100(c: TemplateContent, w: number, h: number): string {
@@ -1595,9 +1595,9 @@ const T101_CSS = `
 .t101 .flag-text{color:#4A4A4A;}
 .t101 .flag-text strong{color:#1A1A1A;font-weight:700;}
 .t101 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
-.t101 .brand-strip .name{font-size:11px;font-weight:700;color:#1A1A1A;}
-.t101 .brand-strip .name span{font-weight:400;color:#8A8A8A;}
-.t101 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#C0BDB5;}
+.t101 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
+.t101 .brand-strip .name span{font-weight:400;color:#000;}
+.t101 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
 `;
 
 function buildT101(c: TemplateContent, w: number, h: number): string {
@@ -1649,9 +1649,9 @@ const T102_CSS = `
 .t102 .digest-desc{font-size:9px;color:#5A596E;line-height:1.45;}
 .t102 .read-more{font-size:9px;color:#6366F1;margin-top:auto;padding-top:16px;text-align:center;font-weight:600;position:relative;}
 .t102 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;}
-.t102 .brand-strip .name{font-size:11px;font-weight:700;color:#E4E2DD;}
-.t102 .brand-strip .name span{font-weight:400;color:#5A596E;}
-.t102 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:rgba(255,255,255,0.12);}
+.t102 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
+.t102 .brand-strip .name span{font-weight:400;color:#fff;}
+.t102 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
 `;
 
 function buildT102(c: TemplateContent, w: number, h: number): string {

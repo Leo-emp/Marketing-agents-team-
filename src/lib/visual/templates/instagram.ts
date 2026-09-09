@@ -28,15 +28,15 @@ const IG_SANS = `'Segoe UI', system-ui, -apple-system, sans-serif`;
 const IG_MONO = `'Cascadia Code', 'Fira Code', Consolas, monospace`;
 
 // # Centered brand footer — subtle, uppercase
-function brandFooter(color: string = "rgba(0,0,0,0.2)"): string {
+function brandFooter(color: string = "#000"): string {
   return `<div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:4px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:${color};z-index:5;">JOBPILOT AI</div>`;
 }
 
 // # Story badge pill — centered bottom
-function storyBadge(): string {
+function storyBadge(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:100px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:5px 12px;z-index:5;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:3px;">
-    <span style="font-family:${IG_SANS};font-size:7px;font-weight:600;color:rgba(255,255,255,0.6);letter-spacing:0.06em;">JOBPILOT AI</span>
+    <span style="font-family:${IG_SANS};font-size:7px;font-weight:600;color:${color};letter-spacing:0.06em;">JOBPILOT AI</span>
   </div>`;
 }
 
@@ -68,7 +68,7 @@ const T23_CSS = `
 .t23 .tip-num{width:18px;height:18px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:2px;}
 .t23 .tip-text{font-family:${IG_SANS};font-size:11px;color:#4A4A4A;line-height:1.5;}
 .t23 .tip-text strong{color:#1A1A1A;font-weight:700;}
-.t23 .bottom{font-family:${IG_SANS};font-size:6px;color:#B0ACA0;text-align:center;margin-top:auto;padding-top:16px;letter-spacing:0.06em;}
+.t23 .bottom{font-family:${IG_SANS};font-size:6px;color:#000;text-align:center;margin-top:auto;padding-top:16px;letter-spacing:0.06em;}
 `;
 
 function buildT23(c: TemplateContent, w: number, h: number): string {
@@ -142,7 +142,7 @@ const T26_CSS = `
 .t26 .chk-good{background:#F0FDF4;color:#16A34A;}
 .t26 .chk-bad{background:#FEF2F2;color:#DC2626;}
 .t26 .cta-btn{margin-top:auto;background:#6366F1;color:#fff;border-radius:5px;padding:8px;font-size:8px;font-weight:700;text-align:center;}
-.t26 .url{font-family:${IG_MONO};font-size:5px;color:#C8C4BC;text-align:center;margin-top:auto;padding-top:12px;}
+.t26 .url{font-family:${IG_MONO};font-size:5px;color:#000;text-align:center;margin-top:auto;padding-top:12px;}
 `;
 
 function buildT26(c: TemplateContent, w: number, h: number): string {
@@ -208,8 +208,8 @@ function buildT27(c: TemplateContent, w: number, h: number): string {
     <div class="spacer-b"></div>
     <div class="brand">
       <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);">JobPilot AI</span>
-      <span style="font-size:8px;font-family:${IG_MONO};color:rgba(255,255,255,0.3);margin-left:auto;">jobpilotai.co</span>
+      <span style="font-size:10px;font-weight:700;color:#fff;">JobPilot AI</span>
+      <span style="font-size:8px;font-family:${IG_MONO};color:#fff;margin-left:auto;">jobpilotai.co</span>
     </div>
   `, 432, 768, w, h);
 }
@@ -225,7 +225,7 @@ const T34_CSS = `
 .t34 .headline{font-family:${IG_SERIF};font-size:10px;font-weight:400;color:#F0E6D3;line-height:1.4;margin-top:auto;margin-bottom:8px;max-width:380px;position:relative;z-index:3;}
 .t34 .gold-rule{width:32px;height:1px;background:#C4A470;margin-bottom:8px;position:relative;z-index:3;}
 .t34 .body{font-family:${IG_SANS};font-size:5px;color:rgba(240,230,211,0.45);line-height:1.6;max-width:360px;position:relative;z-index:3;}
-.t34 .foot{font-family:${IG_SANS};font-size:3px;color:rgba(196,164,112,0.25);letter-spacing:0.12em;text-transform:uppercase;margin-top:auto;padding-top:16px;position:relative;z-index:3;}
+.t34 .foot{font-family:${IG_SANS};font-size:3px;color:#fff;letter-spacing:0.12em;text-transform:uppercase;margin-top:auto;padding-top:16px;position:relative;z-index:3;}
 `;
 
 function buildT34(c: TemplateContent, w: number, h: number): string {
@@ -268,7 +268,7 @@ function buildT35(c: TemplateContent, w: number, h: number): string {
         </div>
       </div>`).join("")}
     </div>
-    ${brandFooter("rgba(30,27,75,0.2)")}
+    ${brandFooter("#000")}
   `, 540, 675, w, h);
 }
 
@@ -285,8 +285,8 @@ const T36_CSS = `
 .t36 .m-val{font-family:${IG_SANS};font-size:7px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;}
 .t36 .m-label{font-family:${IG_SANS};font-size:3px;color:rgba(255,255,255,0.4);margin-top:4px;}
 .t36 .foot{display:flex;justify-content:space-between;margin-top:auto;padding-top:12px;}
-.t36 .foot-brand{font-family:${IG_SANS};font-size:3px;color:rgba(255,255,255,0.15);letter-spacing:0.1em;text-transform:uppercase;}
-.t36 .foot-src{font-family:${IG_MONO};font-size:3px;color:rgba(255,255,255,0.1);}
+.t36 .foot-brand{font-family:${IG_SANS};font-size:3px;color:#fff;letter-spacing:0.1em;text-transform:uppercase;}
+.t36 .foot-src{font-family:${IG_MONO};font-size:3px;color:#fff;}
 `;
 
 function buildT36(c: TemplateContent, w: number, h: number): string {
@@ -317,7 +317,7 @@ const T37_CSS = `
 .t37 .word{font-family:${IG_SANS};font-size:22px;font-weight:900;color:#000;text-transform:uppercase;letter-spacing:-0.05em;line-height:1.1;}
 .t37 .dot{width:4px;height:4px;border-radius:50%;background:#6366F1;margin:14px 0;}
 .t37 .sub{font-family:${IG_SANS};font-size:5px;color:#6B6B6B;max-width:300px;line-height:1.5;}
-.t37 .foot{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:3px;color:#CCC;letter-spacing:0.1em;text-transform:uppercase;}
+.t37 .foot{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:3px;color:#000;letter-spacing:0.1em;text-transform:uppercase;}
 `;
 
 function buildT37(c: TemplateContent, w: number, h: number): string {
@@ -375,7 +375,7 @@ const T39_CSS = `
 .t39 .st-num{font-family:${IG_SANS};font-size:8px;font-weight:800;color:#C4A470;font-variant-numeric:tabular-nums;}
 .t39 .st-label{font-family:${IG_SANS};font-size:3px;color:rgba(196,164,112,0.35);margin-top:2px;}
 .t39 .gold-line{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(196,164,112,0.2),transparent);margin-bottom:8px;position:relative;z-index:3;}
-.t39 .foot{font-family:${IG_SANS};font-size:3px;color:rgba(196,164,112,0.2);letter-spacing:0.12em;text-transform:uppercase;text-align:center;position:relative;z-index:3;}
+.t39 .foot{font-family:${IG_SANS};font-size:3px;color:#fff;letter-spacing:0.12em;text-transform:uppercase;text-align:center;position:relative;z-index:3;}
 `;
 
 function buildT39(c: TemplateContent, w: number, h: number): string {
@@ -425,7 +425,7 @@ function buildT45(c: TemplateContent, w: number, h: number): string {
         return `<tr><td>${esc(item.text)}</td><td>${marks[0] || ""}</td><td>${marks[1] || ""}</td></tr>`;
       }).join("")}
     </table>
-    ${brandFooter("rgba(0,0,0,0.15)")}
+    ${brandFooter("#000")}
   `, 540, 675, w, h);
 }
 
@@ -459,7 +459,7 @@ function buildT46(c: TemplateContent, w: number, h: number): string {
         </div>
       </div>`).join("")}
     </div>
-    ${brandFooter("rgba(0,0,0,0.15)")}
+    ${brandFooter("#fff")}
   `, 540, 675, w, h);
 }
 
@@ -492,7 +492,7 @@ function buildT47(c: TemplateContent, w: number, h: number): string {
         <div class="attr-role">${esc(c.body || "")}</div>
       </div>
     </div>
-    ${brandFooter("rgba(0,0,0,0.12)")}
+    ${brandFooter("#fff")}
   `, 540, 540, w, h);
 }
 
@@ -502,7 +502,7 @@ function buildT47(c: TemplateContent, w: number, h: number): string {
 const T48_CSS = `
 .t48{background:#1E1B4B;display:flex;flex-direction:column;padding:44px 40px 32px;}
 .t48 .issue{font-family:${IG_SANS};font-size:3px;color:rgba(255,255,255,0.2);letter-spacing:0.1em;text-transform:uppercase;position:absolute;top:24px;left:36px;}
-.t48 .logo{font-family:${IG_SANS};font-size:4px;color:rgba(255,255,255,0.3);letter-spacing:0.1em;text-transform:uppercase;position:absolute;top:24px;right:36px;}
+.t48 .logo{font-family:${IG_SANS};font-size:4px;color:#fff;letter-spacing:0.1em;text-transform:uppercase;position:absolute;top:24px;right:36px;}
 .t48 .cat{font-family:${IG_SANS};font-size:4px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(196,181,253,0.6);margin-top:auto;margin-bottom:8px;}
 .t48 .headline{font-family:${IG_SERIF};font-size:10px;font-weight:400;color:#fff;line-height:1.35;margin-bottom:8px;}
 .t48 .deck{font-family:${IG_SANS};font-size:5px;color:rgba(255,255,255,0.4);line-height:1.5;margin-bottom:16px;}
@@ -589,7 +589,7 @@ function buildT54(c: TemplateContent, w: number, h: number): string {
       </div>`).join("")}
     </div>
     <div class="progress"><div class="p-row"><div class="p-track"><div class="p-fill" style="width:${pct}%"></div></div><div class="p-pct">${pct}%</div></div></div>
-    ${brandFooter("rgba(0,0,0,0.12)")}
+    ${brandFooter("#fff")}
   `, 540, 675, w, h);
 }
 
@@ -635,7 +635,7 @@ const T57_CSS = `
 .t57 .eyebrow{font-family:${IG_SANS};font-size:4px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(99,102,241,0.4);margin-bottom:8px;}
 .t57 .title{font-family:${IG_SANS};font-size:8px;font-weight:700;color:#fff;margin-bottom:6px;line-height:1.3;}
 .t57 .desc{font-family:${IG_SANS};font-size:5px;color:rgba(255,255,255,0.3);line-height:1.5;}
-.t57 .foot{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:3px;color:rgba(255,255,255,0.12);letter-spacing:0.1em;text-transform:uppercase;}
+.t57 .foot{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:3px;color:#fff;letter-spacing:0.1em;text-transform:uppercase;}
 `;
 
 function buildT57(c: TemplateContent, w: number, h: number): string {
@@ -678,7 +678,7 @@ function buildT58(c: TemplateContent, w: number, h: number): string {
       <div class="myth"><div class="tag tag-myth">MYTH</div><div class="pair-text">${esc(t.title)}</div></div>
       <div class="fact"><div class="tag tag-fact">FACT</div><div class="pair-text">${esc(t.description)}</div></div>
     </div>`).join("")}
-    ${brandFooter("rgba(0,0,0,0.12)")}
+    ${brandFooter("#000")}
   `, 540, 675, w, h);
 }
 
@@ -696,8 +696,8 @@ const T59_CSS = `
 .t59 .gold-rule{width:36px;height:1px;background:#C4A470;margin-bottom:8px;position:relative;z-index:3;}
 .t59 .desc{font-family:${IG_SANS};font-size:6px;color:rgba(232,223,208,0.45);line-height:1.5;position:relative;z-index:3;}
 .t59 .foot{display:flex;justify-content:space-between;margin-top:auto;padding-top:16px;position:relative;z-index:3;}
-.t59 .foot-brand{font-family:${IG_SANS};font-size:3px;color:rgba(196,164,112,0.2);letter-spacing:0.1em;text-transform:uppercase;}
-.t59 .foot-read{font-family:${IG_SANS};font-size:3px;color:rgba(196,164,112,0.2);}
+.t59 .foot-brand{font-family:${IG_SANS};font-size:3px;color:#fff;letter-spacing:0.1em;text-transform:uppercase;}
+.t59 .foot-read{font-family:${IG_SANS};font-size:3px;color:#fff;}
 `;
 
 function buildT59(c: TemplateContent, w: number, h: number): string {
@@ -744,7 +744,7 @@ function buildT60(c: TemplateContent, w: number, h: number): string {
       <div class="leg-item"><div class="leg-dot leg-dot-m"></div>Matched</div>
       <div class="leg-item"><div class="leg-dot leg-dot-x"></div>Missing</div>
     </div>
-    ${brandFooter("rgba(255,255,255,0.08)")}
+    ${brandFooter("#fff")}
   `, 540, 540, w, h);
 }
 
@@ -774,7 +774,7 @@ function buildT61(c: TemplateContent, w: number, h: number): string {
     </div>
     <div class="title">${esc(c.headline)}</div>
     ${c.body ? `<div class="desc">${esc(c.body)}</div>` : ""}
-    ${brandFooter("rgba(30,27,75,0.15)")}
+    ${brandFooter("#000")}
   `, 540, 540, w, h);
 }
 
@@ -804,7 +804,7 @@ function buildT62(c: TemplateContent, w: number, h: number): string {
         return `<div class="row"><span class="key">${esc(b.label)}</span><span class="val ${cls}">${esc(String(b.value))}</span></div>`;
       }).join("")}
     </div>
-    ${brandFooter("rgba(0,0,0,0.12)")}
+    ${brandFooter("#000")}
   `, 540, 540, w, h);
 }
 
@@ -827,7 +827,7 @@ function buildT63(c: TemplateContent, w: number, h: number): string {
     <div class="accent-rule"></div>
     <div class="attr">${esc(c.subheadline || "")}</div>
     ${c.body ? `<div class="role">${esc(c.body)}</div>` : ""}
-    ${brandFooter("rgba(30,27,75,0.12)")}
+    ${brandFooter("#fff")}
   `, 540, 540, w, h);
 }
 
@@ -862,7 +862,7 @@ function buildT64(c: TemplateContent, w: number, h: number): string {
         <div class="bar-track"><div class="bar-fill ${fills[i % 3]}" style="width:${Math.min(b.value, 100)}%"></div></div>
       </div>`).join("")}
     </div>
-    ${brandFooter("rgba(255,255,255,0.08)")}
+    ${brandFooter("#000")}
   `, 540, 540, w, h);
 }
 
@@ -930,7 +930,7 @@ function buildT90(c: TemplateContent, w: number, h: number): string {
         </div>
       </div>`).join("")}
     </div>
-    ${brandFooter("rgba(0,0,0,0.12)")}
+    ${brandFooter("#000")}
   `, 540, 675, w, h);
 }
 
@@ -976,7 +976,7 @@ function buildT91(c: TemplateContent, w: number, h: number): string {
       </div>`).join("")}
     </div>
     <div class="source">${esc(c.body || "Source: JobPilot AI analysis")}</div>
-    ${brandFooter("rgba(255,255,255,0.08)")}
+    ${brandFooter("#000")}
   `, 540, 675, w, h);
 }
 
@@ -1012,7 +1012,7 @@ function buildT92(c: TemplateContent, w: number, h: number): string {
         </div>`;
       }).join("")}
     </div>
-    ${brandFooter("rgba(0,0,0,0.12)")}
+    ${brandFooter("#fff")}
   `, 540, 540, w, h);
 }
 
@@ -1030,7 +1030,7 @@ const T93_CSS = `
 .t93 .res-name{font-family:${IG_SANS};font-size:12px;font-weight:700;color:#1A1A1A;margin-bottom:2px;}
 .t93 .res-desc{font-family:${IG_SANS};font-size:9px;color:#8A8A8A;}
 .t93 .res-tag{font-family:${IG_SANS};font-size:7px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#6366F1;background:rgba(99,102,241,0.08);padding:3px 8px;border-radius:4px;flex-shrink:0;}
-.t93 .bottom{font-family:${IG_SANS};font-size:7px;color:#B0ACA0;text-align:center;margin-top:auto;padding-top:16px;}
+.t93 .bottom{font-family:${IG_SANS};font-size:7px;color:#000;text-align:center;margin-top:auto;padding-top:16px;}
 `;
 
 function buildT93(c: TemplateContent, w: number, h: number): string {
@@ -1067,7 +1067,7 @@ const T94_CSS = `
 .t94 .item-bullet{width:6px;height:6px;border-radius:50%;background:#C4A470;flex-shrink:0;margin-top:5px;}
 .t94 .item-text{font-family:${IG_SANS};font-size:11px;color:#E8DFD0;line-height:1.5;}
 .t94 .item-text strong{color:#C4A470;font-weight:600;}
-.t94 .foot{font-family:${IG_SANS};font-size:7px;color:rgba(196,164,112,0.2);letter-spacing:0.12em;text-transform:uppercase;text-align:center;margin-top:auto;padding-top:16px;position:relative;z-index:3;}
+.t94 .foot{font-family:${IG_SANS};font-size:7px;color:#fff;letter-spacing:0.12em;text-transform:uppercase;text-align:center;margin-top:auto;padding-top:16px;position:relative;z-index:3;}
 `;
 
 function buildT94(c: TemplateContent, w: number, h: number): string {
@@ -1147,7 +1147,7 @@ function buildT96(c: TemplateContent, w: number, h: number): string {
     ${c.body ? `<div class="desc">${esc(c.body)}</div>` : ""}
     <div class="xp-bar"><div class="xp-fill" style="width:${pct}%"></div></div>
     <div class="xp-label">${esc(c.stat?.label || `${pct}% complete`)}</div>
-    ${brandFooter("rgba(255,255,255,0.08)")}
+    ${brandFooter("#fff")}
   `, 540, 540, w, h);
 }
 
@@ -1161,11 +1161,11 @@ function buildT96(c: TemplateContent, w: number, h: number): string {
    ============================================================ */
 
 // # Premium brand footer for Instagram — logo + name + domain, centered
-function proIgFooter(color: string = "rgba(255,255,255,0.7)"): string {
+function proIgFooter(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:5;">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:20px;height:20px;border-radius:4px;">
     <span style="font-family:${IG_SANS};font-size:9px;font-weight:700;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
-    <span style="font-family:${IG_MONO};font-size:7px;color:${color};opacity:0.6;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-family:${IG_MONO};font-size:7px;color:${color};letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -1173,8 +1173,8 @@ function proIgFooter(color: string = "rgba(255,255,255,0.7)"): string {
 function proIgFooterBar(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(255,255,255,0.06);">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);">
-    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);">JobPilot AI</span>
-    <span style="font-family:${IG_MONO};font-size:8px;color:rgba(255,255,255,0.3);margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:#fff;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:8px;color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -1182,8 +1182,8 @@ function proIgFooterBar(): string {
 function proIgFooterLight(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(0,0,0,0.06);">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);">
-    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:#333;">JobPilot AI</span>
-    <span style="font-family:${IG_MONO};font-size:8px;color:#BBB;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:#000;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:8px;color:#000;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -1213,8 +1213,8 @@ const T109_CSS = `
 /* # Footer */
 .t109 .footer{display:flex;align-items:center;gap:10px;padding-top:12px;}
 .t109 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);}
-.t109 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#999;letter-spacing:0.04em;}
-.t109 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#C8C4BC;margin-left:auto;letter-spacing:0.03em;}
+.t109 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#000;letter-spacing:0.04em;}
+.t109 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#000;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT109(c: TemplateContent, w: number, h: number): string {
@@ -1264,8 +1264,8 @@ const T110_CSS = `
 /* # Footer */
 .t110 .footer{display:flex;align-items:center;gap:8px;padding-top:14px;margin-top:16px;border-top:1px solid #F0F0F0;}
 .t110 .footer img{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,0.06);}
-.t110 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#999;}
-.t110 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#CCC;margin-left:auto;letter-spacing:0.03em;}
+.t110 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#000;}
+.t110 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#000;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT110(c: TemplateContent, w: number, h: number): string {
@@ -1307,8 +1307,8 @@ const T111_CSS = `
 /* # Footer */
 .t111 .footer{display:flex;align-items:center;gap:10px;padding-top:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
 .t111 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);}
-.t111 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:rgba(255,255,255,0.8);}
-.t111 .footer .furl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.3);margin-left:auto;letter-spacing:0.03em;}
+.t111 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#fff;}
+.t111 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#fff;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT111(c: TemplateContent, w: number, h: number): string {
@@ -1351,8 +1351,8 @@ const T112_CSS = `
 /* # Footer centered */
 .t112 .footer{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:1;}
 .t112 .footer img{width:18px;height:18px;border-radius:4px;}
-.t112 .footer .fname{font-family:${IG_SANS};font-size:8px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.04em;}
-.t112 .footer .furl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:0.03em;}
+.t112 .footer .fname{font-family:${IG_SANS};font-size:8px;font-weight:700;color:#fff;letter-spacing:0.04em;}
+.t112 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#fff;letter-spacing:0.03em;}
 `;
 
 function buildT112(c: TemplateContent, w: number, h: number): string {
@@ -1399,8 +1399,8 @@ const T113_CSS = `
 /* # Footer */
 .t113 .footer{display:flex;align-items:center;gap:10px;padding-top:14px;margin-top:auto;border-top:1px solid #F0F0F0;}
 .t113 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);}
-.t113 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#999;}
-.t113 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#CCC;margin-left:auto;letter-spacing:0.03em;}
+.t113 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#000;}
+.t113 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#000;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT113(c: TemplateContent, w: number, h: number): string {
@@ -1453,7 +1453,7 @@ const T114_CSS = `
 /* # Brand badge below card */
 .t114 .badge{display:flex;align-items:center;gap:6px;margin-top:24px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 14px;position:relative;z-index:1;}
 .t114 .badge img{width:18px;height:18px;border-radius:4px;}
-.t114 .badge .bname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:rgba(255,255,255,0.6);}
+.t114 .badge .bname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#fff;}
 .t114 .badge .burl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.25);margin-left:auto;letter-spacing:0.03em;}
 `;
 
@@ -1502,8 +1502,8 @@ const T127_CSS = `
 .t127 .col{font-size:10px;color:#666;line-height:1.6;}
 .t127 .col strong{color:#1A1A1A;font-weight:600;}
 .t127 .rule-btm{height:1px;background:#E2E0DB;}
-.t127 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#999;}
-.t127 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+.t127 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#000;}
+.t127 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT127(c: TemplateContent, w: number, h: number): string {
   const cols = c.bullets || [];
@@ -1534,8 +1534,8 @@ const T128_CSS = `
 .t128 .g-lbl{font-size:8px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:auto;}
 .t128 .g-bar{height:3px;background:#E5E7EB;border-radius:2px;overflow:hidden;margin-top:8px;}
 .t128 .g-fill{height:100%;background:linear-gradient(90deg,#0D9488,#2DD4BF);border-radius:2px;}
-.t128 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#999;}
-.t128 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+.t128 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#000;}
+.t128 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT128(c: TemplateContent, w: number, h: number): string {
   const bars = (c.bars || []).slice(0, 4);
@@ -1564,8 +1564,8 @@ const T129_CSS = `
 .t129 .tips{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
 .t129 .tip{display:flex;gap:8px;align-items:flex-start;font-size:10px;color:#4B5563;}
 .t129 .tip::before{content:'→';color:#7C3AED;font-weight:700;flex-shrink:0;}
-.t129 .ftr{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid rgba(124,58,237,0.1);font-size:9px;color:#7C3AED;}
-.t129 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:rgba(124,58,237,0.4);}
+.t129 .ftr{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid rgba(124,58,237,0.1);font-size:9px;color:#000;}
+.t129 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT129(c: TemplateContent, w: number, h: number): string {
   const tips = c.bullets || [];
@@ -1587,8 +1587,8 @@ const T130_CSS = `
 .t130 .line{width:40px;height:3px;background:linear-gradient(90deg,#EA580C,#FDBA74);border-radius:2px;margin-bottom:12px;}
 .t130 .body{font-size:12px;color:#9CA3AF;line-height:1.6;max-width:380px;}
 .t130 .body strong{color:#374151;font-weight:700;}
-.t130 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#999;}
-.t130 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+.t130 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
+.t130 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT130(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t130", T130_CSS, `
@@ -1615,8 +1615,8 @@ const T131_CSS = `
 .t131 .bar-track{height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden;}
 .t131 .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1E3A5A,#3B82F6);}
 .t131 .source{font-size:7px;color:#D1D5DB;margin-top:8px;}
-.t131 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#999;}
-.t131 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+.t131 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
+.t131 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT131(c: TemplateContent, w: number, h: number): string {
   const bars = (c.bars || []).slice(0, 6);
@@ -1654,7 +1654,7 @@ function buildT132(c: TemplateContent, w: number, h: number): string {
     <div class="divider"></div>
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
     ${c.cta ? `<div class="cta-pill">${esc(c.cta)}</div>` : ""}
-    ${storyBadge()}
+    ${storyBadge("#000")}
   `, 432, 768, w, h);
 }
 
@@ -1674,7 +1674,7 @@ const T145_CSS = `
 .t145 .card-img .placeholder{font-size:36px;color:#94A3B8;font-weight:800;letter-spacing:-0.04em;}
 .t145 .card-caption{font-family:${IG_SERIF};font-size:14px;color:#1E293B;line-height:1.4;font-style:italic;}
 .t145 .card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:9px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
-.t145 .ftr{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:8px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#94A3B8;}
+.t145 .ftr{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:8px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#000;}
 `;
 function buildT145(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t145", T145_CSS, `
@@ -1701,8 +1701,8 @@ const T146_CSS = `
 .t146 .bottom{padding:16px 34px 24px;display:flex;flex-direction:column;}
 .t146 .body{font-size:12px;color:#64748B;line-height:1.6;}
 .t146 .body strong{color:#0F172A;font-weight:700;}
-.t146 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;font-size:9px;color:#94A3B8;}
-.t146 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#CBD5E1;}
+.t146 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;font-size:9px;color:#000;}
+.t146 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT146(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t146", T146_CSS, `
@@ -1732,8 +1732,8 @@ const T147_CSS = `
 .t147 .node-t{font-size:12px;font-weight:700;color:#111827;padding-top:4px;}
 .t147 .node-d{font-size:9px;color:#9CA3AF;margin-top:2px;line-height:1.4;}
 .t147 .connector{width:2px;height:14px;background:#D1FAE5;margin-left:13px;}
-.t147 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#999;}
-.t147 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#C8C4BC;}
+.t147 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
+.t147 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT147(c: TemplateContent, w: number, h: number): string {
   const steps = (c.steps || c.tips || []).slice(0, 4);
@@ -1766,8 +1766,8 @@ const T148_CSS = `
 .t148 .body{font-size:11px;color:#64748B;line-height:1.6;margin-bottom:auto;}
 .t148 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
 .t148 .tag{padding:3px 10px;border-radius:12px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:8px;font-weight:600;color:#0284C7;}
-.t148 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:6px;font-size:9px;color:#94A3B8;}
-.t148 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#CBD5E1;}
+.t148 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:6px;font-size:9px;color:#000;}
+.t148 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT148(c: TemplateContent, w: number, h: number): string {
   const tags = c.tags || [];
@@ -1795,8 +1795,8 @@ const T149_CSS = `
 .t149 .scard-num{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#D97706,#FBBF24);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;}
 .t149 .scard-t{font-size:11px;font-weight:700;color:#1C1917;}
 .t149 .scard-d{font-size:9px;color:#78716C;margin-top:2px;line-height:1.4;}
-.t149 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#A8A29E;}
-.t149 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#D6D3D1;}
+.t149 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
+.t149 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
 `;
 function buildT149(c: TemplateContent, w: number, h: number): string {
   const tips = (c.tips || []).slice(0, 4);
@@ -1831,7 +1831,7 @@ function buildT150(c: TemplateContent, w: number, h: number): string {
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
     ${c.cta ? `<div class="cta-btn">${esc(c.cta)}</div>` : ""}
     <div class="swipe">Swipe up ↑</div>
-    ${storyBadge()}
+    ${storyBadge("#000")}
   `, 432, 768, w, h);
 }
 

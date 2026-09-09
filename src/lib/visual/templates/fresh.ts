@@ -84,8 +84,8 @@ em{font-style:normal;}
 
 // # Footer — brand strip
 function ft(t: FTheme): string {
-  const nc = t.mode === "d" ? "rgba(255,255,255,.25)" : "#999";
-  const uc = t.mode === "d" ? "rgba(255,255,255,.12)" : "#C0BDB5";
+  const nc = t.mode === "d" ? "#fff" : "#000";
+  const uc = t.mode === "d" ? "#fff" : "#000";
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;">
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
@@ -99,7 +99,7 @@ function ft(t: FTheme): string {
 function wm(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:6px;padding-top:12px;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:14px;height:14px;border-radius:3px;">
-    <span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.35);">jobpilotai.co</span>
+    <span style="font-size:9px;font-weight:600;color:#fff;">jobpilotai.co</span>
   </div>`;
 }
 

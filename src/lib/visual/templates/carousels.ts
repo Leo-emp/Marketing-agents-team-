@@ -114,8 +114,8 @@ body{font-family:${FONT_STACK};}
 
 // # Brand strip footer — adapts to dark/light mode
 function footer(t: Theme): string {
-  const nameColor = t.mode === "d" ? "rgba(255,255,255,.25)" : "#999";
-  const urlColor = t.mode === "d" ? "rgba(255,255,255,.12)" : "#C0BDB5";
+  const nameColor = t.mode === "d" ? "#fff" : "#000";
+  const urlColor = t.mode === "d" ? "#fff" : "#000";
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;">
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">

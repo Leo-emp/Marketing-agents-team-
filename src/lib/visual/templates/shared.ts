@@ -108,8 +108,8 @@ export function brandStripDark(): string {
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
     </div>
-    <span style="font-size:10px;font-weight:700;letter-spacing:-0.01em;color:rgba(255,255,255,0.25);">JobPilot AI</span>
-    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:rgba(255,255,255,0.12);">jobpilotai.co</span>
+    <span style="font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;">JobPilot AI</span>
+    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -119,8 +119,8 @@ export function brandStripLight(): string {
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
     </div>
-    <span style="font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#999;">JobPilot AI</span>
-    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#C0BDB5;">jobpilotai.co</span>
+    <span style="font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#000;">JobPilot AI</span>
+    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -154,8 +154,8 @@ export function proFooterDark(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:16px 0 0;">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);">
     <div style="display:flex;flex-direction:column;gap:1px;">
-      <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:-0.01em;">JobPilot AI</span>
-      <span style="font-size:9px;font-family:${MONO_STACK};color:rgba(255,255,255,0.35);letter-spacing:0.03em;">jobpilotai.co</span>
+      <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.01em;">JobPilot AI</span>
+      <span style="font-size:9px;font-family:${MONO_STACK};color:#fff;letter-spacing:0.03em;">jobpilotai.co</span>
     </div>
   </div>`;
 }
@@ -165,8 +165,8 @@ export function proFooterLight(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:16px 0 0;">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,0.06);">
     <div style="display:flex;flex-direction:column;gap:1px;">
-      <span style="font-size:11px;font-weight:700;color:#1A1A1A;letter-spacing:-0.01em;">JobPilot AI</span>
-      <span style="font-size:9px;font-family:${MONO_STACK};color:#999;letter-spacing:0.03em;">jobpilotai.co</span>
+      <span style="font-size:11px;font-weight:700;color:#000;letter-spacing:-0.01em;">JobPilot AI</span>
+      <span style="font-size:9px;font-family:${MONO_STACK};color:#000;letter-spacing:0.03em;">jobpilotai.co</span>
     </div>
   </div>`;
 }
@@ -175,8 +175,8 @@ export function proFooterLight(): string {
 export function proFooterBar(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 20px;background:rgba(0,0,0,0.5);border-radius:10px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;">
-    <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:-0.01em;">JobPilot AI</span>
-    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;color:rgba(255,255,255,0.4);letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.01em;">JobPilot AI</span>
+    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;color:#fff;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
