@@ -131,6 +131,45 @@ const DEFAULT_FIELDS_BY_PLATFORM: Record<string, string[]> = {
 };
 const DEFAULT_RENDERED_FIELDS = ["headline", "subheadline", "body", "bullets"];
 
+// # Safe fallback templates per platform — these render well with just headline + body
+// # Used when enrichment fails and the selected template would render mostly empty
+const SAFE_FALLBACK_TEMPLATES: Record<string, TemplateId> = {
+  linkedin: "t65" as TemplateId,   // # Split Header: headline + body + eyebrow
+  twitter: "t65" as TemplateId,    // # Split Header works for all platforms
+  instagram: "t27" as TemplateId,  // # Clean headline + body + eyebrow
+  tiktok: "t19" as TemplateId,     // # Headline + body + eyebrow
+};
+
+// # Check if a template's critical content fields are populated after enrichment
+// # "Critical" = fields beyond headline/eyebrow that fill the visual space
+// # If these are empty, the template renders as just a headline with dead space
+function hasEnoughContent(templateId: string, content: TemplateContent, platform?: string): boolean {
+  const contentFields = new Set(["body", "bullets", "tips", "steps", "items", "bars", "beforeText", "afterText", "annotations"]);
+  const rendered = TEMPLATE_RENDERED_FIELDS[templateId]
+    || (platform ? DEFAULT_FIELDS_BY_PLATFORM[platform] : null)
+    || DEFAULT_RENDERED_FIELDS;
+
+  // # Count how many content fields the template expects
+  const expectedContentFields = rendered.filter((f: string) => contentFields.has(f));
+  if (expectedContentFields.length === 0) return true; // # Template has no content fields (cover-only)
+
+  // # Check if at least ONE content field is populated
+  for (const field of expectedContentFields) {
+    switch (field) {
+      case "body": if (content.body && content.body.length > 10) return true; break;
+      case "bullets": if (content.bullets && content.bullets.length > 0) return true; break;
+      case "tips": if (content.tips && content.tips.length > 0) return true; break;
+      case "steps": if (content.steps && content.steps.length > 0) return true; break;
+      case "items": if (content.items && content.items.length > 0) return true; break;
+      case "bars": if (content.bars && content.bars.length > 0) return true; break;
+      case "beforeText": if (content.beforeText && content.beforeText.length > 5) return true; break;
+      case "afterText": if (content.afterText && content.afterText.length > 5) return true; break;
+      case "annotations": if (content.annotations && content.annotations.length > 0) return true; break;
+    }
+  }
+  return false;
+}
+
 // # Check which fields the selected template needs but the content lacks
 function getMissingFields(templateId: string, content: TemplateContent, platform?: string): string[] {
   const rendered = TEMPLATE_RENDERED_FIELDS[templateId]
@@ -392,7 +431,7 @@ export async function designVisual(
   // # Step 1: Generate structured slide data via Gemini
   // # Content quality prompt — requires specific, actionable, value-packed content
   // # that gives the reader a real takeaway, not vague labels or empty filler
-  const prompt = `You are an expert content strategist for ${BRAND_NAME}, a premium career tech platform. Your job is to create HIGH-VALUE visual content that makes people stop scrolling and SAVE the post.
+  const prompt = `You are a senior visual content director for ${BRAND_NAME}, a premium career tech platform. You have 12+ years designing social media visuals that stop the scroll. Your job is to create HIGH-VALUE visual content where the IMAGE DESIGN DIRECTLY REFLECTS THE CONTENT — not generic career imagery, but a visual that teaches the specific lesson being communicated.
 
 CONTENT TO STRUCTURE:
 ${content}
@@ -401,6 +440,26 @@ ${mediaPrompt ? `VISUAL DIRECTION: ${mediaPrompt}` : ""}
 ${topic ? `TOPIC: ${topic}` : ""}
 PLATFORM: ${platform}
 FORMAT: ${contentType} (${orientation}, ${width}x${height}px)
+
+CONTENT-DRIVEN DESIGN PRINCIPLE:
+The image IS the message in visual form. Before choosing any layout, ask: "What visual format best TEACHES this specific content?"
+- Comparison content → split panels, side-by-side, before/after
+- Steps/process → numbered timeline, flow, progress indicators
+- Data/stats → charts, bars, meters with real numbers
+- Tips/advice → tip cards with concrete how-to detail per item
+- Myth-busting → cross/check icons, red/green contrast
+- Product demo → UI mockup with realistic interface elements
+Choose the layout that makes the content VISIBLE, not just readable.
+
+MANDATORY CONTENT FIELDS (DO NOT SKIP — images with only a headline and empty space look broken):
+- EVERY slide MUST have a "body" field with 15-30 words of supporting content. A headline alone is NEVER enough.
+- EVERY slide MUST have at least ONE additional content field: "tips" OR "bullets" OR "steps" OR "items" OR "bars" OR "beforeText"/"afterText". Pick the one that best teaches the content.
+- If the topic is advice/tips → use "tips" array with 3-4 items, each with title + description
+- If the topic is data/stats → use "bars" array with 3-5 data points
+- If the topic is process/steps → use "steps" array with 3-4 numbered steps
+- If the topic is comparison → use "beforeText" + "afterText"
+- If the topic is a list → use "bullets" array with 4-5 specific items
+- A slide with ONLY a headline and no other content will render as a broken, empty image. This is the #1 visual quality failure to avoid.
 
 CONTENT QUALITY RULES (CRITICAL — follow these exactly):
 1. Every piece of text must provide STANDALONE VALUE. The reader should learn something specific just from reading the image.
@@ -457,23 +516,29 @@ ${isSingleImage
 
 Choose a layout type for each slide from: hero, stat_card, tip, quote, list, cta, before_after, comparison, numbered_steps, gradient_text, highlight_box.
 
-CAPTION RULES (for the "caption" field in your JSON response):
-Write a HIGH-QUALITY social media caption. Length: ${platform === 'linkedin' ? '150-400 words' : platform === 'twitter' ? '50-180 words' : '80-250 words'}.
-Structure for ${platform === 'linkedin' ? 'LinkedIn' : platform === 'twitter' ? 'Twitter' : 'Instagram'}:
-- Line 1: A HOOK that makes people stop scrolling. Use a surprising stat, contrarian take, personal confession, or bold claim. Never start with 'Did you know' or 'Here are X tips'.
-- Lines 2-4: The MEAT — expand on the hook with a specific story, real example, or data-backed insight. Write like you are talking to a friend, not writing an essay.
-- Last 2 lines: A QUESTION or CTA that invites comments. Ask something specific and debatable, not generic like 'What do you think?'
-${platform === 'linkedin' ? '- Use line breaks between paragraphs (use \\n). No emoji.' : ''}
-${platform === 'instagram' ? '- Add 5-10 relevant hashtags at the end (mix of broad + niche). No emoji in the main text.' : ''}
-${platform === 'twitter' ? '- Punchy and direct. No hashtags unless truly relevant.' : ''}
-- Do NOT repeat or summarize what the image already says. The caption should ADD new context, a personal angle, or a deeper insight.
-- Write in first person ('I', 'we') — not third person brand voice.
-- Include at least ONE specific number, stat, or real example.
-- Sound like a thoughtful human, not a corporate brand. No buzzwords like 'leverage', 'unlock', 'game-changer', 'empower'.
-- No emoji anywhere in the caption.
-- End with a specific question that invites real debate, not a yes/no question.
-BAD CAPTION: 'Your resume matters! Here are some tips to improve it. Check out JobPilot AI for more. What do you think?'
-GOOD CAPTION: 'I reviewed 200+ resumes last month. The #1 reason people get ghosted after applying? Their resume passes ATS but fails the 6-second human scan.\\nRecruiters spend an average of 6.2 seconds on each resume. In that window, they are looking for exactly 3 things...\\nWhat is the one change you made to your resume that actually got results?'
+CAPTION RULES — "JUST RIGHT" LENGTH (CRITICAL):
+Write like a senior marketing professional who knows the exact caption length that performs best on each platform. Not too long, not too short — just right to get to the point.
+
+${platform === 'linkedin' ? `LINKEDIN CAPTION: 800-1500 characters (150-250 words) for posts, 400-800 chars for carousels.
+- First 210 chars = your ENTIRE hook (shows before "see more"). Land the hook HERE.
+- 1-2 sentences per paragraph, blank line between each. Readers scan.
+- End with a specific debatable question, not "What do you think?"
+- Use line breaks (\\n). No emoji.` : ''}
+${platform === 'twitter' ? `X/TWITTER CAPTION: 80-200 characters for image posts. Every word earns its place.
+- Punchy and direct. No hashtags unless truly relevant.
+- The image carries weight — caption adds the take, not the summary.` : ''}
+${platform === 'instagram' ? `INSTAGRAM CAPTION: 125-200 chars for feed, 100-250 for carousels, 80-150 for reels.
+- First 125 chars show before "...more" — your ENTIRE hook must land there.
+- NEVER write a paragraph. 3 seconds to read max.
+- Hashtags in first COMMENT (not caption). No emoji.` : ''}
+${platform === 'tiktok' ? `TIKTOK CAPTION: 50-120 characters MAX.
+- [Hook phrase] + [one question]. That's it. Never more than 2 sentences.
+- Content is in the video/slides. Caption = context + searchability.` : ''}
+- Do NOT repeat what the image says. Caption ADDS context, story, or deeper insight.
+- Write in first person ('I', 'we'). Sound human, not corporate.
+- Include at least ONE specific number, stat, or example.
+- No buzzwords: 'leverage', 'unlock', 'game-changer', 'empower'.
+- No emoji. End with a specific question that invites debate.
 
 Return a JSON object:
 {
@@ -635,6 +700,39 @@ Return ONLY valid JSON.`;
           content,
           platform,
         );
+
+        // # POST-ENRICHMENT VALIDATION: If the template's content fields are
+        // # still empty after enrichment, the image would render as just a headline
+        // # with 80% dead space. Fall back to a safe template that works with body text.
+        if (!hasEnoughContent(selection.templateId, templateContent, platform)) {
+          const fallbackId = SAFE_FALLBACK_TEMPLATES[platform] || ("t65" as TemplateId);
+          console.warn(`[Designer] Template ${selection.templateId} still has empty content after enrichment — falling back to safe template ${fallbackId}`);
+
+          // # Ensure we at least have body text for the fallback
+          if (!templateContent.body || templateContent.body.length < 10) {
+            templateContent.body = normalized.body
+              || normalized.subheadline
+              || (normalized.bullets ? normalized.bullets.join(". ") : undefined)
+              || "Visit jobpilotai.co to learn more";
+          }
+
+          selection = {
+            templateId: fallbackId,
+            templateName: "Safe Fallback — Content-Rich",
+            reasoning: `Original template ${selection.templateId} had empty content fields after enrichment — switched to ${fallbackId} to avoid empty image`,
+          };
+
+          // # Re-enrich for the new simpler template (it might only need body)
+          templateContent = await enrichContentForTemplate(
+            selection.templateId,
+            selection.templateName,
+            templateContent,
+            content,
+            platform,
+          );
+
+          if (isCarouselType && index === 0) carouselLockedTemplate = selection;
+        }
 
         // # Merge enriched fields back into the slide so render functions
         // # that call slideToTemplateContent(slide) get the full content

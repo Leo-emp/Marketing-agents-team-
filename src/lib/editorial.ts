@@ -44,6 +44,14 @@ HOOK: "${hook}"
 ${topPerformerContext ? `\nTOP-PERFORMING CONTENT FOR REFERENCE:\n${topPerformerContext}\n\nCompare the content under review against these high performers. Does it match their quality, specificity, and voice?\n` : ""}
 EVALUATE AGAINST THESE CRITERIA (score each 1-10):
 
+0. CAPTION LENGTH CHECK (CRITICAL — check FIRST):
+   A senior marketing pro knows every platform has a "just right" caption length. Too long = readers bounce. Too short = no substance.
+   ${platform === "linkedin" ? "LinkedIn post: 800-1500 chars. Carousel: 400-800 chars. NEVER exceed 2000 or go under 600." : ""}
+   ${platform === "twitter" ? "X/Twitter tweet: 60-180 chars. Image post: 80-200 chars. Thread tweets: 180-250 each, max 7." : ""}
+   ${platform === "instagram" ? "Instagram feed: 125-200 chars. Carousel: 100-250 chars. Reel: 80-150 chars." : ""}
+   ${platform === "tiktok" ? "TikTok: 50-120 chars MAX. Never more than 2 sentences." : ""}
+   If outside range, REWRITE to correct length in the revisedContent. A perfect caption at the wrong length underperforms a decent one at the right length.
+
 1. AI DETECTION TEST
    - Does it sound like AI wrote it? Check for: overly balanced sentence structure, lists that feel algorithmic, transitions that are too smooth, vocabulary that's uniformly "elevated"
    - Real humans are messier — they emphasize unevenly, skip transitions, use colloquial phrases mixed with technical ones
