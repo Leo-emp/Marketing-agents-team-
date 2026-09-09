@@ -90,8 +90,8 @@ function ft(t: FTheme): string {
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
     </div>
-    <span style="font-size:10px;font-weight:700;letter-spacing:-.01em;color:${nc};">JobPilot AI</span>
-    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:.02em;color:${uc};">jobpilotai.co</span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nc};">JobPilot AI</span>
+    <span style="font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:.02em;color:${uc};">jobpilotai.co</span>
   </div>`;
 }
 
@@ -99,7 +99,7 @@ function ft(t: FTheme): string {
 function wm(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:6px;padding-top:12px;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:14px;height:14px;border-radius:3px;">
-    <span style="font-size:9px;font-weight:600;color:#fff;">jobpilotai.co</span>
+    <span style="font-size:11px;font-weight:600;color:#fff;">jobpilotai.co</span>
   </div>`;
 }
 

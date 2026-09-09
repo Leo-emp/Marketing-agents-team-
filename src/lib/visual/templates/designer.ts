@@ -122,8 +122,8 @@ function footer(mode: "dark" | "light" | "gradient"): string {
     <div style="width:20px;height:20px;border-radius:5px;background:${logoBg};display:flex;align-items:center;justify-content:center;overflow:hidden;">
       <img src="${LOGO_PRO_URI}" alt="JobPilot" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">
     </div>
-    <span style="font-family:${DISP};font-size:10.5px;font-weight:700;letter-spacing:-.01em;color:${nameC};">JobPilot AI</span>
-    <span style="font-size:8.5px;font-family:${MONO};margin-left:auto;letter-spacing:.02em;color:${urlC};">jobpilotai.co</span>
+    <span style="font-family:${DISP};font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nameC};">JobPilot AI</span>
+    <span style="font-size:11px;font-family:${MONO};margin-left:auto;letter-spacing:.02em;color:${urlC};">jobpilotai.co</span>
   </div>`;
 }
 

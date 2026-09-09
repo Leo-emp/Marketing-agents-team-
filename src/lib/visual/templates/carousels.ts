@@ -120,8 +120,8 @@ function footer(t: Theme): string {
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
     </div>
-    <span style="font-size:10px;font-weight:700;letter-spacing:-.01em;color:${nameColor};">JobPilot AI</span>
-    <span style="font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:.02em;color:${urlColor};">jobpilotai.co</span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nameColor};">JobPilot AI</span>
+    <span style="font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:.02em;color:${urlColor};">jobpilotai.co</span>
   </div>`;
 }
 

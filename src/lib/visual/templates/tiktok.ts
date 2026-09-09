@@ -29,7 +29,7 @@ const TT_MONO = `'Cascadia Code', 'SF Mono', 'Fira Code', Consolas, monospace`;
 function watermark(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:24px;left:24px;display:flex;align-items:center;gap:6px;opacity:0.4;z-index:5;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:14px;height:14px;border-radius:3px;">
-    <span style="font-size:7px;font-weight:600;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
+    <span style="font-size:11px;font-weight:600;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
   </div>`;
 }
 
@@ -164,8 +164,8 @@ function buildT18(c: TemplateContent, w: number, h: number): string {
 function tealFooter(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-    <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:-0.01em;">JobPilot AI</span>
-    <span style="font-size:8px;font-family:${TT_MONO};color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.01em;">JobPilot AI</span>
+    <span style="font-size:11px;font-family:${TT_MONO};color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -421,7 +421,7 @@ const T41_CSS = `
 .t41 .thin-rule{width:32px;height:1px;background:rgba(255,255,255,0.08);margin-bottom:12px;}
 .t41 .body{font-size:5px;color:rgba(255,255,255,0.35);line-height:1.6;max-width:300px;margin-bottom:auto;}
 .t41 .foot{display:flex;align-items:center;justify-content:space-between;}
-.t41 .foot-brand{font-size:4px;font-weight:600;color:#fff;}
+.t41 .foot-brand{font-size:11px;font-weight:600;color:#fff;}
 `;
 
 function buildT41(c: TemplateContent, w: number, h: number): string {
@@ -815,8 +815,8 @@ function buildT88(c: TemplateContent, w: number, h: number): string {
 function proBrandBar(): string {
   return `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:14px 20px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.6));z-index:5;">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);">
-    <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:0.02em;">JobPilot AI</span>
-    <span style="font-size:8px;font-family:${TT_MONO};color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:0.02em;">JobPilot AI</span>
+    <span style="font-size:11px;font-family:${TT_MONO};color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 

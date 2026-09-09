@@ -120,7 +120,7 @@ const T1_CSS = `
 .t1 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
 .t1 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t1 .brand-strip .name span{font-weight:400;color:#fff;}
-.t1 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t1 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT1(c: TemplateContent, w: number, h: number): string {
@@ -155,7 +155,7 @@ const T3_CSS = `
 .t3 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
 .t3 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t3 .brand-strip .name span{font-weight:400;color:#fff;}
-.t3 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t3 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT3(c: TemplateContent, w: number, h: number): string {
@@ -195,8 +195,8 @@ const T65_CSS = `
 .t65 .sh-body strong{color:rgba(255,255,255,0.75);font-weight:600;}
 .t65 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
 .t65 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
-.t65 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
-.t65 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
+.t65 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t65 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 `;
 
 function buildT65(c: TemplateContent, w: number, h: number): string {
@@ -235,8 +235,8 @@ const T66_CSS = `
 .t66 .an-score-val{font-size:14px;font-weight:800;color:#6366F1;font-variant-numeric:tabular-nums;}
 .t66 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
 .t66 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
-.t66 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#000;}
-.t66 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;}
+.t66 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#000;}
+.t66 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;}
 `;
 
 function buildT66(c: TemplateContent, w: number, h: number): string {
@@ -280,8 +280,8 @@ const T67_CSS = `
 .t67 .sr-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.3);font-variant-numeric:tabular-nums;}
 .t67 .sr-label.mid{color:#fff;font-weight:800;}
 .t67 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t67 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
-.t67 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
+.t67 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t67 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t67 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -329,8 +329,8 @@ const T68_CSS = `
 .t68 .qw-body{position:relative;z-index:2;font-size:15px;color:rgba(255,255,255,0.5);line-height:1.65;max-width:300px;}
 .t68 .qw-body strong{color:rgba(255,255,255,0.85);font-weight:600;}
 .t68 .brand-strip{position:relative;z-index:2;margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t68 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
-.t68 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
+.t68 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t68 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t68 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -371,8 +371,8 @@ const T69_CSS = `
 .t69 .rk-pct{font-size:13px;font-weight:800;color:rgba(255,255,255,0.2);font-variant-numeric:tabular-nums;}
 .t69 .rk-item.top .rk-pct{color:#A78BFA;}
 .t69 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t69 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
-.t69 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
+.t69 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t69 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t69 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -417,8 +417,8 @@ const T70_CSS = `
 .t70 .tn-desc{font-size:12px;color:#777;line-height:1.45;}
 .t70 .tn-cta{margin-top:20px;text-align:center;font-size:12px;font-weight:600;color:#6366F1;}
 .t70 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t70 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#000;}
-.t70 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;}
+.t70 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#000;}
+.t70 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#000;}
 .t70 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -464,8 +464,8 @@ const T71_CSS = `
 .t71 .fw-step-head{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;}
 .t71 .fw-step-desc{font-size:11px;color:rgba(255,255,255,0.35);line-height:1.45;}
 .t71 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t71 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
-.t71 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
+.t71 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t71 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t71 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -513,8 +513,8 @@ const T72_CSS = `
 .t72 .bm-legend-dot.acc{background:#6366F1;}
 .t72 .bm-legend-dot.avg{background:#F59E0B;}
 .t72 .brand-strip{margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;}
-.t72 .b-name{font-size:10px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
-.t72 .b-url{font-size:9px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
+.t72 .b-name{font-size:11px;font-weight:700;letter-spacing:-0.01em;color:#fff;}
+.t72 .b-url{font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:0.02em;color:#fff;}
 .t72 .b-logo{width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;}
 `;
 
@@ -572,7 +572,7 @@ const T2_CSS = `
 .t2 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;}
 .t2 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t2 .brand-strip .name span{font-weight:400;color:#000;}
-.t2 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t2 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT2(c: TemplateContent, w: number, h: number): string {
@@ -633,7 +633,7 @@ const T4_CSS = `
 .t4 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
 .t4 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t4 .brand-strip .name span{font-weight:400;color:#fff;}
-.t4 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t4 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT4(c: TemplateContent, w: number, h: number): string {
@@ -678,7 +678,7 @@ const T5_CSS = `
 .t5 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;border-top:1px solid #E8E4DD;}
 .t5 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t5 .brand-strip .name span{font-weight:400;color:#000;}
-.t5 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t5 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT5(c: TemplateContent, w: number, h: number): string {
@@ -707,7 +707,7 @@ const T7_CSS = `
 .t7 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
 .t7 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t7 .brand-strip .name span{font-weight:400;color:#fff;}
-.t7 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t7 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT7(c: TemplateContent, w: number, h: number): string {
@@ -744,7 +744,7 @@ const T8_CSS = `
 .t8 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
 .t8 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t8 .brand-strip .name span{font-weight:400;color:#000;}
-.t8 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t8 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT8(c: TemplateContent, w: number, h: number): string {
@@ -781,7 +781,7 @@ const T9_CSS = `
 .t9 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
 .t9 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t9 .brand-strip .name span{font-weight:400;color:#fff;}
-.t9 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t9 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT9(c: TemplateContent, w: number, h: number): string {
@@ -819,7 +819,7 @@ const T10_CSS = `
 .t10 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;position:relative;z-index:2;}
 .t10 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t10 .brand-strip .name span{font-weight:400;color:#fff;}
-.t10 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t10 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT10(c: TemplateContent, w: number, h: number): string {
@@ -856,7 +856,7 @@ const T11_CSS = `
 .t11 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
 .t11 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t11 .brand-strip .name span{font-weight:400;color:#000;}
-.t11 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t11 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT11(c: TemplateContent, w: number, h: number): string {
@@ -891,7 +891,7 @@ const T12_CSS = `
 .t12 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;position:relative;}
 .t12 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t12 .brand-strip .name span{font-weight:400;color:#fff;}
-.t12 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t12 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT12(c: TemplateContent, w: number, h: number): string {
@@ -927,7 +927,7 @@ const T13_CSS = `
 .t13 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
 .t13 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t13 .brand-strip .name span{font-weight:400;color:#000;}
-.t13 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t13 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT13(c: TemplateContent, w: number, h: number): string {
@@ -966,7 +966,7 @@ const T14_CSS = `
 .t14 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
 .t14 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t14 .brand-strip .name span{font-weight:400;color:#fff;}
-.t14 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t14 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT14(c: TemplateContent, w: number, h: number): string {
@@ -1006,7 +1006,7 @@ const T15_CSS = `
 .t15 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
 .t15 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t15 .brand-strip .name span{font-weight:400;color:#fff;}
-.t15 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t15 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT15(c: TemplateContent, w: number, h: number): string {
@@ -1044,7 +1044,7 @@ const T73_CSS = `
 .t73 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
 .t73 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t73 .brand-strip .name span{font-weight:400;color:#fff;}
-.t73 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t73 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT73(c: TemplateContent, w: number, h: number): string {
@@ -1081,7 +1081,7 @@ const T74_CSS = `
 .t74 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
 .t74 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t74 .brand-strip .name span{font-weight:400;color:#000;}
-.t74 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t74 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT74(c: TemplateContent, w: number, h: number): string {
@@ -1125,7 +1125,7 @@ const T75_CSS = `
 .t75 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t75 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t75 .brand-strip .name span{font-weight:400;color:#fff;}
-.t75 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t75 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT75(c: TemplateContent, w: number, h: number): string {
@@ -1162,7 +1162,7 @@ const T76_CSS = `
 .t76 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t76 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t76 .brand-strip .name span{font-weight:400;color:#000;}
-.t76 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t76 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT76(c: TemplateContent, w: number, h: number): string {
@@ -1203,7 +1203,7 @@ const T77_CSS = `
 .t77 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;position:relative;z-index:1;}
 .t77 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t77 .brand-strip .name span{font-weight:400;color:#fff;}
-.t77 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t77 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT77(c: TemplateContent, w: number, h: number): string {
@@ -1247,7 +1247,7 @@ const T78_CSS = `
 .t78 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;position:relative;}
 .t78 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t78 .brand-strip .name span{font-weight:400;color:#fff;}
-.t78 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t78 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT78(c: TemplateContent, w: number, h: number): string {
@@ -1288,7 +1288,7 @@ const T79_CSS = `
 .t79 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t79 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t79 .brand-strip .name span{font-weight:400;color:#000;}
-.t79 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t79 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT79(c: TemplateContent, w: number, h: number): string {
@@ -1442,7 +1442,7 @@ const T98_CSS = `
 .t98 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t98 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t98 .brand-strip .name span{font-weight:400;color:#fff;}
-.t98 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t98 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT98(c: TemplateContent, w: number, h: number): string {
@@ -1492,7 +1492,7 @@ const T99_CSS = `
 .t99 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t99 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t99 .brand-strip .name span{font-weight:400;color:#fff;}
-.t99 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t99 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT99(c: TemplateContent, w: number, h: number): string {
@@ -1542,7 +1542,7 @@ const T100_CSS = `
 .t100 .brand-strip{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t100 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t100 .brand-strip .name span{font-weight:400;color:#fff;}
-.t100 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t100 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT100(c: TemplateContent, w: number, h: number): string {
@@ -1595,7 +1595,7 @@ const T101_CSS = `
 .t101 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:16px;}
 .t101 .brand-strip .name{font-size:11px;font-weight:700;color:#000;}
 .t101 .brand-strip .name span{font-weight:400;color:#000;}
-.t101 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#000;}
+.t101 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#000;}
 `;
 
 function buildT101(c: TemplateContent, w: number, h: number): string {
@@ -1649,7 +1649,7 @@ const T102_CSS = `
 .t102 .brand-strip{position:relative;display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;}
 .t102 .brand-strip .name{font-size:11px;font-weight:700;color:#fff;}
 .t102 .brand-strip .name span{font-weight:400;color:#fff;}
-.t102 .brand-strip .url{font-family:${MONO_STACK};font-size:7px;color:#fff;}
+.t102 .brand-strip .url{font-family:${MONO_STACK};font-size:11px;color:#fff;}
 `;
 
 function buildT102(c: TemplateContent, w: number, h: number): string {

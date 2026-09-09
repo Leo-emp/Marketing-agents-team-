@@ -29,14 +29,14 @@ const IG_MONO = `'Cascadia Code', 'Fira Code', Consolas, monospace`;
 
 // # Centered brand footer — subtle, uppercase
 function brandFooter(color: string = "#000"): string {
-  return `<div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:4px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:${color};z-index:5;">JOBPILOT AI</div>`;
+  return `<div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:${color};z-index:5;">JOBPILOT AI</div>`;
 }
 
 // # Story badge pill — centered bottom
 function storyBadge(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:100px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:5px 12px;z-index:5;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:3px;">
-    <span style="font-family:${IG_SANS};font-size:7px;font-weight:600;color:${color};letter-spacing:0.06em;">JOBPILOT AI</span>
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:600;color:${color};letter-spacing:0.06em;">JOBPILOT AI</span>
   </div>`;
 }
 
@@ -208,8 +208,8 @@ function buildT27(c: TemplateContent, w: number, h: number): string {
     <div class="spacer-b"></div>
     <div class="brand">
       <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-      <span style="font-size:10px;font-weight:700;color:#fff;">JobPilot AI</span>
-      <span style="font-size:8px;font-family:${IG_MONO};color:#fff;margin-left:auto;">jobpilotai.co</span>
+      <span style="font-size:11px;font-weight:700;color:#fff;">JobPilot AI</span>
+      <span style="font-size:11px;font-family:${IG_MONO};color:#fff;margin-left:auto;">jobpilotai.co</span>
     </div>
   `, 432, 768, w, h);
 }
@@ -1156,8 +1156,8 @@ function buildT96(c: TemplateContent, w: number, h: number): string {
 function proIgFooter(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:5;">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:20px;height:20px;border-radius:4px;">
-    <span style="font-family:${IG_SANS};font-size:9px;font-weight:700;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
-    <span style="font-family:${IG_MONO};font-size:7px;color:${color};letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:11px;color:${color};letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -1165,8 +1165,8 @@ function proIgFooter(color: string = "#fff"): string {
 function proIgFooterBar(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(255,255,255,0.06);">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);">
-    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:#fff;">JobPilot AI</span>
-    <span style="font-family:${IG_MONO};font-size:8px;color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:#fff;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:11px;color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -1174,8 +1174,8 @@ function proIgFooterBar(): string {
 function proIgFooterLight(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(0,0,0,0.06);">
     <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);">
-    <span style="font-family:${IG_SANS};font-size:10px;font-weight:700;color:#000;">JobPilot AI</span>
-    <span style="font-family:${IG_MONO};font-size:8px;color:#000;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:#000;">JobPilot AI</span>
+    <span style="font-family:${IG_MONO};font-size:11px;color:#000;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
 
@@ -1205,8 +1205,8 @@ const T109_CSS = `
 /* # Footer */
 .t109 .footer{display:flex;align-items:center;gap:10px;padding-top:12px;}
 .t109 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);}
-.t109 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#000;letter-spacing:0.04em;}
-.t109 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#000;margin-left:auto;letter-spacing:0.03em;}
+.t109 .footer .fname{font-family:${IG_SANS};font-size:11px;font-weight:700;color:#000;letter-spacing:0.04em;}
+.t109 .footer .furl{font-family:${IG_MONO};font-size:11px;color:#000;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT109(c: TemplateContent, w: number, h: number): string {
@@ -1256,8 +1256,8 @@ const T110_CSS = `
 /* # Footer */
 .t110 .footer{display:flex;align-items:center;gap:8px;padding-top:14px;margin-top:16px;border-top:1px solid #F0F0F0;}
 .t110 .footer img{width:20px;height:20px;border-radius:4px;border:1px solid rgba(0,0,0,0.06);}
-.t110 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#000;}
-.t110 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#000;margin-left:auto;letter-spacing:0.03em;}
+.t110 .footer .fname{font-family:${IG_SANS};font-size:11px;font-weight:700;color:#000;}
+.t110 .footer .furl{font-family:${IG_MONO};font-size:11px;color:#000;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT110(c: TemplateContent, w: number, h: number): string {
@@ -1299,8 +1299,8 @@ const T111_CSS = `
 /* # Footer */
 .t111 .footer{display:flex;align-items:center;gap:10px;padding-top:16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;}
 .t111 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,0.12);}
-.t111 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#fff;}
-.t111 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#fff;margin-left:auto;letter-spacing:0.03em;}
+.t111 .footer .fname{font-family:${IG_SANS};font-size:11px;font-weight:700;color:#fff;}
+.t111 .footer .furl{font-family:${IG_MONO};font-size:11px;color:#fff;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT111(c: TemplateContent, w: number, h: number): string {
@@ -1344,7 +1344,7 @@ const T112_CSS = `
 .t112 .footer{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:1;}
 .t112 .footer img{width:18px;height:18px;border-radius:4px;}
 .t112 .footer .fname{font-family:${IG_SANS};font-size:8px;font-weight:700;color:#fff;letter-spacing:0.04em;}
-.t112 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#fff;letter-spacing:0.03em;}
+.t112 .footer .furl{font-family:${IG_MONO};font-size:11px;color:#fff;letter-spacing:0.03em;}
 `;
 
 function buildT112(c: TemplateContent, w: number, h: number): string {
@@ -1391,8 +1391,8 @@ const T113_CSS = `
 /* # Footer */
 .t113 .footer{display:flex;align-items:center;gap:10px;padding-top:14px;margin-top:auto;border-top:1px solid #F0F0F0;}
 .t113 .footer img{width:22px;height:22px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);}
-.t113 .footer .fname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#000;}
-.t113 .footer .furl{font-family:${IG_MONO};font-size:7px;color:#000;margin-left:auto;letter-spacing:0.03em;}
+.t113 .footer .fname{font-family:${IG_SANS};font-size:11px;font-weight:700;color:#000;}
+.t113 .footer .furl{font-family:${IG_MONO};font-size:11px;color:#000;margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT113(c: TemplateContent, w: number, h: number): string {
@@ -1445,8 +1445,8 @@ const T114_CSS = `
 /* # Brand badge below card */
 .t114 .badge{display:flex;align-items:center;gap:6px;margin-top:24px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 14px;position:relative;z-index:1;}
 .t114 .badge img{width:18px;height:18px;border-radius:4px;}
-.t114 .badge .bname{font-family:${IG_SANS};font-size:9px;font-weight:700;color:#fff;}
-.t114 .badge .burl{font-family:${IG_MONO};font-size:7px;color:rgba(255,255,255,0.25);margin-left:auto;letter-spacing:0.03em;}
+.t114 .badge .bname{font-family:${IG_SANS};font-size:11px;font-weight:700;color:#fff;}
+.t114 .badge .burl{font-family:${IG_MONO};font-size:11px;color:rgba(255,255,255,0.25);margin-left:auto;letter-spacing:0.03em;}
 `;
 
 function buildT114(c: TemplateContent, w: number, h: number): string {
@@ -1494,8 +1494,8 @@ const T127_CSS = `
 .t127 .col{font-size:10px;color:#666;line-height:1.6;}
 .t127 .col strong{color:#1A1A1A;font-weight:600;}
 .t127 .rule-btm{height:1px;background:#E2E0DB;}
-.t127 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#000;}
-.t127 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t127 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:11px;color:#000;}
+.t127 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT127(c: TemplateContent, w: number, h: number): string {
   const cols = c.bullets || [];
@@ -1526,8 +1526,8 @@ const T128_CSS = `
 .t128 .g-lbl{font-size:8px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:auto;}
 .t128 .g-bar{height:3px;background:#E5E7EB;border-radius:2px;overflow:hidden;margin-top:8px;}
 .t128 .g-fill{height:100%;background:linear-gradient(90deg,#0D9488,#2DD4BF);border-radius:2px;}
-.t128 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:9px;color:#000;}
-.t128 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t128 .ftr{display:flex;align-items:center;gap:6px;padding-top:8px;font-size:11px;color:#000;}
+.t128 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT128(c: TemplateContent, w: number, h: number): string {
   const bars = (c.bars || []).slice(0, 4);
@@ -1556,8 +1556,8 @@ const T129_CSS = `
 .t129 .tips{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
 .t129 .tip{display:flex;gap:8px;align-items:flex-start;font-size:10px;color:#4B5563;}
 .t129 .tip::before{content:'→';color:#7C3AED;font-weight:700;flex-shrink:0;}
-.t129 .ftr{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid rgba(124,58,237,0.1);font-size:9px;color:#000;}
-.t129 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t129 .ftr{display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid rgba(124,58,237,0.1);font-size:11px;color:#000;}
+.t129 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT129(c: TemplateContent, w: number, h: number): string {
   const tips = c.bullets || [];
@@ -1579,8 +1579,8 @@ const T130_CSS = `
 .t130 .line{width:40px;height:3px;background:linear-gradient(90deg,#EA580C,#FDBA74);border-radius:2px;margin-bottom:12px;}
 .t130 .body{font-size:12px;color:#9CA3AF;line-height:1.6;max-width:380px;}
 .t130 .body strong{color:#374151;font-weight:700;}
-.t130 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
-.t130 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t130 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:11px;color:#000;}
+.t130 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT130(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t130", T130_CSS, `
@@ -1607,8 +1607,8 @@ const T131_CSS = `
 .t131 .bar-track{height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden;}
 .t131 .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1E3A5A,#3B82F6);}
 .t131 .source{font-size:7px;color:#D1D5DB;margin-top:8px;}
-.t131 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
-.t131 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t131 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:11px;color:#000;}
+.t131 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT131(c: TemplateContent, w: number, h: number): string {
   const bars = (c.bars || []).slice(0, 6);
@@ -1693,8 +1693,8 @@ const T146_CSS = `
 .t146 .bottom{padding:16px 34px 24px;display:flex;flex-direction:column;}
 .t146 .body{font-size:12px;color:#64748B;line-height:1.6;}
 .t146 .body strong{color:#0F172A;font-weight:700;}
-.t146 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;font-size:9px;color:#000;}
-.t146 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t146 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;font-size:11px;color:#000;}
+.t146 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT146(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t146", T146_CSS, `
@@ -1724,8 +1724,8 @@ const T147_CSS = `
 .t147 .node-t{font-size:12px;font-weight:700;color:#111827;padding-top:4px;}
 .t147 .node-d{font-size:9px;color:#9CA3AF;margin-top:2px;line-height:1.4;}
 .t147 .connector{width:2px;height:14px;background:#D1FAE5;margin-left:13px;}
-.t147 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
-.t147 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t147 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:11px;color:#000;}
+.t147 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT147(c: TemplateContent, w: number, h: number): string {
   const steps = (c.steps || c.tips || []).slice(0, 4);
@@ -1758,8 +1758,8 @@ const T148_CSS = `
 .t148 .body{font-size:11px;color:#64748B;line-height:1.6;margin-bottom:auto;}
 .t148 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
 .t148 .tag{padding:3px 10px;border-radius:12px;background:#F0F9FF;border:1px solid #BAE6FD;font-size:8px;font-weight:600;color:#0284C7;}
-.t148 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:6px;font-size:9px;color:#000;}
-.t148 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t148 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:6px;font-size:11px;color:#000;}
+.t148 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT148(c: TemplateContent, w: number, h: number): string {
   const tags = c.tags || [];
@@ -1787,8 +1787,8 @@ const T149_CSS = `
 .t149 .scard-num{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#D97706,#FBBF24);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;}
 .t149 .scard-t{font-size:11px;font-weight:700;color:#1C1917;}
 .t149 .scard-d{font-size:9px;color:#78716C;margin-top:2px;line-height:1.4;}
-.t149 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:9px;color:#000;}
-.t149 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:7px;color:#000;}
+.t149 .ftr{display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:11px;color:#000;}
+.t149 .ftr .url{margin-left:auto;font-family:${IG_MONO};font-size:11px;color:#000;}
 `;
 function buildT149(c: TemplateContent, w: number, h: number): string {
   const tips = (c.tips || []).slice(0, 4);
