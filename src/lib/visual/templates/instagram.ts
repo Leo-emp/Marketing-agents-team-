@@ -530,27 +530,19 @@ function buildT48(c: TemplateContent, w: number, h: number): string {
    ============================================================ */
 const T53_CSS = `
 .t53{background:#FFFFFF;display:flex;flex-direction:column;padding:44px 40px 32px;}
-.t53 .counter{font-family:${IG_SANS};font-size:4px;font-weight:600;color:#6366F1;font-variant-numeric:tabular-nums;margin-bottom:16px;}
 .t53 .title{font-family:${IG_SANS};font-size:10px;font-weight:800;color:#1A1A1A;margin-bottom:8px;letter-spacing:-0.02em;}
 .t53 .accent-rule{width:28px;height:2px;background:#6366F1;border-radius:1px;margin-bottom:16px;}
 .t53 .body{font-family:${IG_SANS};font-size:6px;color:#4A4A4A;line-height:1.6;flex:1;}
 .t53 .body strong{color:#1A1A1A;font-weight:700;}
-.t53 .dots{display:flex;gap:3px;align-items:center;position:absolute;bottom:24px;left:50%;transform:translateX(-50%);}
-.t53 .dot{width:3px;height:3px;border-radius:50%;background:#D4D0C8;}
-.t53 .dot.active{width:7px;background:#6366F1;border-radius:3px;}
-.t53 .swipe{font-family:${IG_SANS};font-size:3px;color:#B0ACA0;position:absolute;bottom:24px;right:36px;}
 `;
 
 function buildT53(c: TemplateContent, w: number, h: number): string {
   const body = esc(c.body || "");
   const bold = c.bodyBold ? body.replace(esc(c.bodyBold), `<strong>${esc(c.bodyBold)}</strong>`) : body;
   return wrapIG("t53", T53_CSS, `
-    <div class="counter">${esc(c.stat?.value || "03 / 07")}</div>
     <div class="title">${esc(c.headline)}</div>
     <div class="accent-rule"></div>
     <div class="body">${bold}</div>
-    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
-    <div class="swipe">Swipe →</div>
   `, 540, 675, w, h);
 }
 

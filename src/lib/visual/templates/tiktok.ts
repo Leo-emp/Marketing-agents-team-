@@ -204,15 +204,9 @@ function buildT19(c: TemplateContent, w: number, h: number): string {
 const T20_CSS = `
 .t20{background:#FFFBF0;display:flex;flex-direction:column;padding:60px 28px 32px;}
 .t20 .badge{display:inline-flex;align-self:flex-start;background:#000;color:#fff;padding:5px 12px;border-radius:14px;font-size:8px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;}
-.t20 .slide-num{font-size:52px;font-weight:900;color:#000;letter-spacing:-0.04em;margin-bottom:6px;}
 .t20 .title{font-size:22px;font-weight:800;color:#000;line-height:1.2;margin-bottom:16px;max-width:340px;}
 .t20 .body{font-size:13px;color:#4A4A4A;line-height:1.6;flex:1;max-width:360px;}
 .t20 .body strong{color:#000;font-weight:700;}
-.t20 .bottom{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:20px;}
-.t20 .dots{display:flex;gap:4px;}
-.t20 .dot{width:6px;height:6px;border-radius:3px;background:#D4D0C8;}
-.t20 .dot.active{background:#000;width:14px;}
-.t20 .swipe{font-size:9px;color:#8A8A8A;font-weight:500;}
 `;
 
 function buildT20(c: TemplateContent, w: number, h: number): string {
@@ -220,13 +214,8 @@ function buildT20(c: TemplateContent, w: number, h: number): string {
   const boldBody = c.bodyBold ? body.replace(esc(c.bodyBold), `<strong>${esc(c.bodyBold)}</strong>`) : body;
   return wrapTT("t20", T20_CSS, `
     <div class="badge">${esc(c.eyebrow || "CAREER TIPS")}</div>
-    <div class="slide-num">${esc(c.stat?.value || "01")}</div>
     <div class="title">${esc(c.headline)}</div>
     <div class="body">${boldBody}</div>
-    <div class="bottom">
-      <div class="dots"><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      <div class="swipe">Swipe for more →</div>
-    </div>
     ${watermark("#000")}
   `, 432, 768, w, h);
 }
@@ -427,14 +416,12 @@ function buildT40(c: TemplateContent, w: number, h: number): string {
    ============================================================ */
 const T41_CSS = `
 .t41{background:#0C0C12;display:flex;flex-direction:column;padding:60px 28px 32px;}
-.t41 .slide-num{font-size:4px;color:rgba(99,102,241,0.5);font-weight:600;margin-bottom:auto;}
 .t41 .headline{font-size:10px;font-weight:700;color:#fff;line-height:1.4;max-width:340px;margin-bottom:12px;}
 .t41 .headline em{font-style:normal;color:#6366F1;}
 .t41 .thin-rule{width:32px;height:1px;background:rgba(255,255,255,0.08);margin-bottom:12px;}
 .t41 .body{font-size:5px;color:rgba(255,255,255,0.35);line-height:1.6;max-width:300px;margin-bottom:auto;}
 .t41 .foot{display:flex;align-items:center;justify-content:space-between;}
 .t41 .foot-brand{font-size:4px;font-weight:600;color:#fff;}
-.t41 .foot-page{font-size:4px;color:#fff;font-variant-numeric:tabular-nums;}
 `;
 
 function buildT41(c: TemplateContent, w: number, h: number): string {
@@ -442,13 +429,11 @@ function buildT41(c: TemplateContent, w: number, h: number): string {
   const kw = c.headlineHighlight ? esc(c.headlineHighlight) : "";
   const styled = kw ? headline.replace(kw, `<em>${kw}</em>`) : headline;
   return wrapTT("t41", T41_CSS, `
-    <div class="slide-num">${esc(c.stat?.label || "01")}</div>
     <div class="headline">${styled}</div>
     <div class="thin-rule"></div>
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
     <div class="foot">
       <div class="foot-brand">JobPilot AI</div>
-      <div class="foot-page">${esc(c.stat?.value || "1 / 5")}</div>
     </div>
   `, 432, 768, w, h);
 }

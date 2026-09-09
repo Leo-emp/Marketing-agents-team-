@@ -702,7 +702,6 @@ const T7_CSS = `
 .t7{width:540px;height:675px;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 44px;}
 .t7 .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:auto;}
 .t7 .eyebrow{font-size:7px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);}
-.t7 .slide-count{font-size:9px;font-weight:600;color:rgba(255,255,255,0.35);font-variant-numeric:tabular-nums;}
 .t7 .headline{font-size:42px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-0.03em;max-width:420px;}
 .t7 .hook{font-size:14px;color:rgba(255,255,255,0.6);margin-top:110px;line-height:1.5;max-width:360px;}
 .t7 .brand-strip{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:24px;}
@@ -717,7 +716,6 @@ function buildT7(c: TemplateContent, w: number, h: number): string {
   return wrapPage("t7", T7_CSS + `.t7{background:${bg};}`, `
     <div class="top-row">
       <div class="eyebrow">${esc(c.eyebrow || "BOLD STATEMENT")}</div>
-      <div class="slide-count">${esc(c.stat?.label || "1/7")}</div>
     </div>
     <div class="headline">${esc(c.headline)}</div>
     ${c.body ? `<div class="hook">${esc(c.body)}</div>` : ""}
