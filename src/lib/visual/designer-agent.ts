@@ -503,6 +503,15 @@ GOOD CONTENT (always do this):
 - "ATS Formatting — Single-column layout, standard fonts, no tables or images that parsers skip"
 - "73% of resumes are rejected before a human sees them — here's the 6-second test recruiters actually use"
 
+BODY TEXT RULE (applies to ALL image content):
+- Body text must demonstrate the SPECIFIC point the headline raises — not summarize it vaguely.
+- State the point directly and clearly. Every sentence must advance the argument.
+- NEVER write vague filler like "a significant rebound is projected" or "market shifts create new demands."
+- Tone: professional, trustworthy, formal office language — but always sound like a human professional, never like AI.
+- NEVER use "I" in any sentence. Use "we" when a first-person reference is needed.
+- BAD: Headline "AI Layoffs Today, Higher Pay Tomorrow?" → Body: "The current wave of AI-driven layoffs feels harsh, but don't lose sight of the bigger picture. Market shifts often create new demands, and a significant rebound is projected." (vague summary, says nothing specific)
+- GOOD: Headline "AI Layoffs Today, Higher Pay Tomorrow?" → Body: "Every wave of automation has eliminated old roles and created new ones. The roles replacing them consistently pay more — but only for those who reposition early." (states the specific point directly)
+
 TASK:
 ${isSingleImage
   ? `Create exactly 1 slide with maximum impact. The headline must be punchy (5-12 words) and the body text (15-30 words) must deliver a specific, useful insight — not a vague restatement of the headline.`
