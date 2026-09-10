@@ -343,6 +343,45 @@ async function loadPerformanceData(): Promise<Map<string, { avgScore: number; us
   return perf;
 }
 
+/* ---- Mood Rotation Tracker ---- */
+/* # Tracks recent template moods per platform to prevent same visual style back-to-back.
+   # Returns the last N moods used (most recent first) so the scoring algorithm
+   # can penalize templates that would repeat the same style consecutively. */
+async function getRecentMoods(platform: string, count: number = 3): Promise<string[]> {
+  try {
+    const recentVisuals = await prisma.visual.findMany({
+      where: { contentId: { not: null } },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: { templateId: true, contentId: true },
+    });
+
+    if (recentVisuals.length === 0) return [];
+
+    // # Filter to this platform's content only
+    const contentIds = [...new Set(recentVisuals.map((v) => v.contentId!))];
+    const platformContents = await prisma.content.findMany({
+      where: { id: { in: contentIds }, platform },
+      select: { id: true },
+    });
+    const validIds = new Set(platformContents.map((c) => c.id));
+
+    // # Map to moods in recency order, dedupe by contentId (multi-slide posts share one mood)
+    const moods: string[] = [];
+    const seenContent = new Set<string>();
+    for (const v of recentVisuals) {
+      if (!validIds.has(v.contentId!) || seenContent.has(v.contentId!)) continue;
+      seenContent.add(v.contentId!);
+      const meta = TEMPLATE_CATALOG.find((t) => t.id === v.templateId);
+      if (meta) moods.push(meta.mood);
+      if (moods.length >= count) break;
+    }
+    return moods;
+  } catch {
+    return [];
+  }
+}
+
 /* ---- Recently Used Tracker ---- */
 /* # Prevents the same template from being used twice in 7 days */
 async function getRecentlyUsedTemplates(platform: string, daysBack: number = 7): Promise<Set<string>> {
@@ -424,6 +463,7 @@ function scoreTemplate(
   pillar: string | undefined,
   perfData: Map<string, { avgScore: number; useCount: number; lastUsed: Date | null }>,
   recentlyUsed: Set<string>,
+  recentMoods: string[],
 ): number {
   let score = 0;
 
@@ -448,9 +488,9 @@ function scoreTemplate(
     score += Math.min(perf.avgScore * 5, 25);
   }
 
-  // # 4. Variety penalty — recently used templates get demoted
+  // # 4. Variety penalty — recently used templates get demoted harder
   if (recentlyUsed.has(template.id)) {
-    score -= 20;
+    score -= 30;
   }
 
   // # 5. Mood-pillar alignment bonus (0-10 points)
@@ -467,6 +507,16 @@ function scoreTemplate(
   // # 6. New template exploration bonus — untested templates get a small boost
   if (!perf || perf.useCount === 0) {
     score += 5;
+  }
+
+  // # 7. Mood rotation penalty — prevents same visual style back-to-back
+  // # If the last post used this same mood, penalize heavily
+  if (recentMoods.length > 0 && recentMoods[0] === template.mood) {
+    score -= 15;
+  }
+  // # If the last 2 posts were BOTH this mood, extra penalty to force variety
+  if (recentMoods.length >= 2 && recentMoods[0] === template.mood && recentMoods[1] === template.mood) {
+    score -= 25;
   }
 
   return score;
@@ -492,16 +542,17 @@ export async function selectTemplate(
   // # Analyze the content
   const contentFields = analyzeContentFields(content);
 
-  // # Load performance data and recently used
-  const [perfData, recentlyUsed] = await Promise.all([
+  // # Load performance data, recently used templates, and recent moods for rotation
+  const [perfData, recentlyUsed, recentMoods] = await Promise.all([
     loadPerformanceData(),
     getRecentlyUsedTemplates(platform),
+    getRecentMoods(platform, 3),
   ]);
 
   // # Score all candidates
   const scored = candidates.map((t) => ({
     template: t,
-    score: scoreTemplate(t, contentFields.keywords, contentFields, pillar, perfData, recentlyUsed),
+    score: scoreTemplate(t, contentFields.keywords, contentFields, pillar, perfData, recentlyUsed, recentMoods),
   }));
 
   // # Sort by score descending

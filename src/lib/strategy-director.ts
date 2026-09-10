@@ -78,6 +78,21 @@ export async function generateWeeklyStrategy(): Promise<StrategicPlan> {
     `${c.platform}/${c.contentType}: "${c.title}" (hook: "${c.hook?.slice(0, 60)}...") — engagement: ${c.engagementScore ?? "pending"}`
   ).join("\n");
 
+  // # Step 2.5: Extract recent tones per platform for rotation enforcement
+  const tonesByPlatform: Record<string, string[]> = {};
+  for (const c of recentContent) {
+    try {
+      const notes = JSON.parse(c.notes || "{}");
+      if (notes.tone) {
+        if (!tonesByPlatform[c.platform]) tonesByPlatform[c.platform] = [];
+        tonesByPlatform[c.platform].push(notes.tone);
+      }
+    } catch { /* # notes not JSON */ }
+  }
+  const rotationContext = Object.entries(tonesByPlatform)
+    .map(([plat, tones]) => `  ${plat}: last ${Math.min(tones.length, 5)} tones → ${tones.slice(0, 5).join(" → ")}`)
+    .join("\n");
+
   // # Step 3: Research current trends (real-time via Google Search)
   let trendInsights = "";
   try {
@@ -128,6 +143,28 @@ Every visual must be designed FROM the content, not just decorated. Plan the vis
 5. Motivation — Rejection handling, mindset, encouragement
 6. Behind the Scenes — Building JobPilot, startup journey
 
+## CONTENT TYPE ROTATION (CRITICAL — violating this makes the feed look repetitive)
+Recent tones used per platform (most recent first):
+${rotationContext || "  No recent tone data available"}
+
+ROTATION RULES:
+- NEVER schedule 2 consecutive posts with the same tone on the same platform
+- Each platform MUST use at least 3 different tones across the week
+- If the last post was data_driven, the next on that platform MUST be educational, storytelling, provocative, or editorial
+- If the last 2 posts were educational, force a provocative, storytelling, or data_driven next
+- Distribute across ALL 8 tones over the week — do not cluster around 2-3 favorites
+
+## VISUAL STYLE DIVERSITY (rotate through these — never repeat back-to-back on same platform)
+Each tone maps to visual styles. Vary these across the week:
+- data_driven → stat cards, bar charts, metrics dashboards, salary reveals, scorecards, radar charts, funnels
+- educational → tip cards, checklists, step-by-step timelines, frameworks, cheat sheets, flashcards, blueprints
+- provocative → hot takes, rankings/tier lists, myth vs reality, do vs don't, receipts/cost breakdowns, bold statements
+- storytelling → before/after transformations, case studies, day-in-the-life, career roadmaps, journey timelines, open letters
+- editorial → magazine covers, quotes, thought leadership, editorial series, journal entries, compass/guidance
+- motivational → gradient quotes, affirmations, achievement cards, CTA cards, encouragement
+- casual → polls, bingo cards, iMessage threads, would-you-rather, recruiter DMs, storytime
+- authoritative → announcements, executive insights, verdicts, memos, feature spotlights, expert panels
+
 ## YOUR TASK
 Create a strategic content plan for THIS WEEK. Make informed decisions:
 
@@ -137,9 +174,11 @@ Create a strategic content plan for THIS WEEK. Make informed decisions:
 
 3. TOPIC ANGLES: For each content piece, specify a UNIQUE angle that hasn't been covered recently. Reference specific trends, data points, or current events.
 
-4. EXPERIMENTS: Include 1-2 experimental content pieces — try an angle, format, or pillar we haven't tested much. Mark these as "can_skip" priority so they don't block core content.
+4. TONE ROTATION: Verify that no 2 consecutive pieces on the same platform share the same tone. Cross-check your calendar before returning it.
 
-5. AVOID LIST: Topics that are oversaturated, recently covered, or trending negatively.
+5. EXPERIMENTS: Include 1-2 experimental content pieces — try an angle, format, or pillar we haven't tested much. Mark these as "can_skip" priority so they don't block core content.
+
+6. AVOID LIST: Topics that are oversaturated, recently covered, or trending negatively.
 
 Return a JSON object:
 {
@@ -150,7 +189,7 @@ Return a JSON object:
       "day": "Monday|Tuesday|...",
       "pillar": "pillar name",
       "topicAngle": "specific angle for this piece — reference trends or data",
-      "tone": "authoritative|provocative|educational|motivational|data_driven|storytelling|casual",
+      "tone": "authoritative|provocative|educational|motivational|data_driven|storytelling|casual|editorial",
       "priority": "must_post|can_skip"
     }
   ],
@@ -184,6 +223,27 @@ Generate 10-14 content pieces total. Return ONLY valid JSON.`;
     tone: String(item.tone || "educational"),
     priority: item.priority === "can_skip" ? "can_skip" : "must_post",
   }));
+
+  // # Post-generation rotation enforcement — fix any back-to-back same-tone violations
+  // # the AI might have produced despite the prompt instructions
+  const ALL_TONES = ["authoritative", "provocative", "educational", "motivational", "data_driven", "storytelling", "casual", "editorial"];
+  const lastToneByPlatform: Record<string, string> = {};
+
+  // # Seed with the most recent historical tone per platform
+  for (const [plat, tones] of Object.entries(tonesByPlatform)) {
+    if (tones.length > 0) lastToneByPlatform[plat] = tones[0];
+  }
+
+  for (const item of calendar) {
+    const lastTone = lastToneByPlatform[item.platform];
+    if (lastTone && item.tone === lastTone) {
+      // # Pick a different tone that isn't the repeated one
+      const alternatives = ALL_TONES.filter((t) => t !== lastTone);
+      item.tone = alternatives[Math.floor(Math.random() * alternatives.length)];
+      console.log(`[StrategyDirector] Rotation fix: ${item.platform}/${item.day} tone changed from "${lastTone}" to "${item.tone}" (no back-to-back)`);
+    }
+    lastToneByPlatform[item.platform] = item.tone;
+  }
 
   const plan: StrategicPlan = {
     calendar,
