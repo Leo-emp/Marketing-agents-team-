@@ -76,7 +76,7 @@ EVALUATE AGAINST THESE CRITERIA (score each 1-10):
 5. BRAND ALIGNMENT (brandScore)
    - Does it sound like a senior career advisor sharing real expertise?
    - Is the tone confident and credible without being arrogant?
-   - If JobPilot is mentioned, is it natural (not salesy)?
+   - If JP Arc is mentioned, is it natural (not salesy)?
 
 6. PLATFORM FIT (platformScore)
    - ${platform === "linkedin" ? "LinkedIn: 800-1300 chars, short paragraphs, ends with question, 3-5 hashtags" : ""}

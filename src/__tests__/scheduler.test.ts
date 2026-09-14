@@ -76,7 +76,7 @@ function makeContent(overrides: Record<string, unknown> = {}) {
     platform: "linkedin",
     status: "scheduled",
     scheduledFor: new Date(Date.now() - 60000), // # 1 minute ago = due now
-    body: "Check out JobPilot AI!",
+    body: "Check out JP Arc!",
     captionText: null,
     hashtags: null,
     imageUrl: null,

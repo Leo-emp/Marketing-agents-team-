@@ -52,7 +52,7 @@ export async function postToLinkedIn(content: string, imageUrl?: string): Promis
     let authorUrn: string;
 
     if (orgId) {
-      // # Post as the JobPilot AI company page
+      // # Post as the JP Arc company page
       authorUrn = `urn:li:organization:${orgId}`;
     } else {
       // # Fallback: post as personal profile via OpenID userinfo

@@ -136,7 +136,7 @@ export async function analyzeFunnel(): Promise<{
     };
   }
 
-  const prompt = `You are a growth marketing analyst. Analyze this conversion funnel and attribution data for JobPilot AI (a career tech SaaS at £9.99/month Pro plan).
+  const prompt = `You are a growth marketing analyst. Analyze this conversion funnel and attribution data for JP Arc (a career tech SaaS at £9.99/month Pro plan).
 
 FUNNEL:
 ${JSON.stringify(funnel.stages, null, 2)}

@@ -120,7 +120,7 @@ function footer(t: Theme): string {
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
     </div>
-    <span style="font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nameColor};">JobPilot AI</span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nameColor};">JP Arc</span>
     <span style="font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:.02em;color:${urlColor};">jobpilotai.co</span>
   </div>`;
 }
@@ -526,7 +526,7 @@ function buildLC1(si: number, c: CarouselContent, w: number, h: number): string 
     const s = slides[si - 1] || { heading: "", body: "", label: `MISTAKE #${si}` };
     body = buildNumbered(t, "linkedin", s.label || `MISTAKE #${si}`, s.heading, s.body, s.bodyBold, si, total);
   } else {
-    body = buildCTA(t, "linkedin", c.ctaTitle || "Fix All 5 in\n{ac}6 Seconds{/ac}", c.ctaSubtitle || "", c.ctaButton || "Try JobPilot AI Free →", total);
+    body = buildCTA(t, "linkedin", c.ctaTitle || "Fix All 5 in\n{ac}6 Seconds{/ac}", c.ctaSubtitle || "", c.ctaButton || "Try JP Arc Free →", total);
   }
 
   return wrapSlide("linkedin", si === total - 1 ? t.gradBg : t.bg, body, w, h);

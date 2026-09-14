@@ -23,7 +23,7 @@ export function RemotionRoot() {
     <>
       {/* # Social media reels (vertical 1080x1920) */}
       <Composition
-        id="JobPilotReel"
+        id="JP ArcReel"
         component={ReelComposition as unknown as React.ComponentType<Record<string, unknown>>}
         durationInFrames={TOTAL_FRAMES}
         fps={30}
@@ -38,7 +38,7 @@ export function RemotionRoot() {
 
       {/* # Cinematic launch video (horizontal 1920x1080) */}
       <Composition
-        id="JobPilotLaunchVideo"
+        id="JP ArcLaunchVideo"
         component={LaunchVideoComposition as unknown as React.ComponentType<Record<string, unknown>>}
         durationInFrames={LAUNCH_TOTAL_FRAMES}
         fps={30}

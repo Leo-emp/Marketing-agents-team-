@@ -120,9 +120,9 @@ function footer(mode: "dark" | "light" | "gradient"): string {
   const logoBg = mode === "light" ? "rgba(99,102,241,.06)" : "rgba(99,102,241,.1)";
   return `<div style="display:flex;align-items:center;gap:8px;padding:10px 18px 12px;border-top:1px solid ${borderC};margin-top:auto;">
     <div style="width:20px;height:20px;border-radius:5px;background:${logoBg};display:flex;align-items:center;justify-content:center;overflow:hidden;">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">
+      <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">
     </div>
-    <span style="font-family:${DISP};font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nameC};">JobPilot AI</span>
+    <span style="font-family:${DISP};font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nameC};">JP Arc</span>
     <span style="font-size:11px;font-family:${MONO};margin-left:auto;letter-spacing:.02em;color:${urlC};">jobpilotai.co</span>
   </div>`;
 }
@@ -359,7 +359,7 @@ function t190(c: TemplateContent, w: number, h: number): string {
           <div class="d190-is">${beforeHtml}</div>
         </div>
         <div class="d190-p af">
-          <div class="d190-bg">After JobPilot</div>
+          <div class="d190-bg">After JP Arc</div>
           <div class="d190-sc">${esc(afterText)}</div>
           <div class="d190-sl">ATS Score</div>
           <div class="d190-is">${afterHtml}</div>
@@ -654,7 +654,7 @@ function t198(c: TemplateContent, w: number, h: number): string {
 .d198-pill-text{font-size:9px;font-weight:600;color:#C4B5FD;}`;
 
   // # Escape body + bold phrase
-  let safeBody = esc(c.body || "ATS algorithms don't read quality. They read patterns. JobPilot makes sure yours match.");
+  let safeBody = esc(c.body || "ATS algorithms don't read quality. They read patterns. JP Arc makes sure yours match.");
   const safeBold = esc(c.bodyBold || "They read patterns");
   if (safeBody.includes(safeBold)) {
     safeBody = safeBody.replace(safeBold, `<strong>${safeBold}</strong>`);
@@ -890,7 +890,7 @@ function t201(c: TemplateContent, w: number, h: number): string {
           <span class="d201-total-val">${esc(total.value)}</span>
         </div>
         <div class="d201-total-unit">${esc(total.label)}</div>
-        <div class="d201-saved">${esc(c.cta || "JobPilot AI cuts this to under 3 hours â†’")}</div>
+        <div class="d201-saved">${esc(c.cta || "JP Arc cuts this to under 3 hours â†’")}</div>
       </div>
     </div>
     ${footer("light")}
@@ -1062,7 +1062,7 @@ function t203(c: TemplateContent, w: number, h: number): string {
       <div class="d203-ticker">${tickerHtml}</div>
       <div class="d203-wm">
         <img src="${LOGO_DATA_URI}" alt="JP">
-        <span>JobPilot AI Â· jobpilotai.co</span>
+        <span>JP Arc Â· jobpilotai.co</span>
       </div>
     </div>
   </div>`;
@@ -1124,7 +1124,7 @@ function t204(c: TemplateContent, w: number, h: number): string {
       </div>
       <div class="d204-wm">
         <img src="${LOGO_DATA_URI}" alt="JP">
-        <span>JobPilot AI Â· jobpilotai.co</span>
+        <span>JP Arc Â· jobpilotai.co</span>
       </div>
     </div>
   </div>`;
@@ -1197,7 +1197,7 @@ function t205(c: TemplateContent, w: number, h: number): string {
       </div>
       <div class="d205-wm">
         <img src="${LOGO_DATA_URI}" alt="JP">
-        <span>JobPilot AI Â· jobpilotai.co</span>
+        <span>JP Arc Â· jobpilotai.co</span>
       </div>
     </div>
   </div>`;
@@ -1374,7 +1374,7 @@ function t207(c: TemplateContent, w: number, h: number): string {
     <div class="bd">
       ${eyebrow(c.eyebrow || "Your Job Search", "#6366F1")}
       <h2 class="d207-tt">${esc(c.headline || "This Is What an AI-Powered Job Search Looks Like")}</h2>
-      <p class="d207-sub">${esc(c.subheadline || "Real notifications from a JobPilot user's first week")}</p>
+      <p class="d207-sub">${esc(c.subheadline || "Real notifications from a JP Arc user's first week")}</p>
       <div class="d207-stack">${notifsHtml}</div>
       <div class="d207-tip">${esc(c.cta || "Start getting these notifications â†’ jobpilotai.co")}</div>
     </div>
@@ -1695,7 +1695,7 @@ function t211(c: TemplateContent, w: number, h: number): string {
 function t212(c: TemplateContent, w: number, h: number): string {
   // # Comparison items (left = option A, right = option B)
   const optionA = c.beforeText || "Manual Approach";
-  const optionB = c.afterText || "With JobPilot AI";
+  const optionB = c.afterText || "With JP Arc";
   const rows = c.tips || [
     { title: "Resume tailoring", description: "2-3 hours per application vs 30 seconds" },
     { title: "ATS keyword matching", description: "Guesswork vs AI-powered analysis" },
@@ -2100,7 +2100,7 @@ function t217(c: TemplateContent, w: number, h: number): string {
       <div class="d217-letter">
         ${parasHtml}
         <div class="d217-sig">
-          <div class="d217-sig-name">${esc(c.afterText || "The JobPilot Team")}</div>
+          <div class="d217-sig-name">${esc(c.afterText || "The JP Arc Team")}</div>
           <div class="d217-sig-role">${esc(c.cta || "We built this for you")}</div>
         </div>
       </div>

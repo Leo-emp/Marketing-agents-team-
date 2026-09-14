@@ -24,7 +24,7 @@ const DEFAULT_ADMIN_EMAIL = "pmzo.mm08@gmail.com";
 
 // # "From" address uses the alerts subdomain so admin can filter
 // # these separately from marketing emails (noreply@jobpilotai.co)
-const ALERT_FROM = "JobPilot Alerts <alerts@jobpilotai.co>";
+const ALERT_FROM = "JP Arc Alerts <alerts@jobpilotai.co>";
 
 // # ── Lazy Resend client ───────────────────────────────────────
 // # We initialise lazily so the module can be imported even if
@@ -124,7 +124,7 @@ export async function notifyAdmin(
         ${detailsHtml}
 
         <p style="margin-top:24px;font-size:12px;color:#6366f1;">
-          This is an automated alert from JobPilot Marketing.
+          This is an automated alert from JP Arc Marketing.
           Check Vercel logs for full context.
         </p>
       </div>

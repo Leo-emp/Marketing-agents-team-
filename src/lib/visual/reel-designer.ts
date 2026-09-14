@@ -18,7 +18,7 @@ export async function designReel(
   mediaPrompt: string | null,
   topic?: string
 ): Promise<ReelConfig> {
-  const prompt = `You are a video content designer for a premium career tech brand (JobPilot AI). Convert this reel script into structured scene data for an animated video.
+  const prompt = `You are a video content designer for a premium career tech brand (JP Arc). Convert this reel script into structured scene data for an animated video.
 
 BRAND VISUAL IDENTITY:
 - Dark background, clean white text

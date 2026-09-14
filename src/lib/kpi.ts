@@ -129,7 +129,7 @@ export async function analyzeKpis(): Promise<KpiAnalysis> {
     };
   }
 
-  const prompt = `You are a social media analytics expert. Analyze these marketing KPIs for JobPilot AI (a career tech brand).
+  const prompt = `You are a social media analytics expert. Analyze these marketing KPIs for JP Arc (a career tech brand).
 
 PRIMARY GOAL: Build trustworthy, credible brand image
 SECONDARY GOAL: Increase brand awareness, website traffic, users

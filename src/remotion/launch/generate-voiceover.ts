@@ -10,7 +10,7 @@ And heard nothing back.
 
 What if the problem... was never you?
 
-Introducing JobPilot AI.
+Introducing JP Arc.
 
 Your career. Co-piloted.
 
@@ -26,7 +26,7 @@ Not another tool. Your entire career operating system.
 
 Stop searching. Start engineering your future.
 
-JobPilot AI. Your career co-pilot is ready.`;
+JP Arc. Your career co-pilot is ready.`;
 
 async function main() {
   console.log("[launch-vo] Generating voiceover...");

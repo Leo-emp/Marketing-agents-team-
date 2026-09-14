@@ -1,7 +1,7 @@
 /* ============================================================
    EMAIL TEMPLATES - Dark-themed branded HTML emails
    ============================================================
-   Generates responsive HTML emails matching the JobPilot brand.
+   Generates responsive HTML emails matching the JP Arc brand.
    Dark background, indigo/purple accents, Geist font fallback.
    ============================================================ */
 
@@ -25,7 +25,7 @@ export function buildEmailHtml(
     <!-- # Logo / brand header -->
     <div style="text-align:center;margin-bottom:32px;">
       <span style="font-size:24px;font-weight:700;background:linear-gradient(135deg,#818cf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
-        JobPilot AI
+        JP Arc
       </span>
     </div>
 
@@ -45,7 +45,7 @@ export function buildEmailHtml(
 
     <!-- # Footer with unsubscribe -->
     <div style="text-align:center;font-size:12px;color:#71717a;border-top:1px solid #27272a;padding-top:24px;">
-      <p>JobPilot AI — Your Career Co-Pilot</p>
+      <p>JP Arc — Your Career Co-Pilot</p>
       <p><a href="${escapeHtml(unsubscribeUrl)}" style="color:#71717a;text-decoration:underline;">Unsubscribe</a></p>
     </div>
   </div>

@@ -11,7 +11,7 @@
    #
    # Key behaviors:
    #   - Uses Google Search grounding for real-time trend data
-   #   - Filters for topics relevant to JobPilot's audience
+   #   - Filters for topics relevant to JP Arc's audience
    #   - Avoids trend fatigue (won't re-draft covered topics)
    #   - Creates platform-appropriate content for fastest reach
    #   - Tags content as "trend_reactive" for performance tracking
@@ -25,7 +25,7 @@ import { reviewContent } from "./editorial";
 export interface DetectedTrend {
   topic: string;
   urgency: "breaking" | "trending" | "emerging";
-  relevance: number;        // # 1-10 scale for JobPilot audience fit
+  relevance: number;        // # 1-10 scale for JP Arc audience fit
   viralPotential: number;   // # 1-10 scale for engagement likelihood
   angle: string;            // # Specific content angle to take
   platforms: string[];       // # Best platforms for this trend
@@ -76,7 +76,7 @@ export async function scanForTrends(): Promise<DetectedTrend[]> {
     .join("\n");
 
   // # Ask Gemini to identify actionable trends
-  const trendPrompt = `You are a trend detection agent for JobPilot AI, a career tech platform. Analyze these search results and identify actionable trends for our content.
+  const trendPrompt = `You are a trend detection agent for JP Arc, a career tech platform. Analyze these search results and identify actionable trends for our content.
 
 SEARCH RESULTS:
 ${searchResults.join("\n\n---\n\n")}
@@ -132,7 +132,7 @@ async function draftReactiveContent(trend: DetectedTrend): Promise<string | null
     ? "single_image"      // # Fast — single image for speed
     : "single_image";     // # Single image for most reactive content
 
-  const draftPrompt = `You are a senior content strategist for JobPilot AI (jobpilotai.co). A trending topic has been detected and you need to draft reactive content FAST.
+  const draftPrompt = `You are a senior content strategist for JP Arc (jobpilotai.co). A trending topic has been detected and you need to draft reactive content FAST.
 
 TREND: ${trend.topic}
 ANGLE: ${trend.angle}
@@ -142,10 +142,10 @@ SOURCE: ${trend.source}
 
 Create a ${contentType} post for ${platform} about this trend. Your content must:
 1. Be SPECIFIC to this trend — reference the actual event, data point, or development
-2. Add JobPilot's expert perspective — what does this mean for job seekers?
+2. Add JP Arc's expert perspective — what does this mean for job seekers?
 3. Be immediately actionable — what should readers DO in response?
 4. Zero emojis, professional tone, human-voiced
-5. If mentioning JobPilot, max 1x and only if naturally relevant
+5. If mentioning JP Arc, max 1x and only if naturally relevant
 6. Lead with the most attention-grabbing fact or angle
 
 Return JSON:

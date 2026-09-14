@@ -1,5 +1,5 @@
 // ============================================================
-// PRISMA SCHEMA - JobPilot Marketing Agents
+// PRISMA SCHEMA - JP Arc Marketing Agents
 // ============================================================
 // Content queue for AI-generated social media posts.
 // Each record is created by an AI agent, reviewed by admin,

@@ -29,7 +29,7 @@ const TT_MONO = `'Cascadia Code', 'SF Mono', 'Fira Code', Consolas, monospace`;
 function watermark(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:24px;left:24px;display:flex;align-items:center;gap:6px;opacity:0.4;z-index:5;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:14px;height:14px;border-radius:3px;">
-    <span style="font-size:11px;font-weight:600;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
+    <span style="font-size:11px;font-weight:600;color:${color};letter-spacing:0.04em;">JP Arc</span>
   </div>`;
 }
 
@@ -143,7 +143,7 @@ function buildT18(c: TemplateContent, w: number, h: number): string {
   return wrapTT("t18", T18_CSS, `
     <div class="header">
       <div class="avatar"><img src="${LOGO_DATA_URI}" alt="JP"></div>
-      <div class="hdr-text"><span class="hdr-name">JobPilot AI</span><span class="hdr-role">Career Assistant</span></div>
+      <div class="hdr-text"><span class="hdr-name">JP Arc</span><span class="hdr-role">Career Assistant</span></div>
     </div>
     <div class="msgs">
       <div class="ts">${esc(c.eyebrow || "Today 10:24 AM")}</div>
@@ -163,8 +163,8 @@ function buildT18(c: TemplateContent, w: number, h: number): string {
 // # Teal-style brand footer for gradient templates — logo + name + URL
 function tealFooter(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:16px;">
-    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.01em;">JobPilot AI</span>
+    <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:22px;height:22px;border-radius:5px;">
+    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:-0.01em;">JP Arc</span>
     <span style="font-size:11px;font-family:${TT_MONO};color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
@@ -309,7 +309,7 @@ function buildT29(c: TemplateContent, w: number, h: number): string {
       ${leftItems.map(b => `<div class="item item-l"><div class="dot dot-bad"></div>${esc(b)}</div>`).join("")}
     </div>
     <div class="right">
-      <div class="label label-good">WITH JOBPILOT</div>
+      <div class="label label-good">WITH JP ARC</div>
       <div class="heading heading-r">${esc(c.afterText || "AI-powered")}</div>
       ${rightItems.map(t => `<div class="item item-r"><div class="dot dot-good"></div>${esc(t)}</div>`).join("")}
     </div>
@@ -433,7 +433,7 @@ function buildT41(c: TemplateContent, w: number, h: number): string {
     <div class="thin-rule"></div>
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
     <div class="foot">
-      <div class="foot-brand">JobPilot AI</div>
+      <div class="foot-brand">JP Arc</div>
     </div>
   `, 432, 768, w, h);
 }
@@ -814,8 +814,8 @@ function buildT88(c: TemplateContent, w: number, h: number): string {
 // # Premium brand bar for TikTok — clearer than watermark, still native-feeling
 function proBrandBar(): string {
   return `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:14px 20px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.6));z-index:5;">
-    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);">
-    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:0.02em;">JobPilot AI</span>
+    <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);">
+    <span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:0.02em;">JP Arc</span>
     <span style="font-size:11px;font-family:${TT_MONO};color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
@@ -1020,7 +1020,7 @@ function buildT107(c: TemplateContent, w: number, h: number): string {
   return wrapTT("t108", T108_CSS, `
     <div class="quote">"${esc(c.headline)}"</div>
     <div class="rule"></div>
-    <div class="attr">${esc(c.subheadline || c.eyebrow || "— JobPilot AI")}</div>
+    <div class="attr">${esc(c.subheadline || c.eyebrow || "— JP Arc")}</div>
     ${proBrandBar()}
   `, 432, 768, w, h);
 }

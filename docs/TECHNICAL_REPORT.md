@@ -1,4 +1,4 @@
-# JobPilot Marketing Agents: Technical Report
+# JP Arc Marketing Agents: Technical Report
 
 ## Problem Statement
 

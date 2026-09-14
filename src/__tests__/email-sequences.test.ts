@@ -271,7 +271,7 @@ describe("Email Sequences", () => {
           status: "active",
           priority: 10,
           steps: JSON.stringify([
-            { delayDays: 0, subject: "Welcome to JobPilot", bodyTemplate: "<p>Welcome!</p>", ctaUrl: "https://jobpilotai.co", ctaText: "Get Started" },
+            { delayDays: 0, subject: "Welcome to JP Arc", bodyTemplate: "<p>Welcome!</p>", ctaUrl: "https://jobpilotai.co", ctaText: "Get Started" },
           ]),
         },
       ]);

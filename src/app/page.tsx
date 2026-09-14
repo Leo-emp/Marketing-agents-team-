@@ -1041,7 +1041,7 @@ export default function Dashboard() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold">Marketing HQ</h1>
-            <p className="text-text-secondary text-sm mt-1">JobPilot AI Agent Dashboard</p>
+            <p className="text-text-secondary text-sm mt-1">JP Arc Agent Dashboard</p>
           </div>
           <div className="bg-card-bg border border-card-border rounded-xl p-6">
             <label className="block text-sm text-text-secondary mb-2">Admin Password</label>
@@ -1078,7 +1078,7 @@ export default function Dashboard() {
           </div>
           <div>
             <h1 className="text-lg font-bold leading-tight">Marketing HQ</h1>
-            <p className="text-text-muted text-xs">JobPilot AI Agent Team</p>
+            <p className="text-text-muted text-xs">JP Arc Agent Team</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

@@ -38,7 +38,7 @@ const SEQUENCES = [
     steps: JSON.stringify([
           {
             delayDays: 0,
-            subject: "Welcome to JobPilot — here's your quick start",
+            subject: "Welcome to JP Arc — here's your quick start",
             bodyTemplate: `<h2 style="color:#e4e4e7;margin:0 0 16px;">Welcome aboard!</h2>
 <p style="color:#a1a1aa;line-height:1.6;">You just joined thousands of job seekers who use AI to land interviews faster.</p>
 <p style="color:#a1a1aa;line-height:1.6;">Here's what you can do right now:</p>
@@ -86,7 +86,7 @@ const SEQUENCES = [
             delayDays: 0,
             subject: "You're getting serious about your job search",
             bodyTemplate: `<h2 style="color:#e4e4e7;margin:0 0 16px;">You've been putting in the work</h2>
-<p style="color:#a1a1aa;line-height:1.6;">You've used JobPilot's AI tools multiple times now — that tells us you're serious about landing your next role.</p>
+<p style="color:#a1a1aa;line-height:1.6;">You've used JP Arc's AI tools multiple times now — that tells us you're serious about landing your next role.</p>
 <p style="color:#a1a1aa;line-height:1.6;">With Pro, you get:</p>
 <ul style="color:#a1a1aa;line-height:1.8;">
 <li><strong style="color:#e4e4e7;">Unlimited AI generations</strong> — no monthly caps</li>
@@ -111,7 +111,7 @@ const SEQUENCES = [
             delayDays: 14,
             subject: "Your Pro upgrade is waiting",
             bodyTemplate: `<h2 style="color:#e4e4e7;margin:0 0 16px;">Ready to go all-in?</h2>
-<p style="color:#a1a1aa;line-height:1.6;">You've seen what JobPilot can do on the free plan. Pro removes all limits and unlocks the full toolkit.</p>
+<p style="color:#a1a1aa;line-height:1.6;">You've seen what JP Arc can do on the free plan. Pro removes all limits and unlocks the full toolkit.</p>
 <p style="color:#a1a1aa;line-height:1.6;">At £9.99/month, it's less than a single coffee a week — and it could be the difference between months of searching and landing your next role this month.</p>
 <p style="color:#a1a1aa;line-height:1.6;">No commitment. Cancel anytime.</p>`,
             ctaUrl: `${BASE_URL}/pricing`,

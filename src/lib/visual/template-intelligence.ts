@@ -594,7 +594,7 @@ async function geminiPickBest(
     return `${i + 1}. ${c.template.id} — "${c.template.name}" (${c.template.style} style, ${c.template.mood} mood). Best for: ${c.template.bestFor.slice(0, 4).join(", ")}. Score: ${c.score}. ${perfNote}.`;
   }).join("\n");
 
-  const prompt = `You are a senior visual design director for JobPilot AI. Pick the BEST template for this content.
+  const prompt = `You are a senior visual design director for JP Arc. Pick the BEST template for this content.
 
 CONTENT (${platform}, ${contentType}):
 ${content.slice(0, 500)}

@@ -29,14 +29,14 @@ const IG_MONO = `'Cascadia Code', 'Fira Code', Consolas, monospace`;
 
 // # Centered brand footer — subtle, uppercase
 function brandFooter(color: string = "#000"): string {
-  return `<div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:${color};z-index:5;">JOBPILOT AI</div>`;
+  return `<div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;font-family:${IG_SANS};font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:${color};z-index:5;">JP ARC</div>`;
 }
 
 // # Story badge pill — centered bottom
 function storyBadge(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:100px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:5px 12px;z-index:5;">
     <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:3px;">
-    <span style="font-family:${IG_SANS};font-size:11px;font-weight:600;color:${color};letter-spacing:0.06em;">JOBPILOT AI</span>
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:600;color:${color};letter-spacing:0.06em;">JP ARC</span>
   </div>`;
 }
 
@@ -207,8 +207,8 @@ function buildT27(c: TemplateContent, w: number, h: number): string {
     ${c.subheadline ? `<div class="sub">${esc(c.subheadline)}</div>` : (c.body ? `<div class="sub">${esc(c.body)}</div>` : "")}
     <div class="spacer-b"></div>
     <div class="brand">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-      <span style="font-size:11px;font-weight:700;color:#fff;">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:22px;height:22px;border-radius:5px;">
+      <span style="font-size:11px;font-weight:700;color:#fff;">JP Arc</span>
       <span style="font-size:11px;font-family:${IG_MONO};color:#fff;margin-left:auto;">jobpilotai.co</span>
     </div>
   `, 432, 768, w, h);
@@ -235,7 +235,7 @@ function buildT34(c: TemplateContent, w: number, h: number): string {
     <div class="headline">${esc(c.headline)}</div>
     <div class="gold-rule"></div>
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
-    <div class="foot">JOBPILOT AI</div>
+    <div class="foot">JP ARC</div>
   `, 540, 675, w, h);
 }
 
@@ -305,7 +305,7 @@ function buildT36(c: TemplateContent, w: number, h: number): string {
         </div>`;
       }).join("")}
     </div>
-    <div class="foot"><span class="foot-brand">JOBPILOT AI</span><span class="foot-src">${esc(c.subheadline || "")}</span></div>
+    <div class="foot"><span class="foot-brand">JP ARC</span><span class="foot-src">${esc(c.subheadline || "")}</span></div>
   `, 540, 540, w, h);
 }
 
@@ -325,7 +325,7 @@ function buildT37(c: TemplateContent, w: number, h: number): string {
     <div class="word">${esc(c.headline)}</div>
     <div class="dot"></div>
     ${c.body ? `<div class="sub">${esc(c.body)}</div>` : ""}
-    <div class="foot">JOBPILOT AI</div>
+    <div class="foot">JP ARC</div>
   `, 540, 540, w, h);
 }
 
@@ -388,7 +388,7 @@ function buildT39(c: TemplateContent, w: number, h: number): string {
       ${bars.map(b => `<div><div class="st-num">${esc(String(b.value))}</div><div class="st-label">${esc(b.label)}</div></div>`).join("")}
     </div>
     <div class="gold-line"></div>
-    <div class="foot">JOBPILOT AI</div>
+    <div class="foot">JP ARC</div>
   `, 540, 540, w, h);
 }
 
@@ -513,7 +513,7 @@ const T48_CSS = `
 function buildT48(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t48", T48_CSS, `
     <div class="issue">${esc(c.stat?.label || "ISSUE 01")}</div>
-    <div class="logo">JOBPILOT AI</div>
+    <div class="logo">JP ARC</div>
     <div class="cat">${esc(c.eyebrow || "CAREER STRATEGY")}</div>
     <div class="headline">${esc(c.headline)}</div>
     <div class="deck">${esc(c.body || "")}</div>
@@ -641,7 +641,7 @@ function buildT57(c: TemplateContent, w: number, h: number): string {
       <div class="title">${esc(c.headline)}</div>
       <div class="desc">${esc(c.body || "")}</div>
     </div>
-    <div class="foot">JOBPILOT AI</div>
+    <div class="foot">JP ARC</div>
   `, 540, 540, w, h);
 }
 
@@ -702,7 +702,7 @@ function buildT59(c: TemplateContent, w: number, h: number): string {
     <div class="headline">${esc(c.headline)}</div>
     <div class="gold-rule"></div>
     ${c.body ? `<div class="desc">${esc(c.body)}</div>` : ""}
-    <div class="foot"><span class="foot-brand">JOBPILOT AI</span><span class="foot-read">${esc(c.stat?.label || "4 min read")}</span></div>
+    <div class="foot"><span class="foot-brand">JP ARC</span><span class="foot-read">${esc(c.stat?.label || "4 min read")}</span></div>
   `, 540, 675, w, h);
 }
 
@@ -876,7 +876,7 @@ const T89_CSS = `
 function buildT89(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t89", T89_CSS, `
     <div class="masthead">
-      <div class="masthead-name">The JobPilot Weekly</div>
+      <div class="masthead-name">The JP Arc Weekly</div>
       <div class="masthead-issue">${esc(c.stat?.label || "Issue #12")}</div>
     </div>
     <div class="cat">${esc(c.eyebrow || "THIS WEEK")}</div>
@@ -967,7 +967,7 @@ function buildT91(c: TemplateContent, w: number, h: number): string {
         <div class="d-val">${b.value}%</div>
       </div>`).join("")}
     </div>
-    <div class="source">${esc(c.body || "Source: JobPilot AI analysis")}</div>
+    <div class="source">${esc(c.body || "Source: JP Arc analysis")}</div>
     ${brandFooter("#000")}
   `, 540, 675, w, h);
 }
@@ -1077,7 +1077,7 @@ function buildT94(c: TemplateContent, w: number, h: number): string {
         return `<div class="item"><div class="item-bullet"></div><div class="item-text">${text}</div></div>`;
       }).join("")}
     </div>
-    <div class="foot">JOBPILOT AI</div>
+    <div class="foot">JP ARC</div>
   `, 540, 540, w, h);
 }
 
@@ -1155,8 +1155,8 @@ function buildT96(c: TemplateContent, w: number, h: number): string {
 // # Premium brand footer for Instagram — logo + name + domain, centered
 function proIgFooter(color: string = "#fff"): string {
   return `<div style="position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;z-index:5;">
-    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:20px;height:20px;border-radius:4px;">
-    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:${color};letter-spacing:0.04em;">JobPilot AI</span>
+    <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:20px;height:20px;border-radius:4px;">
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:${color};letter-spacing:0.04em;">JP Arc</span>
     <span style="font-family:${IG_MONO};font-size:11px;color:${color};letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
@@ -1164,8 +1164,8 @@ function proIgFooter(color: string = "#fff"): string {
 // # Premium brand footer in a bar style for dark backgrounds
 function proIgFooterBar(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(255,255,255,0.06);">
-    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);">
-    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:#fff;">JobPilot AI</span>
+    <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);">
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:#fff;">JP Arc</span>
     <span style="font-family:${IG_MONO};font-size:11px;color:#fff;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
@@ -1173,8 +1173,8 @@ function proIgFooterBar(): string {
 // # Premium brand footer for light backgrounds
 function proIgFooterLight(): string {
   return `<div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 0 0;border-top:1px solid rgba(0,0,0,0.06);">
-    <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);">
-    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:#000;">JobPilot AI</span>
+    <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:24px;height:24px;border-radius:5px;border:1px solid rgba(0,0,0,0.06);">
+    <span style="font-family:${IG_SANS};font-size:11px;font-weight:700;color:#000;">JP Arc</span>
     <span style="font-family:${IG_MONO};font-size:11px;color:#000;margin-left:auto;letter-spacing:0.03em;">jobpilotai.co</span>
   </div>`;
 }
@@ -1224,8 +1224,8 @@ function buildT109(c: TemplateContent, w: number, h: number): string {
     ${body ? `<div class="pullquote">${body}</div>` : ""}
     <div class="rule-bottom"></div>
     <div class="footer">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
-      <span class="fname">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc">
+      <span class="fname">JP Arc</span>
       <span class="furl">jobpilotai.co</span>
     </div>
   `, 540, 675, w, h);
@@ -1268,8 +1268,8 @@ function buildT110(c: TemplateContent, w: number, h: number): string {
     ${c.body ? `<div class="desc">${esc(c.body)}</div>` : ""}
     ${c.cta ? `<div class="cta">${esc(c.cta)} →</div>` : ""}
     <div class="footer">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
-      <span class="fname">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc">
+      <span class="fname">JP Arc</span>
       <span class="furl">jobpilotai.co</span>
     </div>
   `, 540, 540, w, h);
@@ -1314,8 +1314,8 @@ function buildT111(c: TemplateContent, w: number, h: number): string {
     <div class="hdl">${headline}</div>
     ${body ? `<div class="body">${body}</div>` : ""}
     <div class="footer">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
-      <span class="fname">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc">
+      <span class="fname">JP Arc</span>
       <span class="furl">jobpilotai.co</span>
     </div>
   `, 540, 675, w, h);
@@ -1355,10 +1355,10 @@ function buildT112(c: TemplateContent, w: number, h: number): string {
   return wrapIG("t112", T112_CSS, `
     <div class="statement">${headline}</div>
     <div class="rule"></div>
-    <div class="attr">${esc(c.subheadline || c.eyebrow || "— JobPilot AI")}</div>
+    <div class="attr">${esc(c.subheadline || c.eyebrow || "— JP Arc")}</div>
     <div class="footer">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
-      <span class="fname">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc">
+      <span class="fname">JP Arc</span>
       <span class="furl">jobpilotai.co</span>
     </div>
   `, 540, 540, w, h);
@@ -1407,8 +1407,8 @@ function buildT113(c: TemplateContent, w: number, h: number): string {
       </div>`).join("")}
     </div>
     <div class="footer">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
-      <span class="fname">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc">
+      <span class="fname">JP Arc</span>
       <span class="furl">jobpilotai.co</span>
     </div>
   `, 540, 675, w, h);
@@ -1467,8 +1467,8 @@ function buildT114(c: TemplateContent, w: number, h: number): string {
       </div>` : ""}
     </div>
     <div class="badge">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI">
-      <span class="bname">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc">
+      <span class="bname">JP Arc</span>
       <span class="burl">jobpilotai.co</span>
     </div>
   `, 432, 768, w, h);
@@ -1510,7 +1510,7 @@ function buildT127(c: TemplateContent, w: number, h: number): string {
       <div class="col">${esc(cols[1])}</div>
     </div>` : ""}
     <div class="rule-btm"></div>
-    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
   `, 540, 675, w, h);
 }
 
@@ -1541,7 +1541,7 @@ function buildT128(c: TemplateContent, w: number, h: number): string {
         <div class="g-bar"><div class="g-fill" style="width:${b.value}%"></div></div>
       </div>`).join("")}
     </div>
-    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
   `, 540, 540, w, h);
 }
 
@@ -1566,7 +1566,7 @@ function buildT129(c: TemplateContent, w: number, h: number): string {
     <div class="hdl">${esc(c.headline)}</div>
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
     ${tips.length ? `<div class="tips">${tips.slice(0, 4).map(t => `<div class="tip">${esc(t)}</div>`).join("")}</div>` : ""}
-    <div class="ftr"><span>JobPilot AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP Arc</span><span class="url">jobpilotai.co</span></div>
   `, 540, 675, w, h);
 }
 
@@ -1588,7 +1588,7 @@ function buildT130(c: TemplateContent, w: number, h: number): string {
     <div class="hdl">${esc(c.headline)}</div>
     <div class="line"></div>
     ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
-    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
   `, 540, 540, w, h);
 }
 
@@ -1623,7 +1623,7 @@ function buildT131(c: TemplateContent, w: number, h: number): string {
       </div>`).join("")}
     </div>
     ${c.body ? `<div class="source">${esc(c.body)}</div>` : ""}
-    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
   `, 540, 675, w, h);
 }
 
@@ -1674,11 +1674,11 @@ function buildT145(c: TemplateContent, w: number, h: number): string {
       <div class="card-img"><div class="placeholder">${esc(c.stat?.value || "📸")}</div></div>
       <div class="card-caption">${esc(c.headline)}</div>
       <div class="card-meta">
-        <span>${esc(c.eyebrow || "JOBPILOT AI")}</span>
+        <span>${esc(c.eyebrow || "JP ARC")}</span>
         <span>${esc(c.subheadline || "2026")}</span>
       </div>
     </div>
-    <div class="ftr">JOBPILOT AI</div>
+    <div class="ftr">JP ARC</div>
   `, 540, 675, w, h);
 }
 
@@ -1705,7 +1705,7 @@ function buildT146(c: TemplateContent, w: number, h: number): string {
     <div class="divider"></div>
     <div class="bottom">
       ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
-      <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+      <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
     </div>
   `, 540, 540, w, h);
 }
@@ -1744,7 +1744,7 @@ function buildT147(c: TemplateContent, w: number, h: number): string {
         </div>
       `).join("")}
     </div>
-    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
   `, 540, 675, w, h);
 }
 
@@ -1771,7 +1771,7 @@ function buildT148(c: TemplateContent, w: number, h: number): string {
     <div class="bottom">
       ${c.body ? `<div class="body">${esc(c.body)}</div>` : ""}
       ${tags.length ? `<div class="tags">${tags.slice(0, 5).map(t => `<div class="tag">${esc(t)}</div>`).join("")}</div>` : ""}
-      <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+      <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
     </div>
   `, 540, 540, w, h);
 }
@@ -1801,7 +1801,7 @@ function buildT149(c: TemplateContent, w: number, h: number): string {
         <div><div class="scard-t">${esc(t.title)}</div><div class="scard-d">${esc(t.description)}</div></div>
       </div>`).join("")}
     </div>
-    <div class="ftr"><span>JOBPILOT AI</span><span class="url">jobpilotai.co</span></div>
+    <div class="ftr"><span>JP ARC</span><span class="url">jobpilotai.co</span></div>
   `, 540, 675, w, h);
 }
 

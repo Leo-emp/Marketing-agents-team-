@@ -29,7 +29,7 @@ function brandStripT1Dark(): string {
   return `<div class="brand-strip">
     <div style="display:flex;align-items:center;gap:8px;">
       <img src="${LOGO_DATA_URI}" style="width:22px;height:22px;border-radius:4px;">
-      <span class="name">JobPilot <span>AI</span></span>
+      <span class="name">JP Arc <span>AI</span></span>
     </div>
     <span class="url">jobpilotai.co</span>
   </div>`;
@@ -39,7 +39,7 @@ function brandStripT1Light(): string {
   return `<div class="brand-strip">
     <div style="display:flex;align-items:center;gap:8px;">
       <img src="${LOGO_DATA_URI}" style="width:22px;height:22px;border-radius:4px;">
-      <span class="name">JobPilot <span>AI</span></span>
+      <span class="name">JP Arc <span>AI</span></span>
     </div>
     <span class="url">jobpilotai.co</span>
   </div>`;
@@ -49,7 +49,7 @@ function brandStripT1Light(): string {
 function brandStripSet2Dark(): string {
   return `<div class="brand-strip">
     <div class="b-logo"><img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;"></div>
-    <span class="b-name">JobPilot AI</span>
+    <span class="b-name">JP Arc</span>
     <span class="b-url">jobpilotai.co</span>
   </div>`;
 }
@@ -57,7 +57,7 @@ function brandStripSet2Dark(): string {
 function brandStripSet2Light(): string {
   return `<div class="brand-strip">
     <div class="b-logo"><img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;"></div>
-    <span class="b-name">JobPilot AI</span>
+    <span class="b-name">JP Arc</span>
     <span class="b-url">jobpilotai.co</span>
   </div>`;
 }
@@ -172,7 +172,7 @@ function buildT3(c: TemplateContent, w: number, h: number): string {
     <div class="brand-strip">
       <div style="display:flex;align-items:center;gap:8px;">
         <img src="${LOGO_DATA_URI}" style="width:22px;height:22px;border-radius:4px;">
-        <span class="name">JobPilot <span>AI</span></span>
+        <span class="name">JP Arc <span>AI</span></span>
       </div>
       <span class="url">jobpilotai.co</span>
     </div>
@@ -651,7 +651,7 @@ function buildT4(c: TemplateContent, w: number, h: number): string {
         <div class="score"><span class="score-num score-bad">${beforeScore}%</span><span class="score-label">ATS match</span></div>
       </div>
       <div class="col">
-        <div class="label label-good">AFTER JOBPILOT</div>
+        <div class="label label-good">AFTER JP ARC</div>
         <div class="bar bar-good"></div><div class="bar bar-good" style="width:90%"></div>
         <div class="bar bar-good"></div><div class="bar bar-good" style="width:85%"></div>
         <div class="bar bar-good" style="width:95%"></div><div class="bar bar-good"></div>
@@ -798,7 +798,7 @@ function buildT9(c: TemplateContent, w: number, h: number): string {
         </div>`;
       }).join("")}
     </div>
-    <div class="source">${esc(c.subheadline || "Source: JobPilot AI analysis")}</div>
+    <div class="source">${esc(c.subheadline || "Source: JP Arc analysis")}</div>
     ${brandStripT1Dark()}
   `, 540, 675, w, h);
 }
@@ -1342,8 +1342,8 @@ function buildT80(c: TemplateContent, w: number, h: number): string {
     ${body ? `<div class="context">${boldBody}</div>` : ""}
     <div class="spacer-b"></div>
     <div class="brand-strip">
-      <img src="${LOGO_PRO_URI}" alt="JobPilot AI" style="width:22px;height:22px;border-radius:5px;">
-      <span style="font-size:10px;font-weight:700;color:#fff;">JobPilot AI</span>
+      <img src="${LOGO_PRO_URI}" alt="JP Arc" style="width:22px;height:22px;border-radius:5px;">
+      <span style="font-size:10px;font-weight:700;color:#fff;">JP Arc</span>
       <span style="font-size:8px;font-family:${MONO_STACK};color:#fff;margin-left:auto;">jobpilotai.co</span>
     </div>
   `, 540, 675, w, h);
@@ -1353,7 +1353,7 @@ function buildT80(c: TemplateContent, w: number, h: number): string {
    PREMIUM LINKEDIN TEMPLATES (T97-T102)
    ============================================================
    # Polished, professional designs with prominent branding.
-   # All use the full-size JobPilot AI logo and clear footer.
+   # All use the full-size JP Arc logo and clear footer.
    # Preview at 540×675 → scale 2× to 1080×1350.
    ============================================================ */
 

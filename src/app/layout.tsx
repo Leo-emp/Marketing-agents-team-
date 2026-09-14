@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JobPilot Marketing HQ",
-  description: "AI-powered marketing agent dashboard for JobPilot",
+  title: "JP Arc Marketing HQ",
+  description: "AI-powered marketing agent dashboard for JP Arc",
 };
 
 export default function RootLayout({

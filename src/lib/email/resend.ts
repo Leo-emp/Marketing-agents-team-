@@ -28,7 +28,7 @@ export async function sendEmail(
 ): Promise<{ id: string } | null> {
   try {
     const result = await getResend().emails.send({
-      from: "JobPilot AI <noreply@jobpilotai.co>",
+      from: "JP Arc <noreply@jobpilotai.co>",
       to,
       subject,
       html,

@@ -34,7 +34,7 @@ export const ACCENT_WARM = "#f59e0b"; // # Amber (contrast accent for special mo
 export const MASCOT_DESCRIPTION = "A friendly white robot with a blue (#3b82f6) pilot cap featuring a wing emblem, blue screen-eyes showing a friendly expression, and a wing badge on its chest. Professional, approachable, clean design. No goggles.";
 
 // # Brand identity
-export const BRAND_NAME = "JobPilot AI";
+export const BRAND_NAME = "JP Arc";
 export const BRAND_URL = "jobpilotai.co";
 export const BRAND_TAGLINE = "Your AI Career Co-Pilot";
 export const FONT_FAMILY = "Geist";

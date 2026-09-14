@@ -37,7 +37,7 @@ const SAMPLE: TemplateContent = {
   steps: [
     { label: "01", title: "Analyze the Job Description", description: "Highlight required skills and keywords" },
     { label: "02", title: "Optimize Your Resume", description: "Tailor content to match each application" },
-    { label: "03", title: "Test with ATS Scanner", description: "Use JobPilot's analyzer to check your score" },
+    { label: "03", title: "Test with ATS Scanner", description: "Use JP Arc's analyzer to check your score" },
   ],
   bars: [
     { label: "Software Engineering", value: 92 },
@@ -188,7 +188,7 @@ export async function GET(req: NextRequest) {
     const fullHtml = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>JobPilot Templates Full Size — ${allIds.length} Templates</title>
+<title>JP Arc Templates Full Size — ${allIds.length} Templates</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #09090b; color: #e4e2dd; font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; }
@@ -259,7 +259,7 @@ ${sections}
   const html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>JobPilot Template Gallery — ${allIds.length} Templates</title>
+<title>JP Arc Template Gallery — ${allIds.length} Templates</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #09090b; color: #e4e2dd; font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px; }

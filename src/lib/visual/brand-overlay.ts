@@ -2,7 +2,7 @@
    BRAND OVERLAY — Composites logo + name + domain on every slide
    ============================================================
    Post-processing step applied after any renderer (Flux/OpenAI/Canvas).
-   Ensures the ACTUAL logo, "JobPilot AI", and "jobpilotai.co" appear
+   Ensures the ACTUAL logo, "JP Arc", and "jobpilotai.co" appear
    on every generated image at consistent positions.
    ============================================================ */
 

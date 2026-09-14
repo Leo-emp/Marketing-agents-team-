@@ -177,7 +177,7 @@ export function FinalBrandScene() {
         transform: `translateY(${interpolate(logoEntrance, [0, 1], [10, 0])}px)`,
       }}>
         <span style={{ fontSize: 42, fontWeight: 700, color: C.white, fontFamily: FONT.heading, letterSpacing: "0.02em" }}>
-          JobPilot
+          JP Arc
         </span>
         <span style={{ fontSize: 42, fontWeight: 300, color: C.textSecondary, fontFamily: FONT.heading }}>
           AI

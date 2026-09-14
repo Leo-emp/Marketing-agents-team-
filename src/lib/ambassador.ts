@@ -48,7 +48,7 @@ export async function generateAmbassadorVideo(
   // # Step 2: Generate a 30-60 second speaking script via Gemini
   console.log(`[Ambassador] Writing script for: ${videoTopic}`);
 
-  const scriptPrompt = `You are the AI brand ambassador for JobPilot AI (jobpilotai.co), a premium career tech platform. Write a speaking script for a short video.
+  const scriptPrompt = `You are the AI brand ambassador for JP Arc (jobpilotai.co), a premium career tech platform. Write a speaking script for a short video.
 
 TOPIC: ${videoTopic}
 ${topicReasoning ? `REASONING: ${topicReasoning}` : ""}
@@ -59,7 +59,7 @@ SCRIPT REQUIREMENTS:
 3. STRUCTURE:
    - Hook (first 3 seconds): A surprising insight or bold statement that grabs attention
    - Body (20-45 seconds): 2-3 actionable tips or insights with specific details
-   - CTA (last 5-10 seconds): Natural mention of JobPilot AI as a tool that helps with this
+   - CTA (last 5-10 seconds): Natural mention of JP Arc as a tool that helps with this
 4. STYLE:
    - Speak directly to the viewer ("you", "your")
    - Use conversational language — not formal or stiff

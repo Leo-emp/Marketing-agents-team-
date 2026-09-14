@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
         const itemTone = (item as any).tone || "";
 
         // # Generate content via Gemini with performance context + playbook + strategic direction
-        const contentPrompt = `You are a senior content strategist for JobPilot AI (jobpilotai.co), a premium career tech platform.
+        const contentPrompt = `You are a senior content strategist for JP Arc (jobpilotai.co), a premium career tech platform.
 
 ${digest}
 
@@ -124,7 +124,7 @@ RULES:
 - Zero emojis
 - Specific numbers, data, or scenarios — not generic advice
 - One clear takeaway per piece
-- If mentioning JobPilot, be natural (1-2x max, never the focus)
+- If mentioning JP Arc, be natural (1-2x max, never the focus)
 - ${item.contentType === "carousel" ? "Create content for a 4-6 slide carousel. Slide 1 is the hook, last slide is CTA." : ""}
 - ${item.contentType === "post" ? "Plain text post, no image needed." : ""}
 

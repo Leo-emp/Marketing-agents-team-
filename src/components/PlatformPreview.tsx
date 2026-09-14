@@ -284,7 +284,7 @@ function LinkedInPreview({ item, slides, agent }: PlatformPreviewProps) {
               <span style={{ fontWeight: 600, fontSize: "14px", color: "#000000e6" }}>{agent.name}</span>
               <span style={{ color: "#00000099", fontSize: "14px" }}>• 1st</span>
             </div>
-            <p style={{ color: "#00000099", fontSize: "12px", margin: "0", lineHeight: "16px" }}>{agent.role} at JobPilot AI</p>
+            <p style={{ color: "#00000099", fontSize: "12px", margin: "0", lineHeight: "16px" }}>{agent.role} at JP Arc</p>
             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
               <span style={{ color: "#00000099", fontSize: "12px" }}>1h</span>
               <span style={{ color: "#00000099", fontSize: "12px" }}>•</span>

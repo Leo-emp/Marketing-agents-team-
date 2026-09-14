@@ -1,4 +1,4 @@
-# JobPilot Marketing Agents
+# JP Arc Marketing Agents
 
 An autonomous AI marketing system that generates, reviews, schedules, and publishes social media content across 4 platforms — with 8 specialized AI agents, multi-format visual generation, email sequences, and a KPI analytics dashboard.
 

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   });
 
   return new NextResponse(
-    unsubPage("Unsubscribed", "You've been removed from all JobPilot marketing emails. We're sorry to see you go."),
+    unsubPage("Unsubscribed", "You've been removed from all JP Arc marketing emails. We're sorry to see you go."),
     { status: 200, headers: { "Content-Type": "text/html" } }
   );
 }

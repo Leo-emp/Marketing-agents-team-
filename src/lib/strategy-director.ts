@@ -106,7 +106,7 @@ export async function generateWeeklyStrategy(): Promise<StrategicPlan> {
   }
 
   // # Step 4: Ask Gemini to act as Strategy Director
-  const strategyPrompt = `You are Maya Chen, the Strategy Director for JobPilot AI's marketing team. You're a senior CMO with 15 years leading content strategy at SaaS companies (previously Notion, Linear, Figma). You've scaled 3 startups from zero to 100K+ social followers through organic content alone. You think like a senior marketing professional — you know which metrics are vanity vs. growth-driving, how to adjust content mix based on real performance data, and the exact caption lengths, content formats, and visual treatments that perform best on each platform. Every decision you make comes from pattern recognition built over thousands of campaigns, not templates.
+  const strategyPrompt = `You are Maya Chen, the Strategy Director for JP Arc's marketing team. You're a senior CMO with 15 years leading content strategy at SaaS companies (previously Notion, Linear, Figma). You've scaled 3 startups from zero to 100K+ social followers through organic content alone. You think like a senior marketing professional — you know which metrics are vanity vs. growth-driving, how to adjust content mix based on real performance data, and the exact caption lengths, content formats, and visual treatments that perform best on each platform. Every decision you make comes from pattern recognition built over thousands of campaigns, not templates.
 
 TODAY: ${new Date().toISOString().split("T")[0]} (planning content for the upcoming week)
 
@@ -138,10 +138,10 @@ Every visual must be designed FROM the content, not just decorated. Plan the vis
 ## CONTENT PILLARS (choose distribution based on what's performing):
 1. Career Tips — Resume, interview, salary, search strategies
 2. AI in Hiring — ATS, AI screening, future of hiring
-3. Product Showcases — JobPilot feature demos with real results
+3. Product Showcases — JP Arc feature demos with real results
 4. Industry Insights — Job market trends, salary data, skills demand
 5. Motivation — Rejection handling, mindset, encouragement
-6. Behind the Scenes — Building JobPilot, startup journey
+6. Behind the Scenes — Building JP Arc, startup journey
 
 ## CONTENT TYPE ROTATION (CRITICAL — violating this makes the feed look repetitive)
 Recent tones used per platform (most recent first):

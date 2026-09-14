@@ -86,7 +86,7 @@ export async function generateBlogArticle(): Promise<{
   const existingSlugs = await getExistingSlugs();
 
   // # Step 3: Generate the full article via Gemini
-  const writePrompt = `You are a senior career content writer for JobPilot AI (jobpilotai.co), an all-in-one AI career platform.
+  const writePrompt = `You are a senior career content writer for JP Arc (jobpilotai.co), an all-in-one AI career platform.
 
 TOPIC: ${topic}
 REASONING: ${reasoning}
@@ -105,8 +105,8 @@ WRITE A BLOG ARTICLE following these rules:
 4. CONTENT:
    - One clear takeaway per section
    - At least 2 specific numbers, stats, or data points
-   - One internal link to a JobPilot feature using markdown: [feature name](https://jobpilotai.co/features/...)
-   - CTA at the end driving to a specific JobPilot tool
+   - One internal link to a JP Arc feature using markdown: [feature name](https://jobpilotai.co/features/...)
+   - CTA at the end driving to a specific JP Arc tool
    - No fluff, no filler, no "In today's competitive..." openers
 5. TONE: Expert career advisor sharing real insights. Confident, not salesy. No emojis.
 6. SLUG: URL-friendly, lowercase, hyphens, no stop words. Must NOT be in the existing slugs list.

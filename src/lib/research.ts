@@ -54,7 +54,7 @@ RESEARCH FOCUS:
 
 INDUSTRY CONTEXT:
 - We operate in the career tech / job search / AI hiring space
-- Our brand is JobPilot AI — an all-in-one AI job search platform
+- Our brand is JP Arc — an all-in-one AI job search platform
 - We want to position ourselves as a trustworthy, expert authority
 - Our audience: professionals actively job hunting
 
@@ -156,7 +156,7 @@ RESEARCH TASK:
 5. Any new AI hiring tools, layoff news, salary reports, or workplace policy changes?
 
 INDUSTRY CONTEXT:
-- Brand: JobPilot AI — all-in-one AI career platform (resume tools, interview prep, cover letters, LinkedIn optimization, portfolio builder)
+- Brand: JP Arc — all-in-one AI career platform (resume tools, interview prep, cover letters, LinkedIn optimization, portfolio builder)
 - Audience: active job seekers, career changers, recent grads, international professionals
 - Voice: expert career advisor, not salesy — builds trust through real expertise
 
@@ -203,7 +203,7 @@ Return ONLY valid JSON.`;
   }
 
   // # Step 2: Pick the single best topic from the research — specific angle, not generic
-  const pickPrompt = `You are a content strategist for a career tech brand (JobPilot AI). Based on the research below, pick ONE specific, high-potential content topic.
+  const pickPrompt = `You are a content strategist for a career tech brand (JP Arc). Based on the research below, pick ONE specific, high-potential content topic.
 
 PLATFORM: ${platform}
 CONTENT TYPE: ${contentType}

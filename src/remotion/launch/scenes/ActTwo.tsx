@@ -63,7 +63,7 @@ export function BrandRevealScene() {
         opacity: nameOpacity, transform: `translateY(${nameY}px)`,
       }}>
         <span style={{ fontSize: 46, fontWeight: 700, color: C.white, fontFamily: FONT.heading, letterSpacing: "0.02em" }}>
-          JobPilot
+          JP Arc
         </span>
         <span style={{ fontSize: 46, fontWeight: 300, color: C.textSecondary, fontFamily: FONT.heading, letterSpacing: "0.02em" }}>
           AI

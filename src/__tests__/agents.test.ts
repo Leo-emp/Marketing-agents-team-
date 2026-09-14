@@ -129,7 +129,7 @@ describe("Marketing Agents", () => {
       for (const agentId of writingAgents) {
         const agent = AGENTS[agentId];
         // # Check for key brand elements in the prompt
-        expect(agent.systemPrompt).toContain("JobPilot AI");
+        expect(agent.systemPrompt).toContain("JP Arc");
         expect(agent.systemPrompt).toContain("jobpilotai.co");
         // # Tone directives should be present
         expect(agent.systemPrompt).toContain("TONE");

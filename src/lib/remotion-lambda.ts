@@ -27,7 +27,7 @@ export async function triggerRender(
     region: region as "us-east-1",
     functionName,
     serveUrl,
-    composition: "JobPilotReel",
+    composition: "JP ArcReel",
     inputProps: { scenes: reelConfig.scenes },
     codec: "h264",
     imageFormat: "jpeg",

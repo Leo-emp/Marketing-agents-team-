@@ -186,7 +186,7 @@ jobs:
   # ---------------------------------------------------------------------------
   # 5. FUNNEL EVENT SYNC
   # ---------------------------------------------------------------------------
-  # Syncs funnel/conversion events from the main JobPilot app into
+  # Syncs funnel/conversion events from the main JP Arc app into
   # the marketing database. This powers analytics dashboards and
   # helps the content pipeline understand what's converting.
   # Runs daily at 12PM UTC (after the morning's user activity).

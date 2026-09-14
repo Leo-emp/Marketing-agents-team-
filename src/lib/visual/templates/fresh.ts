@@ -90,7 +90,7 @@ function ft(t: FTheme): string {
     <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;">
       <img src="${LOGO_DATA_URI}" alt="JP" style="width:10px;height:10px;border-radius:2px;">
     </div>
-    <span style="font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nc};">JobPilot AI</span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:-.01em;color:${nc};">JP Arc</span>
     <span style="font-size:11px;font-family:${MONO_STACK};margin-left:auto;letter-spacing:.02em;color:${uc};">jobpilotai.co</span>
   </div>`;
 }
@@ -441,13 +441,13 @@ function t164(c: TemplateContent, w: number, h: number): string {
     ${ey(c.eyebrow || "LIVE SCAN", t.ac)}
     <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
       <div style="font-family:${MONO_STACK};font-size:13px;line-height:2.2;color:${t.ac};">
-        <div style="color:${t.t3};">$ jobpilot scan resume.pdf</div>
+        <div style="color:${t.t3};">$ jparc scan resume.pdf</div>
         <div><span style="color:#FBBF24;">→</span> Analyzing keywords...</div>
         <div><span style="color:${t.ac};">✓</span> Matched: 14/16 skills</div>
         <div><span style="color:${t.ac};">✓</span> Format: ATS-compatible</div>
         <div><span style="color:#F87171;">✕</span> Missing: cloud certification</div>
         <div style="margin-top:8px;"><span style="color:#FBBF24;">→</span> Score: <span style="font-weight:700;">${esc(c.stat?.value || "91%")}</span></div>
-        <div style="color:${t.t3};margin-top:8px;">$ jobpilot optimize --auto</div>
+        <div style="color:${t.t3};margin-top:8px;">$ jparc optimize --auto</div>
         <div><span style="color:${t.ac};">✓</span> Boosted to <span style="font-weight:700;">${esc(c.stat?.label || "96%")}</span></div>
       </div>
     </div>

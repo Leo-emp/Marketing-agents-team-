@@ -1,4 +1,4 @@
-/* # JobPilot AI — Apple-style cinematic launch video composition */
+/* # JP Arc — Apple-style cinematic launch video composition */
 
 import { Series, Audio } from "remotion";
 import { SCENES, C, FONT } from "./config";
@@ -65,7 +65,7 @@ export function LaunchVideoComposition({ voiceoverUrl, musicUrl }: LaunchVideoPr
 
         {/* ======== ACT II — THE REVEAL ======== */}
 
-        {/* # Scene 5: JobPilot AI logo materializes from the light */}
+        {/* # Scene 5: JP Arc logo materializes from the light */}
         <Series.Sequence durationInFrames={SCENES.brandReveal}>
           <BrandRevealScene />
         </Series.Sequence>
