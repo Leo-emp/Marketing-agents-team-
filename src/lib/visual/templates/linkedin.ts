@@ -29,7 +29,7 @@ function brandStripT1Dark(): string {
   return `<div class="brand-strip">
     <div style="display:flex;align-items:center;gap:8px;">
       <img src="${LOGO_DATA_URI}" style="width:22px;height:22px;border-radius:4px;">
-      <span class="name">JP Arc <span>AI</span></span>
+      <span class="name">JP Arc</span>
     </div>
     <span class="url">jobpilotai.co</span>
   </div>`;
@@ -39,7 +39,7 @@ function brandStripT1Light(): string {
   return `<div class="brand-strip">
     <div style="display:flex;align-items:center;gap:8px;">
       <img src="${LOGO_DATA_URI}" style="width:22px;height:22px;border-radius:4px;">
-      <span class="name">JP Arc <span>AI</span></span>
+      <span class="name">JP Arc</span>
     </div>
     <span class="url">jobpilotai.co</span>
   </div>`;
@@ -172,7 +172,7 @@ function buildT3(c: TemplateContent, w: number, h: number): string {
     <div class="brand-strip">
       <div style="display:flex;align-items:center;gap:8px;">
         <img src="${LOGO_DATA_URI}" style="width:22px;height:22px;border-radius:4px;">
-        <span class="name">JP Arc <span>AI</span></span>
+        <span class="name">JP Arc</span>
       </div>
       <span class="url">jobpilotai.co</span>
     </div>
