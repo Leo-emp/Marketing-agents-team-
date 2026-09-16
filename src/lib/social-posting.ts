@@ -300,6 +300,7 @@ async function postToTwitterOAuth2(content: string, token: string, imageUrl?: st
 
 /* ---- Instagram ---- */
 /* Uses the Instagram Graph API (requires Facebook Business account) */
+/* Handles both single images and carousels (comma-separated imageUrl) */
 export async function postToInstagram(content: string, imageUrl?: string): Promise<PostResult> {
   const token = await getToken("instagram", "INSTAGRAM_ACCESS_TOKEN");
   const accountId = await getInstagramAccountId();
@@ -313,6 +314,81 @@ export async function postToInstagram(content: string, imageUrl?: string): Promi
       return { success: false, error: "Instagram requires an image URL for posts" };
     }
 
+    // # Split comma-separated URLs — pipeline stores carousel slides as "url1,url2,url3"
+    const imageUrls = imageUrl.split(",").map((u) => u.trim()).filter(Boolean);
+
+    if (imageUrls.length > 1) {
+      // # ---- CAROUSEL POST (2-10 images) ----
+      // # Step 1: Create a child container for each image (no caption on children)
+      const childIds: string[] = [];
+      for (const url of imageUrls.slice(0, 10)) {
+        const childRes = await fetch(
+          `https://graph.facebook.com/v19.0/${accountId}/media`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image_url: url,
+              is_carousel_item: true,
+              access_token: token,
+            }),
+          }
+        );
+
+        if (!childRes.ok) {
+          const err = await childRes.text();
+          return { success: false, error: `Instagram carousel child failed: ${err}` };
+        }
+
+        const { id } = await childRes.json();
+        childIds.push(id);
+      }
+
+      // # Step 2: Create the carousel container referencing all children
+      const carouselRes = await fetch(
+        `https://graph.facebook.com/v19.0/${accountId}/media`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            media_type: "CAROUSEL",
+            children: childIds.join(","),
+            caption: content,
+            access_token: token,
+          }),
+        }
+      );
+
+      if (!carouselRes.ok) {
+        const err = await carouselRes.text();
+        return { success: false, error: `Instagram carousel container failed: ${err}` };
+      }
+
+      const { id: carouselId } = await carouselRes.json();
+
+      // # Step 3: Publish the carousel
+      const publishRes = await fetch(
+        `https://graph.facebook.com/v19.0/${accountId}/media_publish`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            creation_id: carouselId,
+            access_token: token,
+          }),
+        }
+      );
+
+      if (!publishRes.ok) {
+        const err = await publishRes.text();
+        return { success: false, error: `Instagram carousel publish failed: ${err}` };
+      }
+
+      const data = await publishRes.json();
+      return { success: true, platformPostId: data.id };
+    }
+
+    // # ---- SINGLE IMAGE POST ----
     /* Step 1: Create media container */
     const createRes = await fetch(
       `https://graph.facebook.com/v19.0/${accountId}/media`,
@@ -320,7 +396,7 @@ export async function postToInstagram(content: string, imageUrl?: string): Promi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          image_url: imageUrl,
+          image_url: imageUrls[0],
           caption: content,
           access_token: token,
         }),
