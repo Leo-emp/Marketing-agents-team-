@@ -8,7 +8,7 @@
    from a plan. Saves generated content to the queue.
    ============================================================ */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateContent, generateVariations, generateBatch, AGENTS } from "@/lib/agents";
 import type { PlanItem } from "@/lib/agents";
@@ -256,9 +256,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // # Auto-design visual for visual content types
+      // # Auto-design visual in background after response is sent
+      // # after() keeps the function alive on Vercel while visual generates
       if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
-        autoGenerateVisual(record.id);
+        after(() => autoGenerateVisual(record.id));
       }
 
       return NextResponse.json(record);
@@ -336,9 +337,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // # Auto-design visual for visual content types
+    // # Auto-design visual in background after response is sent
+    // # after() returns the content record immediately so the dashboard
+    // # shows it right away, while the visual generates behind the scenes.
+    // # This prevents Vercel function timeout on slow visual pipelines.
     if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
-      await autoGenerateVisual(record.id);
+      after(() => autoGenerateVisual(record.id));
     }
 
     return NextResponse.json(record);

@@ -471,9 +471,7 @@ export default function Dashboard() {
         setNewContentId(data.id);
         setTimeout(() => setNewContentId(null), 5000);
         showToast(
-          isAuto
-            ? `${AGENT_META[genAgent]?.name || genAgent} found a trending topic and generated content`
-            : `${AGENT_META[genAgent]?.name || genAgent} generated content with visuals`,
+          `${AGENT_META[genAgent]?.name || genAgent} generated content — visuals rendering in background`,
           "success"
         );
         fetchContent();
