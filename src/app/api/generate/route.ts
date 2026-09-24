@@ -23,6 +23,10 @@ import { isTemplateId, getTemplateDimensions } from "@/lib/visual/templates/inde
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
 
+// # Allow up to 60s for content + visual generation on Vercel Pro
+// # Gemini calls + Puppeteer rendering can exceed the default 10s timeout
+export const maxDuration = 60;
+
 // # Content types that get auto-visual generation
 const VISUAL_CONTENT_TYPES = ["post", "carousel", "single_image", "reel_script"];
 
@@ -47,15 +51,20 @@ function slideToTemplateContent(slide: SlideData): TemplateContent {
 }
 
 // # Render a single slide with tiered fallback:
-// # 1. HTML template (PRIMARY — layout is t1-t186, Puppeteer render)
+// # 1. HTML template (PRIMARY — Puppeteer render, has timeout protection)
 // # 2. fal.ai Flux Pro (fallback — $0.05/image)
 // # 3. OpenAI gpt-image-1 (secondary fallback)
-// # 4. Canvas 2D (last resort — text-only, free)
+// # 4. Canvas 2D (last resort — text-only, free, always works)
 async function renderSlide(slide: SlideData, width: number, height: number, platform: string): Promise<Buffer> {
   // # HTML template path — branded Puppeteer-rendered templates
+  // # Falls back to Canvas 2D if Puppeteer times out or crashes
   if (isTemplateId(slide.layout)) {
-    const content = slideToTemplateContent(slide);
-    return renderTemplateHTML(slide.layout as TemplateId, content, width, height);
+    try {
+      const content = slideToTemplateContent(slide);
+      return await renderTemplateHTML(slide.layout as TemplateId, content, width, height);
+    } catch (err) {
+      console.warn(`[Visual] Puppeteer failed for ${slide.layout}, falling back to Canvas 2D:`, err instanceof Error ? err.message : err);
+    }
   }
 
   if (slide.aiImagePrompt) {
@@ -131,8 +140,8 @@ async function autoGenerateVisual(contentId: string) {
     } catch (e) {
       console.error(`[Visual] Auto-design attempt ${attempt} failed for ${contentId}:`, e);
       if (attempt < 2) {
-        // # Wait 30s between attempts so Gemini rate limit resets
-        await new Promise((r) => setTimeout(r, 30000));
+        // # Short pause between retries — don't waste 30s of function budget
+        await new Promise((r) => setTimeout(r, 3000));
       }
     }
   }
@@ -209,16 +218,23 @@ export async function POST(req: NextRequest) {
         saved.push(record);
       }
 
-      // # Auto-design visuals for visual content types (awaited so Vercel doesn't kill the function)
-      const visualRecords = saved.filter((r) => VISUAL_CONTENT_TYPES.includes(r.contentType));
-      await Promise.allSettled(
-        visualRecords.map((record) => autoGenerateVisual(record.id))
-      );
-
       await prisma.contentPlan.update({
         where: { id: body.planId },
         data: { status: "active" },
       });
+
+      // # Auto-design visuals AFTER the response is sent — don't block
+      // # Previously this awaited all visuals, causing Vercel function timeout
+      // # on batches with 5+ visual posts (each needs Gemini + Puppeteer)
+      const visualRecords = saved.filter((r) => VISUAL_CONTENT_TYPES.includes(r.contentType));
+      if (visualRecords.length > 0) {
+        after(async () => {
+          // # Process visuals sequentially to avoid Gemini rate limits
+          for (const record of visualRecords) {
+            await autoGenerateVisual(record.id);
+          }
+        });
+      }
 
       return NextResponse.json({ generated: saved.length, total: plan.length, items: saved });
     }

@@ -2,9 +2,11 @@
    VISUAL API — /api/visual
    ============================================================
    POST: Generate branded PNG images from content.
-   Two-tier rendering with smart fallback:
-   1. OpenAI gpt-image-1 (primary — all slides have aiImagePrompt)
-   2. Canvas 2D @napi-rs/canvas (fallback if OpenAI fails)
+   Tiered rendering with automatic fallback:
+   1. HTML template via Puppeteer (primary — t1-t256 templates)
+   2. fal.ai Flux Pro (fallback — $0.05/image)
+   3. OpenAI gpt-image-1 (secondary fallback)
+   4. Canvas 2D @napi-rs/canvas (last resort — always works)
    Uploads to Vercel Blob for HTTPS URLs.
    ============================================================ */
 
@@ -21,6 +23,10 @@ import { applyBrandOverlay } from "@/lib/visual/brand-overlay";
 import { isTemplateId, getTemplateDimensions } from "@/lib/visual/templates/index";
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
+
+// # Allow up to 60s for visual generation on Vercel Pro
+// # Default 10s (Hobby) is too short for Puppeteer + Gemini pipeline
+export const maxDuration = 60;
 
 /* # Convert SlideData to TemplateContent for the HTML renderer */
 function slideToTemplateContent(slide: SlideData): TemplateContent {
@@ -44,10 +50,10 @@ function slideToTemplateContent(slide: SlideData): TemplateContent {
 }
 
 /* # Render a single slide with tiered fallback:
-   # 1. HTML template (PRIMARY — layout is t1-t186, Puppeteer render)
+   # 1. HTML template (PRIMARY — Puppeteer render, has timeout protection)
    # 2. fal.ai Flux Pro (fallback — $0.05/image)
    # 3. OpenAI gpt-image-1 (secondary fallback)
-   # 4. Canvas 2D (last resort — text-only, free) */
+   # 4. Canvas 2D (last resort — text-only, free, always works) */
 async function renderSlide(
   slide: SlideData,
   width: number,
@@ -57,13 +63,20 @@ async function renderSlide(
 ): Promise<Buffer> {
   let buffer: Buffer;
 
-  // # HTML template path — for template IDs (t1-t186)
+  // # HTML template path — for template IDs (t1-t256)
   // # These are our branded Puppeteer-rendered templates
   // # They already include brand strip, so skip brand overlay after
+  // # If Puppeteer fails/times out, fall back to Canvas 2D renderer
   if (isTemplateId(slide.layout)) {
     const content = slideToTemplateContent(slide);
-    buffer = await renderTemplateHTML(slide.layout as TemplateId, content, width, height);
-    return buffer;
+    try {
+      buffer = await renderTemplateHTML(slide.layout as TemplateId, content, width, height);
+      return buffer;
+    } catch (err) {
+      // # Puppeteer failed (timeout, Chromium download hang, crash)
+      // # Fall through to Canvas 2D instead of killing the whole request
+      console.warn(`[Visual API] Puppeteer failed for ${slide.layout}, falling back to Canvas 2D:`, err instanceof Error ? err.message : err);
+    }
   }
 
   if (model === "canvas") {
