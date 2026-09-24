@@ -18,9 +18,11 @@ const deadModels = new Map<string, number>();
 const DEAD_TTL = 60 * 60 * 1000;
 const TIMEOUT_MS = 45_000;
 
-// # Rate limiter — free tier allows ~2-3 RPM so we space calls 4s apart
+// # Rate limiter — light pacing to avoid burst 429s
+// # Vercel functions are ephemeral so this only paces calls within ONE request
+// # The retry logic with backoff handles actual rate limit errors
 let lastCallTime = 0;
-const MIN_CALL_GAP_MS = 4000;
+const MIN_CALL_GAP_MS = 1000;
 
 async function waitForRateLimit() {
   const now = Date.now();
@@ -41,10 +43,10 @@ async function callGeminiInternal(
 
   let lastError = "";
 
-  // # 4 passes with increasing backoff on rate-limit
-  // # Free tier is ~2-3 RPM so backoff must exceed 60s to reset
-  for (let pass = 0; pass < 4; pass++) {
-    if (pass > 0) await new Promise((r) => setTimeout(r, 15000 * pass));
+  // # 3 passes with increasing backoff on rate-limit
+  // # Keep total retry budget under 30s so function doesn't timeout
+  for (let pass = 0; pass < 3; pass++) {
+    if (pass > 0) await new Promise((r) => setTimeout(r, 5000 * pass));
 
     for (const model of GEMINI_MODELS) {
       const deadSince = deadModels.get(model);
@@ -81,11 +83,11 @@ async function callGeminiInternal(
         clearTimeout(timeout);
 
         if (res.status === 404) { deadModels.set(model, Date.now()); continue; }
-        // # On rate-limit, wait 30s before trying next model
-        // # Free tier resets per minute, so short waits just fail again
+        // # On rate-limit, wait before trying next model
+        // # Keep it short — 30s burned half the function timeout
         if (res.status === 429 || res.status === 503) {
           lastError = `${model} rate-limited`;
-          await new Promise((r) => setTimeout(r, 30000));
+          await new Promise((r) => setTimeout(r, 8000));
           continue;
         }
         if (!res.ok) { const d = await res.json(); lastError = d.error?.message || "API error"; continue; }

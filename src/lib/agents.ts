@@ -823,16 +823,23 @@ export type PlanItem = {
 
 /* # Extract JSON from AI response (handles markdown code blocks) */
 function extractJSON(raw: string): string {
+  // # Strip markdown code fences if present
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenced) return fenced[1].trim();
+  const text = fenced ? fenced[1].trim() : raw;
 
-  const arr = raw.match(/\[[\s\S]*\]/);
-  if (arr) return arr[0];
+  // # Try array first, then object
+  const match = text.match(/\[[\s\S]*\]/) || text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("No JSON found in AI response");
 
-  const obj = raw.match(/\{[\s\S]*\}/);
-  if (obj) return obj[0];
+  let json = match[0];
 
-  throw new Error("No JSON found in AI response");
+  // # Fix common Gemini JSON issues:
+  // # 1. Trailing commas before ] or } (invalid JSON)
+  json = json.replace(/,\s*([}\]])/g, "$1");
+  // # 2. Single-line // comments (strip them)
+  json = json.replace(/\/\/[^\n]*/g, "");
+
+  return json;
 }
 
 /* # Generate weekly content plan — research first, then plan */
@@ -1007,21 +1014,31 @@ export async function generateContent(
   const toneDirective = tone && TONES[tone] ? TONES[tone] : "";
 
   // # Auto-discover a trending topic when none is provided
+  // # discoverTopic already does Gemini Search research — we reuse it
+  // # directly instead of calling conductResearch again (saves ~15s)
   let autoDiscovered = false;
+  let discoveredResearch: ResearchBrief | null = null;
   if (!topic || !topic.trim()) {
     console.log(`[AutoTopic] No topic provided for ${agentId}, discovering...`);
     const discovered = await discoverTopic(agent.platform, contentType, tone);
     topic = discovered.topic;
+    discoveredResearch = discovered.researchBrief;
     autoDiscovered = true;
     console.log(`[AutoTopic] Discovered: "${topic}" — ${discovered.reasoning}`);
   }
 
   // # Research the topic before generating content
+  // # Skip if discoverTopic already provided research (saves a full Gemini call)
   let researchContext = "";
   let researchSources: { title: string; uri: string }[] = [];
   let researchBrief = "";
 
-  if (!options?.skipResearch) {
+  if (discoveredResearch) {
+    // # Reuse research from auto-discovery — no extra Gemini call needed
+    researchContext = `\n\nCURRENT RESEARCH (use this data to make your content specific, current, and evidence-backed):\n${discoveredResearch.rawBrief}`;
+    researchSources = discoveredResearch.sources;
+    researchBrief = discoveredResearch.rawBrief;
+  } else if (!options?.skipResearch) {
     try {
       const research = await conductResearch(topic, agent.platform, context);
       researchContext = `\n\nCURRENT RESEARCH (use this data to make your content specific, current, and evidence-backed):\n${research.rawBrief}`;
@@ -1069,8 +1086,10 @@ Return ONLY a valid JSON object matching the output format. No explanation outsi
   const parsed = JSON.parse(extractJSON(raw));
 
   // # Editorial review — second-pass quality gate
+  // # Skip for auto-discovered topics to stay within function timeout
+  // # (auto-discovered already has 3 Gemini calls: search + pick + generate)
   let editorial: EditorialReview | undefined;
-  if (!options?.skipEditorial) {
+  if (!options?.skipEditorial && !autoDiscovered) {
     try {
       editorial = await reviewContent(
         parsed.content,

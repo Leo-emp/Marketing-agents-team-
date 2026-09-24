@@ -73,13 +73,16 @@ Return ONLY a valid JSON object.`;
   try {
     const { text, sources } = await callGeminiWithSearch(prompt);
 
-    // # Parse the research response
+    // # Parse the research response — fix Gemini's common JSON issues
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return buildFallbackBrief(topic, platform, sources);
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    const cleaned = jsonMatch[0]
+      .replace(/,\s*([}\]])/g, "$1")
+      .replace(/\/\/[^\n]*/g, "");
+    const parsed = JSON.parse(cleaned);
 
     const brief: ResearchBrief = {
       trends: parsed.trends || [],
@@ -180,7 +183,11 @@ Return ONLY valid JSON.`;
     const { text, sources } = await callGeminiWithSearch(researchPrompt);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      rawResearch = JSON.parse(jsonMatch[0]);
+      // # Fix trailing commas and comments — Gemini often outputs invalid JSON
+      const cleaned = jsonMatch[0]
+        .replace(/,\s*([}\]])/g, "$1")
+        .replace(/\/\/[^\n]*/g, "");
+      rawResearch = JSON.parse(cleaned);
     }
     research = {
       trends: rawResearch.trending || [],
