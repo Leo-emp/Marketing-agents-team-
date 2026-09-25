@@ -24,9 +24,9 @@ import { isTemplateId, getTemplateDimensions } from "@/lib/visual/templates/inde
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
 
-// # Allow up to 60s for visual generation on Vercel Pro
-// # Default 10s (Hobby) is too short for Puppeteer + Gemini pipeline
-export const maxDuration = 60;
+// # Allow up to 300s (Vercel Pro max) for visual generation
+// # Puppeteer cold start + Gemini design calls need headroom
+export const maxDuration = 300;
 
 /* # Convert SlideData to TemplateContent for the HTML renderer */
 function slideToTemplateContent(slide: SlideData): TemplateContent {

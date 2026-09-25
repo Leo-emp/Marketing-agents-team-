@@ -23,9 +23,10 @@ import { isTemplateId, getTemplateDimensions } from "@/lib/visual/templates/inde
 import { renderTemplateHTML } from "@/lib/visual/html-renderer";
 import type { TemplateContent, TemplateId } from "@/lib/visual/templates/shared";
 
-// # Allow up to 60s for content + visual generation on Vercel Pro
-// # Gemini calls + Puppeteer rendering can exceed the default 10s timeout
-export const maxDuration = 60;
+// # Allow up to 300s (Vercel Pro max) for content generation
+// # Pipeline: Gemini search (~15s) + topic pick (~8s) + content write (~20s)
+// # = ~45s minimum, with retries can reach 60s+
+export const maxDuration = 300;
 
 // # Content types that get auto-visual generation
 const VISUAL_CONTENT_TYPES = ["post", "carousel", "single_image", "reel_script"];

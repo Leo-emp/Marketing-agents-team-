@@ -37,8 +37,8 @@ import { reviewContent } from "@/lib/editorial";
 import { notifyAdmin } from "@/lib/notify-admin";
 import { getPlaybookForPrompt } from "@/lib/learning-loop";
 
-// # Weekly pipeline generates 11+ posts with visuals — needs the full 60s
-export const maxDuration = 60;
+// # Weekly pipeline generates 11+ posts with visuals — needs extended time
+export const maxDuration = 300;
 
 // # Default calendar config — generates a balanced mix of content types
 // # This can be overridden by a ContentPlan or dashboard settings
