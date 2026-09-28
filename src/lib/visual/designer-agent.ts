@@ -153,17 +153,23 @@ function hasEnoughContent(templateId: string, content: TemplateContent, platform
   const expectedContentFields = rendered.filter((f: string) => contentFields.has(f));
   if (expectedContentFields.length === 0) return true; // # Template has no content fields (cover-only)
 
-  // # Check if at least ONE content field is populated
+  // # Check if at least ONE content field is populated with MEANINGFUL data
+  // # Empty labels, short percentages, or placeholder text don't count
   for (const field of expectedContentFields) {
     switch (field) {
       case "body": if (content.body && content.body.length > 10) return true; break;
-      case "bullets": if (content.bullets && content.bullets.length > 0) return true; break;
-      case "tips": if (content.tips && content.tips.length > 0) return true; break;
-      case "steps": if (content.steps && content.steps.length > 0) return true; break;
-      case "items": if (content.items && content.items.length > 0) return true; break;
-      case "bars": if (content.bars && content.bars.length > 0) return true; break;
-      case "beforeText": if (content.beforeText && content.beforeText.length > 5) return true; break;
-      case "afterText": if (content.afterText && content.afterText.length > 5) return true; break;
+      case "bullets": if (content.bullets && content.bullets.length >= 2) return true; break;
+      case "tips": if (content.tips && content.tips.length >= 2 && content.tips.every(t => t.title?.length > 3)) return true; break;
+      case "steps": if (content.steps && content.steps.length >= 2 && content.steps.every(s => s.title?.length > 3)) return true; break;
+      case "items": if (content.items && content.items.length >= 2) return true; break;
+      case "bars": {
+        // # Bars MUST have meaningful labels — unlabeled bars are just colored rectangles
+        const validBars = content.bars?.filter(b => b.label && b.label.length > 2);
+        if (validBars && validBars.length >= 2) return true;
+        break;
+      }
+      case "beforeText": if (content.beforeText && content.beforeText.length > 20) return true; break;
+      case "afterText": if (content.afterText && content.afterText.length > 20) return true; break;
       case "annotations": if (content.annotations && content.annotations.length > 0) return true; break;
     }
   }
@@ -188,9 +194,13 @@ function getMissingFields(templateId: string, content: TemplateContent, platform
       case "steps": if (!content.steps?.length) missing.push(field); break;
       case "tips": if (!content.tips?.length) missing.push(field); break;
       case "items": if (!content.items?.length) missing.push(field); break;
-      case "bars": if (!content.bars?.length) missing.push(field); break;
-      case "beforeText": if (!content.beforeText) missing.push(field); break;
-      case "afterText": if (!content.afterText) missing.push(field); break;
+      case "bars": {
+        const validBars = content.bars?.filter(b => b.label && b.label.length > 2);
+        if (!validBars?.length || validBars.length < 2) missing.push(field);
+        break;
+      }
+      case "beforeText": if (!content.beforeText || content.beforeText.length < 20) missing.push(field); break;
+      case "afterText": if (!content.afterText || content.afterText.length < 20) missing.push(field); break;
       case "tags": if (!content.tags?.length) missing.push(field); break;
       case "annotations": if (!content.annotations?.length) missing.push(field); break;
       case "score": if (content.score === undefined) missing.push(field); break;
@@ -211,9 +221,9 @@ const FIELD_SCHEMAS: Record<string, string> = {
   steps: '"steps": [{"label": "01", "title": "Step Name", "description": "brief detail 8-12 words"}, ...]  (3-4 steps)',
   tips: '"tips": [{"title": "Tip Name", "description": "brief explanation 8-12 words"}, ...]  (3-4 tips)',
   items: '"items": [{"text": "label", "value": "data", "highlighted": true/false}, ...]  (3-5 items)',
-  bars: '"bars": [{"label": "Category Name", "value": 85}, ...]  (3-5 bars, values 0-100)',
-  beforeText: '"beforeText": "the bad example or before state (15-25 words)"',
-  afterText: '"afterText": "the improved example or after state (15-25 words)"',
+  bars: '"bars": [{"label": "Specific Descriptive Category", "value": 85}, ...]  (3-5 bars, values 0-100. CRITICAL: every bar MUST have a descriptive label — unlabeled bars are useless colored rectangles)',
+  beforeText: '"beforeText": "actual bad resume text or real before-state example, minimum 20+ words showing the specific problem"',
+  afterText: '"afterText": "actual improved resume text or real after-state example, minimum 20+ words showing the specific fix"',
   tags: '"tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]',
   annotations: '"annotations": [{"text": "full sentence", "highlights": [{"text": "key phrase", "type": "good"}], "callout": {"text": "explanation", "type": "good"}}]',
   score: '"score": 85  (number 0-100)',
