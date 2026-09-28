@@ -110,6 +110,7 @@ async function renderAndUploadSlides(slides: SlideData[], platform: string, cont
 
 // # Auto-generate visual for a content record: design + render + upload
 // # Retries once on failure, falls back to basic hero slide if both attempts fail
+// # Also creates Visual records for template variety tracking
 async function autoGenerateVisual(contentId: string) {
   const content = await prisma.content.findUnique({ where: { id: contentId } });
   if (!content) return;
@@ -135,6 +136,26 @@ async function autoGenerateVisual(contentId: string) {
           imageUrl,
         },
       });
+
+      // # Create Visual records so template-intelligence can track usage
+      // # for variety enforcement (prevents same template repeating)
+      for (let i = 0; i < design.slides.length; i++) {
+        try {
+          await prisma.visual.create({
+            data: {
+              contentId,
+              type: design.slides.length === 1 ? "single_image" : "carousel_slide",
+              slideIndex: i,
+              templateId: design.slides[i].layout,
+              data: JSON.stringify(design.slides[i]),
+              width: 1200,
+              height: 1200,
+            },
+          });
+        } catch (vErr) {
+          console.warn(`[Visual] Failed to create Visual record for slide ${i}:`, vErr);
+        }
+      }
 
       console.log(`[Visual] Auto-design + render succeeded for ${contentId} (attempt ${attempt})`);
       return;
@@ -168,6 +189,21 @@ async function autoGenerateVisual(contentId: string) {
         notes: `${content.notes ? content.notes + " | " : ""}Visual design failed — using fallback hero slide`,
       },
     });
+
+    // # Track fallback template usage too
+    try {
+      await prisma.visual.create({
+        data: {
+          contentId,
+          type: "single_image",
+          slideIndex: 0,
+          templateId: "hero",
+          data: JSON.stringify(fallbackSlides[0]),
+          width: 1200,
+          height: 1200,
+        },
+      });
+    } catch { /* non-critical */ }
 
     console.warn(`[Visual] Using fallback hero slide (rendered) for ${contentId}`);
   } catch (fallbackErr) {
@@ -273,10 +309,11 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // # Auto-design visual in background after response is sent
-      // # after() keeps the function alive on Vercel while visual generates
+      // # Generate visual synchronously so image returns with caption
       if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
-        after(() => autoGenerateVisual(record.id));
+        await autoGenerateVisual(record.id);
+        const updated = await prisma.content.findUnique({ where: { id: record.id } });
+        return NextResponse.json(updated || record);
       }
 
       return NextResponse.json(record);
@@ -354,12 +391,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // # Auto-design visual in background after response is sent
-    // # after() returns the content record immediately so the dashboard
-    // # shows it right away, while the visual generates behind the scenes.
-    // # This prevents Vercel function timeout on slow visual pipelines.
+    // # Generate visual SYNCHRONOUSLY for single posts so the image
+    // # returns with the response — user sees caption + image together.
+    // # maxDuration is 300s which is plenty for one post.
     if (VISUAL_CONTENT_TYPES.includes(record.contentType)) {
-      after(() => autoGenerateVisual(record.id));
+      await autoGenerateVisual(record.id);
+      // # Re-fetch record to include the generated imageUrl
+      const updated = await prisma.content.findUnique({ where: { id: record.id } });
+      return NextResponse.json(updated || record);
     }
 
     return NextResponse.json(record);

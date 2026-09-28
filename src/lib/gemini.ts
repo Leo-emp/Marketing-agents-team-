@@ -36,7 +36,7 @@ async function waitForRateLimit() {
 /* # Shared fetch logic for both standard and grounded calls */
 async function callGeminiInternal(
   prompt: string,
-  options?: { useSearch?: boolean }
+  options?: { useSearch?: boolean; json?: boolean }
 ): Promise<{ text: string; sources: { title: string; uri: string }[] }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
@@ -60,9 +60,13 @@ async function callGeminiInternal(
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+        const generationConfig: any = { temperature: 0.8, maxOutputTokens: 8192 };
+        // # JSON mode forces Gemini to return valid JSON — no markdown, no prose
+        if (options?.json) generationConfig.responseMimeType = "application/json";
+
         const requestBody: any = {
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 8192 },
+          generationConfig,
         };
 
         // # Google Search grounding — gives Gemini real-time web access
@@ -124,6 +128,12 @@ async function callGeminiInternal(
 /* # Standard Gemini call (no web search) */
 export async function callGemini(prompt: string): Promise<string> {
   const result = await callGeminiInternal(prompt);
+  return result.text;
+}
+
+/* # JSON-mode Gemini call — forces valid JSON output (no markdown wrapping) */
+export async function callGeminiJson(prompt: string): Promise<string> {
+  const result = await callGeminiInternal(prompt, { json: true });
   return result.text;
 }
 

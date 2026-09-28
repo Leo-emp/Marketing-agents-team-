@@ -488,9 +488,10 @@ function scoreTemplate(
     score += Math.min(perf.avgScore * 5, 25);
   }
 
-  // # 4. Variety penalty — recently used templates get demoted harder
+  // # 4. Variety penalty — recently used templates get blocked
+  // # -50 ensures a template used in the last 7 days almost never repeats
   if (recentlyUsed.has(template.id)) {
-    score -= 30;
+    score -= 50;
   }
 
   // # 5. Mood-pillar alignment bonus (0-10 points)
@@ -512,11 +513,11 @@ function scoreTemplate(
   // # 7. Mood rotation penalty — prevents same visual style back-to-back
   // # If the last post used this same mood, penalize heavily
   if (recentMoods.length > 0 && recentMoods[0] === template.mood) {
-    score -= 15;
+    score -= 25;
   }
   // # If the last 2 posts were BOTH this mood, extra penalty to force variety
   if (recentMoods.length >= 2 && recentMoods[0] === template.mood && recentMoods[1] === template.mood) {
-    score -= 25;
+    score -= 35;
   }
 
   return score;

@@ -12,7 +12,7 @@
    # Gemini's output to TemplateContent format for rendering.
    ============================================================ */
 
-import { callGemini } from "../gemini";
+import { callGemini, callGeminiJson } from "../gemini";
 import { getDimensions, type SlideData, type SlideLayout, type TemplateLayout } from "./types";
 import { BRAND_NAME, BRAND_URL } from "./brand";
 import { selectTemplate, slideToTemplateContent } from "./template-intelligence";
@@ -572,24 +572,49 @@ Return a JSON object:
   "caption": "Your high-quality caption here following the CAPTION RULES above"
 }
 
+CRITICAL JSON FORMAT RULES:
+- Return ONLY a valid JSON object. No markdown code fences, no backticks, no explanation text.
+- Do NOT use "[SLIDE 1]", "[SLIDE 2]" text format. That is NOT JSON and will crash the system.
+- The response must be parseable by JSON.parse() directly.
+
 Return ONLY valid JSON.`;
 
-  let raw = await callGemini(prompt);
+  let raw = await callGeminiJson(prompt);
 
-  // # Parse response — retry once if JSON is malformed
+  // # Parse response — JSON mode should guarantee valid JSON,
+  // # but retry with standard call + regex extraction as fallback
   let parsed: { slides?: unknown[]; caption?: string };
   try {
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON object found");
-    parsed = JSON.parse(jsonMatch[0]);
+    // # JSON mode: response should be valid JSON directly
+    parsed = JSON.parse(raw);
   } catch (firstErr) {
-    console.warn("[Visual Designer] First JSON parse failed, retrying:", firstErr);
-    raw = await callGemini(
-      `Your previous response was not valid JSON. Return ONLY a valid JSON object with "slides" array and "caption" string. No explanation, no markdown. The original request was:\n\n${prompt}`
-    );
-    const retryMatch = raw.match(/\{[\s\S]*\}/);
-    if (!retryMatch) throw new Error("Visual designer returned no valid JSON after retry");
-    parsed = JSON.parse(retryMatch[0]);
+    // # Fallback 1: try regex extraction (Gemini sometimes wraps in markdown)
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON object found in response");
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      // # Fallback 2: retry with explicit JSON-only instruction
+      console.warn("[Visual Designer] JSON parse failed, retrying with standard call:", firstErr);
+      raw = await callGemini(
+        `Your previous response was not valid JSON. It may have used "[SLIDE 1]" text format which is WRONG. Return ONLY a valid JSON object with this exact structure: {"slides": [...], "caption": "..."}. No markdown, no explanation, no [SLIDE] format. The original request was:\n\n${prompt}`
+      );
+      const retryMatch = raw.match(/\{[\s\S]*\}/);
+      if (!retryMatch) {
+        // # Fallback 3: create a minimal valid slide from content instead of crashing
+        console.error("[Visual Designer] All JSON parse attempts failed — creating fallback slide");
+        parsed = {
+          slides: [{
+            headline: topic || "Career Insights",
+            body: content.slice(0, 100),
+            layout: "hero",
+          }],
+          caption: content.slice(0, 200),
+        };
+      } else {
+        parsed = JSON.parse(retryMatch[0]);
+      }
+    }
   }
 
   if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
