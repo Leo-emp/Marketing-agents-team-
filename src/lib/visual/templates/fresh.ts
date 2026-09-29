@@ -75,7 +75,8 @@ function wrap(
 html,body{width:${tW}px;height:${tH}px;overflow:hidden;background:#000;}
 body{font-family:${FONT_STACK};}
 .sw{width:${pvW}px;height:${pvH}px;transform:scale(${sc});transform-origin:top left;}
-.tpl{width:${pvW}px;height:${pvH}px;${bgProp};display:flex;flex-direction:column;padding:40px 44px;position:relative;overflow:hidden;}
+.tpl{width:${pvW}px;height:${pvH}px;${bgProp};display:flex;flex-direction:column;justify-content:space-between;gap:16px;padding:40px 44px;position:relative;overflow:hidden;}
+.tpl>div{flex-grow:0 !important;flex-basis:auto !important;}
 em{font-style:normal;}
 </style></head><body>
 <div class="sw"><div class="tpl">${body}</div></div>
