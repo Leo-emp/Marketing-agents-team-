@@ -443,6 +443,16 @@ export async function designVisual(
   // # that gives the reader a real takeaway, not vague labels or empty filler
   const prompt = `You are a senior visual content director for ${BRAND_NAME}, a premium career tech platform. You have 12+ years designing social media visuals that stop the scroll. Your job is to create HIGH-VALUE visual content where the IMAGE DESIGN DIRECTLY REFLECTS THE CONTENT — not generic career imagery, but a visual that teaches the specific lesson being communicated.
 
+RULE #0 — COHERENCE (THE MOST IMPORTANT RULE — CHECK BEFORE RETURNING):
+Every element in the image MUST directly support the headline. Before returning:
+1. Re-read your headline. Does the body/tips actually deliver what it promises?
+2. If headline says "X vs Y" → body MUST show BOTH X and Y with clear contrast, not tips about one side
+3. If headline says "3 reasons" → body MUST have exactly 3 specific reasons
+4. If headline says "trap" or "mistake" → body MUST show the actual trap AND the fix
+5. Every tip must be so specific that a reader can ACT on it immediately. "Refine your voice" = FAIL. "Replace 'managed team' with 'Led 12-person team, increased revenue 34%'" = PASS.
+6. NEVER use these words: leverage, unlock, game-changer, empower, revolutionary, optimize (as vague CTA)
+7. Caption must extend the image story — same argument, not a separate summary
+
 CONTENT TO STRUCTURE:
 ${content}
 
@@ -634,6 +644,38 @@ Return ONLY valid JSON.`;
   // # Enforce single slide for single_image — Gemini sometimes returns multiple
   if (isSingleImage && parsed.slides.length > 1) {
     parsed.slides = [parsed.slides[0]];
+  }
+
+  // # Post-generation quality: scrub banned buzzwords from all text fields
+  const BANNED_WORDS = /\b(leverage|unlock|game[- ]?changer|empower|revolutionary)\b/gi;
+  for (const slide of parsed.slides) {
+    const s = slide as Record<string, unknown>;
+    for (const key of ["headline", "subheadline", "body", "beforeText", "afterText", "cta"] as const) {
+      if (typeof s[key] === "string") {
+        s[key] = (s[key] as string).replace(BANNED_WORDS, (match: string) => {
+          const replacements: Record<string, string> = {
+            leverage: "use", unlock: "access", empower: "enable",
+            "game-changer": "breakthrough", "game changer": "breakthrough",
+            gamechanger: "breakthrough", revolutionary: "significant",
+          };
+          return replacements[match.toLowerCase()] || match;
+        });
+      }
+    }
+    // # Scrub tips/bullets too
+    if (Array.isArray(s.tips)) {
+      for (const tip of s.tips as { title?: string; description?: string }[]) {
+        if (tip.title) tip.title = tip.title.replace(BANNED_WORDS, "use");
+        if (tip.description) tip.description = tip.description.replace(BANNED_WORDS, "use");
+      }
+    }
+    if (Array.isArray(s.bullets)) {
+      s.bullets = (s.bullets as string[]).map((b: string) => b.replace(BANNED_WORDS, "use"));
+    }
+  }
+  // # Scrub caption too
+  if (parsed.caption) {
+    parsed.caption = String(parsed.caption).replace(BANNED_WORDS, "use");
   }
 
   const totalSlides = parsed.slides.length;
